@@ -1,0 +1,17 @@
+역할: HTTP 요청(Request)을 받아서 해당 로직을 실행한 뒤, 클라이언트에 응답(Response)을 반환
+컨트롤러는 주로 라우트 처리에 특화. 데이터베이스 로직이나 복잡한 비즈니스 로직은 서비스 레이어에서 처리하고, 컨트롤러는 깔끔하고 간단한 역할만 담당
+
+예시
+
+const Community = require('../models/community');
+const communityService = require('../services/communityService');
+
+exports.createPost = async (req, res, next) => {
+  try {
+    const { title, content, image } = req.body;
+    const post = await communityService.createPost({ title, content, image });
+    res.status(201).json(post);
+  } catch (error) {
+    next(error); // 에러 미들웨어로 전달
+  }
+};

@@ -1,0 +1,15 @@
+역할: 비즈니스 로직을 처리하는 곳으로, 데이터베이스 작업 및 복잡한 로직을 구현
+
+컨트롤러가 너무 많은 역할을 가지게 되면 코드가 복잡해지고 유지보수가 어려워짐. 때문에 서비스 레이어를 통해 데이터베이스 로직과 비즈니스 로직을 캡슐화하여 코드 가독성을 높이고 재사용성을 강화
+
+예시
+const Community = require('../models/community');
+
+exports.createPost = async ({ title, content, image }) => {
+  const post = new Community({ title, content, image });
+  return await post.save();
+};
+
+exports.getPosts = async () => {
+  return await Community.find();
+};

@@ -1,0 +1,20 @@
+역할: 설정 파일로, 데이터베이스 연결, 환경 변수 관리 등을 담당
+
+데이터베이스 연결 설정, 환경 변수(.env), 전역 설정 등을 중앙에서 관리하여 코드 변경 없이 쉽게 수정 가능
+
+require('dotenv').config();
+
+const config = {
+  server: {
+    port: process.env.SERVER_PORT || 8000, // 서버 포트
+  },
+  auth: {
+    jwtSecret: process.env.JWT_SECRET,    // JWT 시크릿 키
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h', // 토큰 만료 시간
+  },
+  externalApi: {
+    apiKey: process.env.EXTERNAL_API_KEY, // 외부 API 키
+  },
+};
+
+module.exports = config;

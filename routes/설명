@@ -1,0 +1,15 @@
+역할: API 엔드포인트를 정의하고, HTTP 요청이 어떤 컨트롤러로 전달될지 결정
+
+라우팅은 URL 경로와 컨트롤러를 연결하는 역할.
+
+예시
+const express = require('express');
+const router = express.Router();
+const communityController = require('../controllers/communityController');
+
+// 커뮤니티 API 라우트
+router.post('/posts', communityController.createPost);
+router.get('/posts', communityController.getPosts);
+router.get('/posts/:id', communityController.getPostById);
+
+module.exports = router;

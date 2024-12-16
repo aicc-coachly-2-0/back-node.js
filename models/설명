@@ -1,0 +1,49 @@
+역할: 데이터베이스의 스키마를 정의하고, 데이터를 처리
+
+데이터베이스와 직접적으로 연결되는 부분. 이 레이어는 프로젝트의 핵심 데이터 구조를 책임짐
+
+예시 
+const { pool } = require('../config/db'); // PostgreSQL 연결 pool 가져오기
+
+// Community 테이블 생성 함수
+const createCommunityTable = async () => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS Community (
+      id SERIAL PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      content TEXT NOT NULL,
+      image TEXT,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+  try {
+    await pool.query(query);
+    console.log('Community table is ready');
+  } catch (error) {
+    console.error('Failed to create Community table:', error.message);
+  }
+};
+
+// 데이터 삽입 함수
+const createCommunityPost = async ({ title, content, image }) => {
+  const query = `
+    INSERT INTO Community (title, content, image)
+    VALUES ($1, $2, $3)
+    RETURNING *;
+  `;
+  const values = [title, content, image];
+  try {
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  } catch (error) {
+    console.error('Failed to insert post:', error.message);
+    throw error;
+  }
+};
+
+module.exports = {
+  createCommunityTable,
+  createCommunityPost,
+};
+
+

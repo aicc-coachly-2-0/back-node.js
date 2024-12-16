@@ -1,0 +1,19 @@
+역할: 요청 처리 중간에 동작하는 로직을 구현. (인증, 로깅, 에러 처리 등)
+
+모든 요청에 대해 공통적으로 적용되어야 하는 로직(예: JWT 인증, 권한 검사, 에러 핸들링)을 중앙에서 처리하면 코드 중복을 줄일 수 있음
+
+예시
+const jwt = require('jsonwebtoken');
+
+exports.authenticateToken = (req, res, next) => {
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = user; // 요청 객체에 사용자 정보 추가
+    next();
+  } catch (error) {
+    res.status(403).json({ error: 'Forbidden' });
+  }
+};
