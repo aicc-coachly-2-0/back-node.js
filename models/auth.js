@@ -1,21 +1,40 @@
-const { pool } = require('../config/database');
+const pool = require('../config/database');
 
-const createUser = async (userData) => {
+// 사용자 생성 (회원가입)
+const createUser = async ({
+  user_id,
+  user_name,
+  user_email,
+  user_pw,
+  user_phone,
+  user_date_of_birth,
+  user_gender,
+}) => {
   const query = `
     INSERT INTO users (
       user_id, user_name, user_email, user_pw, user_phone, user_date_of_birth, user_gender
     ) VALUES ($1, $2, $3, $4, $5, $6, $7)
     RETURNING *;
   `;
-  const values = Object.values(userData); // 객체의 값들을 배열로 변환
+  const values = [
+    user_id,
+    user_name,
+    user_email,
+    user_pw,
+    user_phone,
+    user_date_of_birth,
+    user_gender,
+  ];
 
   try {
-    const { rows } = await pool.query(query, values);
-    return rows[0];
+    const result = await pool.query(query, values);
+    return result.rows[0]; // 삽입된 사용자 데이터 반환
   } catch (error) {
     console.error('Failed to create user:', error.message);
     throw error;
   }
 };
 
-module.exports = { createUser };
+module.exports = {
+  createUser,
+};
