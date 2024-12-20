@@ -1,0 +1,29 @@
+0. db는 있다고 생각한다.
+CREATE TABLE `users` (
+	`user_number`	SERIAL	NOT NULL,
+	`user_id`	VARCHAR	NOT NULL,
+	`user_name`	VARCHAR	NULL,
+	`user_email`	VARCHAR	NULL,
+	`user_pw`	VARCHAR	NULL,
+	`user_phone`	int	NULL,
+	`user_date_of_birth`	date	NULL,
+	`user_gender`	ENUM	NULL,
+	`created_at`	TIMESTAMP	NULL,
+	`deleted_at`	TIMESTAMP	NULL,
+	`status`	ENUM	NULL
+);
+
+
+
+1. 클라단에서 값 입력 {id, name, email, phone, date_of_birth, gender} 엔드포인트로 전송
+2. index.js에서 app.use로 router경로로 전달 (authRoute.js)
+3. router에서 contrallers로 전달 (authController.js)
+4. contrallers에서 요청을 처리하나 일부? 기능을 services로 위임시켜 처리 (authService.js)
+5. contrallers에서 온 일을 services에서 요청 수행  (암호화, models과 상호작용 등)
+6. models에서 db와 상호작용 (데이터를 삽입하고 다시 services에서로 전달.) (auth.js)
+7. services의 처리 결과를  contrallers로반환.
+8. contrallers는 결과 값에대해 적절한 응답을 반환
+9. 클라이언트가 결과 수신
+
+미들웨어로 검증이 필요한 경우에는
+1번에서 전송 후 index.js에서 router로 전달하기 전 middlewares로 검증 후 router로 전송한다?
