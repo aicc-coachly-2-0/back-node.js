@@ -1,6 +1,8 @@
 const bcrypt = require('bcrypt');
 const authModel = require('../models/authModel');
 const userService = require('./userService');
+const jwt = require('jsonwebtoken');
+const config = require('../config/config');
 
 exports.createUser = async (userData) => {
   // 비밀번호 해싱
@@ -28,4 +30,29 @@ exports.createUser = async (userData) => {
   });
 
   return createdUser; // PostgreSQL 사용자 데이터 반환
+};
+
+exports.loginUser = async (userData) => {
+  const { user_id, user_pw } = userData;
+
+  const user = await authModel.findUserById(user_id);
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  const isPasswordValid = await bcrypt.compare(user_pw, user.user_pw);
+  if (!isPasswordValid) {
+    throw new Error('Invalid password');
+  }
+
+  const token = jwt.sign(
+    { user_id: user.user_id, user_email: user.user_email },
+    config.auth.jwtSecret,
+    { expiresIn: config.auth.jwtExpiresIn }
+  );
+
+  return {
+    token,
+    user: { user_id: user.user_id, user_email: user.user_email },
+  };
 };

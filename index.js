@@ -3,9 +3,9 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const errorHandler = require('./middlewares/errorHandler');
 const authRoute = require('./routes/authRoute');
-require('dotenv').config();
+const config = require('./config/config');
 
-const PORT = process.env.SERVER_PORT || 8000;
+const PORT = config.server.port || 8000;
 const app = express();
 
 app.use(express.json());
