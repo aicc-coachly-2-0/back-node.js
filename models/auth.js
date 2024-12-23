@@ -1,6 +1,15 @@
 const { postgreSQL } = require('../config/database');
 
-const createUser = async (userData) => {
+// 사용자 생성 (회원가입)
+const createUser = async ({
+  user_id,
+  user_name,
+  user_email,
+  user_pw,
+  user_phone,
+  user_date_of_birth,
+  user_gender,
+}) => {
   const query = `
     INSERT INTO users (
       user_id, user_name, user_email, user_pw, user_phone, user_date_of_birth, user_gender
@@ -18,4 +27,6 @@ const createUser = async (userData) => {
   }
 };
 
-module.exports = { createUser };
+module.exports = {
+  createUser,
+};
