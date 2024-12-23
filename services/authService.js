@@ -1,11 +1,14 @@
 const bcrypt = require('bcrypt');
-const authModel = require('../models/auth');
+const authModel = require('../models/authModel');
 const userService = require('./userService');
 
 exports.createUser = async (userData) => {
   // 비밀번호 해싱
   const hashedPassword = await bcrypt.hash(userData.user_pw, 10);
-  const sanitizedPhone = userData.user_phone.replace(/\D/g, ''); // 숫자 외 문자 제거
+
+  // 전화번호 정리 (숫자 외 문자 제거)
+  const sanitizedPhone = userData.user_phone.replace(/\D/g, '');
+
   // PostgreSQL에 사용자 생성
   const createdUser = await authModel.createUser({
     user_id: userData.user_id,

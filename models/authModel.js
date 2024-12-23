@@ -1,38 +1,41 @@
-const { MongoClient } = require("mongodb");
+const { postgreSQL } = require('../config/database');
 
-// MongoDB 연결 설정
-const uri = "mongodb://localhost:27020";
-const client = new MongoClient(uri);
+// 사용자 생성 (회원가입)
+const createUser = async ({
+  user_id,
+  user_name,
+  user_email,
+  user_pw,
+  user_phone,
+  user_date_of_birth,
+  user_gender,
+}) => {
+  const query = `
+    INSERT INTO users (
+      user_id, user_name, user_email, user_pw, user_phone, user_date_of_birth, user_gender
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING *;
+  `;
 
-async function createUserInDB(userData) {
-    try {
-        await client.connect();
-        const db = client.db("my_database");
-        const usersCollection = db.collection("users");
+  const values = [
+    user_id,
+    user_name,
+    user_email,
+    user_pw,
+    user_phone,
+    user_date_of_birth,
+    user_gender,
+  ];
 
-        await usersCollection.insertOne(userData);
-    } catch (err) {
-        throw new Error("Error creating user in database: " + err.message);
-    } finally {
-        await client.close();
-    }
-}
+  try {
+    const { rows } = await postgreSQL.query(query, values);
+    return rows[0]; // 반환된 user_number 포함
+  } catch (error) {
+    console.error('Failed to create user:', error.message);
+    throw error;
+  }
+};
 
-async function updateUserInDB(userNumber, updateFields) {
-    try {
-        await client.connect();
-        const db = client.db("my_database");
-        const usersCollection = db.collection("users");
-
-        await usersCollection.updateOne(
-            { user_number: userNumber },
-            { $set: updateFields }
-        );
-    } catch (err) {
-        throw new Error("Error updating user in database: " + err.message);
-    } finally {
-        await client.close();
-    }
-}
-
-module.exports = { createUserInDB, updateUserInDB };
+module.exports = {
+  createUser,
+};

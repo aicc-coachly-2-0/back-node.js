@@ -1,4 +1,4 @@
-const User = require('../models/mongoDB');
+const User = require('../models/mongoDBModels');
 
 exports.createMongoUser = async (userData) => {
   const newUser = new User({
