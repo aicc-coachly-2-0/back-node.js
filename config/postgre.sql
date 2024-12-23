@@ -16,3 +16,13 @@ CREATE TABLE users (
     deleted_at TIMESTAMP,
     status status_enum DEFAULT 'active'
 );
+
+CREATE TABLE question_classifications(
+    question_category_number SERIAL PRIMARY KEY,
+    question_category VARCHAR(50) NOT NULL UNIQUE,
+    status status_enum DEFAULT 'active'
+)
+CREATE TABLE faqs(
+    faq_number SERIAL PRIMARY KEY,
+    
+)
