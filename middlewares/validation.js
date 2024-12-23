@@ -26,6 +26,5 @@ exports.validateSignup = (req, res, next) => {
   if (!emailRegex.test(user_email)) {
     return res.status(400).json({ error: 'Invalid email format' });
   }
-
   next();
 };
