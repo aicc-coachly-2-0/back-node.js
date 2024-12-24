@@ -4,9 +4,6 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-console.log(userController); // undefined 확인
-console.log(authMiddleware); // undefined 확인
-
 // 팔로우, 언팔로우
 router.post(
   '/:userId/follow',
