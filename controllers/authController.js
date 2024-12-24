@@ -19,3 +19,23 @@ exports.login = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.adminsignup = async (req, res, next) => {
+  try {
+    const newAdmin = await authService.createAdmin(req.body);
+    res
+      .status(201)
+      .json({ message: 'Admin created successfully', admin: newAdmin });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.adminlogin = async (req, res, next) => {
+  try {
+    const { token, admin } = await authService.loginAdmin(req.body);
+    res.status(200).json({ message: 'Login successful', token, admin });
+  } catch (error) {
+    next(error);
+  }
+};

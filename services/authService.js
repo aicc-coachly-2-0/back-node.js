@@ -56,3 +56,42 @@ exports.loginUser = async (userData) => {
     user: { user_id: user.user_id, user_email: user.user_email },
   };
 };
+
+exports.createAdmin = async (adminData) => {
+  // 비밀번호 해싱
+  const hashedPassword = await bcrypt.hash(adminData.user_pw, 10);
+
+  const createAdmin = await authModel.createAdmin({
+    admin_id: adminData.admin_id,
+    admin_pw: hashedPassword,
+  });
+
+  return createAdmin; // PostgreSQL 사용자 데이터 반환
+};
+
+exports.loginAdmin = async (adminData) => {
+  const { admin_id, admin_pw } = adminData;
+
+  const admin = await authModel.findAdminById(admin_id);
+  if (!admin) {
+    throw new Error('Adminr not found');
+  }
+
+  const isPasswordValid = await bcrypt.compare(admin_pw, admin.admin_pw);
+  if (!isPasswordValid) {
+    throw new Error('Invalid password');
+  }
+
+  const token = jwt.sign(
+    { admin_id: admin.admin_id, isAdmin: true },
+    config.auth.jwtSecret,
+    {
+      expiresIn: config.auth.jwtExpiresIn,
+    }
+  );
+
+  return {
+    token,
+    admin: { admin_id: admin.admin_id },
+  };
+};

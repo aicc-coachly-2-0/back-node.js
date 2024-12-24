@@ -71,7 +71,7 @@ CREATE TABLE mission_rooms (
     CONSTRAINT fk_user_number FOREIGN KEY (user_number) REFERENCES users(user_number) ON DELETE CASCADE,
     CONSTRAINT fk_mission_number FOREIGN KEY (mission_number) REFERENCES missions(mission_number) ON DELETE CASCADE
 );
-
+ 
 -- 미션 참가자
 CREATE TABLE mission_participants (
     group_number SERIAL PRIMARY KEY,

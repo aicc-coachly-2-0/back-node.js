@@ -28,3 +28,12 @@ exports.validateSignup = (req, res, next) => {
   }
   next();
 };
+
+exports.validateAdminSignup = (req, res, next) => {
+  const { admin_id, admin_pw } = req.body;
+
+  if (!admin_id || !admin_pw) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+  next();
+};

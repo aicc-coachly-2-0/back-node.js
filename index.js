@@ -1,9 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+
 const errorHandler = require('./middlewares/errorHandler');
-const authRoute = require('./routes/authRoute');
 const config = require('./config/config');
+
+// route
+const authRoute = require('./routes/authRoute');
+const postRoute = require('./routes/postRoute');
+const feedRoute = require('./routes/feedRoute');
 
 const PORT = config.server.port || 8000;
 const app = express();
@@ -16,8 +21,12 @@ app.get('/', (req, res) => {
   res.send('Hello World! Test Server Running.');
 });
 
+// route
 app.use('/api/auth', authRoute);
+app.use('/api/posts', postRoute);
+app.use('/api/feeds', feedRoute);
 
+// error route
 app.use(errorHandler);
 
 app.listen(PORT, () =>
