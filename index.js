@@ -9,6 +9,7 @@ const config = require('./config/config');
 const authRoute = require('./routes/authRoute');
 const postRoute = require('./routes/postRoute');
 const feedRoute = require('./routes/feedRoute');
+const userRoute = require('./routes/userRoute');
 
 const PORT = config.server.port || 8000;
 const app = express();
@@ -25,6 +26,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoute);
 app.use('/api/posts', postRoute);
 app.use('/api/feeds', feedRoute);
+app.use('/api/user', userRoute);
 
 // error route
 app.use(errorHandler);

@@ -22,3 +22,81 @@ exports.createMongoUser = async (userData) => {
 
   return await newUser.save();
 };
+
+exports.followUser = async (currentUser, targetUserId) => {
+  await User.updateOne(
+    { user_number: currentUser },
+    { $addToSet: { following_users: targetUserId } }
+  );
+  await User.updateOne(
+    { user_number: targetUserId },
+    { $addToSet: { followers: currentUser } }
+  );
+};
+
+exports.unfollowUser = async (currentUser, targetUserId) => {
+  await User.updateOne(
+    { user_number: currentUser },
+    { $pull: { following_users: targetUserId } }
+  );
+  await User.updateOne(
+    { user_number: targetUserId },
+    { $pull: { followers: currentUser } }
+  );
+};
+
+exports.blockUser = async (currentUser, targetUserId) => {
+  await User.updateOne(
+    { user_number: currentUser },
+    { $addToSet: { blocked_users: targetUserId } }
+  );
+};
+
+exports.unblockUser = async (currentUser, targetUserId) => {
+  await User.updateOne(
+    { user_number: currentUser },
+    { $pull: { blocked_users: targetUserId } }
+  );
+};
+
+exports.likePost = async (currentUser, postId) => {
+  await User.updateOne(
+    { user_number: currentUser },
+    { $addToSet: { liked_posts: postId } }
+  );
+};
+
+exports.unlikePost = async (currentUser, postId) => {
+  await User.updateOne(
+    { user_number: currentUser },
+    { $pull: { liked_posts: postId } }
+  );
+};
+
+exports.likeFeed = async (currentUser, feedId) => {
+  await User.updateOne(
+    { user_number: currentUser },
+    { $addToSet: { liked_feeds: feedId } }
+  );
+};
+
+exports.unlikeFeed = async (currentUser, feedId) => {
+  await User.updateOne(
+    { user_number: currentUser },
+    { $pull: { liked_feeds: feedId } }
+  );
+};
+
+exports.likeComment = async (currentUser, commentId) => {
+  await User.updateOne(
+    { user_number: currentUser },
+    { $addToSet: { liked_feed_comments: commentId } }
+  );
+};
+
+exports.unlikeComment = async (currentUser, commentId) => {
+  await User.updateOne(
+    { user_number: currentUser },
+    { $pull: { liked_feed_comments: commentId } }
+  );
+};

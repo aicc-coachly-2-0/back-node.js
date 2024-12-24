@@ -1,0 +1,112 @@
+// controllers/userController.js
+const userService = require('../services/userService');
+
+exports.followUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const currentUser = req.user.user_number; // 현재 로그인 사용자
+    await userService.followUser(currentUser, userId);
+    res.status(200).json({ message: 'User followed successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.unfollowUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const currentUser = req.user.user_number;
+    await userService.unfollowUser(currentUser, userId);
+    res.status(200).json({ message: 'User unfollowed successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.blockUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const currentUser = req.user.user_number;
+    await userService.blockUser(currentUser, userId);
+    res.status(200).json({ message: 'User blocked successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.unblockUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const currentUser = req.user.user_number;
+    await userService.unblockUser(currentUser, userId);
+    res.status(200).json({ message: 'User unblocked successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.likePost = async (req, res, next) => {
+  try {
+    const { postId } = req.params;
+    const currentUser = req.user.user_number;
+    await userService.likePost(currentUser, postId);
+    res.status(200).json({ message: 'Post liked successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.unlikePost = async (req, res, next) => {
+  try {
+    const { postId } = req.params;
+    const currentUser = req.user.user_number;
+    await userService.unlikePost(currentUser, postId);
+    res.status(200).json({ message: 'Post unliked successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.likeFeed = async (req, res, next) => {
+  try {
+    const { feedId } = req.params;
+    const currentUser = req.user.user_number;
+    await userService.likeFeed(currentUser, feedId);
+    res.status(200).json({ message: 'Feed liked successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.unlikeFeed = async (req, res, next) => {
+  try {
+    const { feedId } = req.params;
+    const currentUser = req.user.user_number;
+    await userService.unlikeFeed(currentUser, feedId);
+    res.status(200).json({ message: 'Feed unliked successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.likeComment = async (req, res, next) => {
+  try {
+    const { commentId } = req.params;
+    const currentUser = req.user.user_number;
+    await userService.likeComment(currentUser, commentId);
+    res.status(200).json({ message: 'Comment liked successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.unlikeComment = async (req, res, next) => {
+  try {
+    const { commentId } = req.params;
+    const currentUser = req.user.user_number;
+    await userService.unlikeComment(currentUser, commentId);
+    res.status(200).json({ message: 'Comment unliked successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
