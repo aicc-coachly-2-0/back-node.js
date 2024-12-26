@@ -1,15 +1,36 @@
 const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+
+const errorHandler = require('./middlewares/errorHandler');
+const config = require('./config/config');
+
+// route
+const authRoute = require('./routes/authRoute');
+const postRoute = require('./routes/postRoute');
+const feedRoute = require('./routes/feedRoute');
+const userRoute = require('./routes/userRoute');
+
+const PORT = config.server.port || 8000;
 const app = express();
 
-require("dotenv").config();
+app.use(express.json());
+app.use(cors());
+app.use(bodyParser.json());
 
-// 기본 라우트
 app.get('/', (req, res) => {
-    res.send('Hello, Node.js!');
+  res.send('Hello World! Test Server Running.');
 });
 
-// 서버 시작
-const PORT = 8000;
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+// route
+app.use('/api/auth', authRoute);
+app.use('/api/posts', postRoute);
+app.use('/api/feeds', feedRoute);
+app.use('/api/user', userRoute);
+
+// error route
+app.use(errorHandler);
+
+app.listen(PORT, () =>
+  console.log(`Server running on http://localhost:${PORT}`)
+);
