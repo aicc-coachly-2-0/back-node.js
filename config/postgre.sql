@@ -1,20 +1,25 @@
 -- ENUM 타입 정의
-CREATE TYPE mission_state_enum AS ENUM ('active', 'inactive');
-CREATE TYPE community_state_enum AS ENUM ('active', 'inactive', 'archived');
-CREATE TYPE level_enum AS ENUM ('easy', 'medium', 'hard');
-CREATE TYPE field_enum AS ENUM ('field1', 'field2', 'field3', 'field4');
-CREATE TYPE is_secret_enum AS ENUM ('yes', 'no');
-CREATE TYPE participant_state_enum AS ENUM ('active', 'banned');
-CREATE TYPE validation_status_enum AS ENUM ('pending', 'approved', 'rejected');
-CREATE TYPE validation_state_enum AS ENUM ('active', 'inactive');
+CREATE TYPE mission_state_enum AS ENUM ('active', 'inactive'); -- 미션 카테고리 상태
+CREATE TYPE level_enum AS ENUM ('easy', 'medium', 'hard'); -- 미션 난이도
+CREATE TYPE cert_freq_enum AS ENUM ('매일', '평일 매일', '주말 매일'); -- 미션 인증 빈도
+CREATE TYPE mission_rooms_state_enum AS ENUM ('recruiting', 'ongoing', 'completed'); -- 미션방 상태
+-- CREATE TYPE field_enum AS ENUM ('field1', 'field2', 'field3', 'field4');
+-- CREATE TYPE is_secret_enum AS ENUM ('yes', 'no');
+
+CREATE TYPE participant_state_enum AS ENUM ('active', 'banned'); -- 미션 참가자 상태
+
+CREATE TYPE validation_status_enum AS ENUM ('pending', 'approved', 'rejected'); -- 미션 성공 상태
+CREATE TYPE validation_state_enum AS ENUM ('active', 'inactive'); -- 미션 인증 상태
+
 CREATE TYPE feed_state_enum AS ENUM ('active', 'inactive', 'deleted');
+CREATE TYPE community_state_enum AS ENUM ('active', 'inactive', 'archived');
 CREATE TYPE comment_state_enum AS ENUM ('active', 'deleted');
 CREATE TYPE post_state_enum AS ENUM ('active', 'hidden', 'deleted');
 CREATE TYPE payment_status_enum AS ENUM ('success', 'failed', 'pending');
 CREATE TYPE subscription_state_enum AS ENUM ('active', 'paused', 'canceled');
 CREATE TYPE refund_state_enum AS ENUM ('requested', 'approved', 'completed', 'rejected');
 CREATE TYPE refund_review_state_enum AS ENUM ('pending', 'in_progress', 'approved', 'rejected');
-CREATE TYPE classification_state_enum AS ENUM ('active', 'inactive');
+CREATE TYPE classification_state_enum AS ENUM ('active', 'inactive'); -- 질문 카테고리 상태
 CREATE TYPE question_state_enum AS ENUM ('pending', 'answered', 'deleted');
 CREATE TYPE admin_position_enum AS ENUM ('superadmin', 'manager', 'staff');
 CREATE TYPE admin_state_enum AS ENUM ('active', 'inactive', 'suspended');
