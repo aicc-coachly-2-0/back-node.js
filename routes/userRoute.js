@@ -60,4 +60,6 @@ router.post(
   userController.unlikeComment
 );
 
+router.get('/likes/:type/:id', userController.getLikesCount);
+
 module.exports = router;

@@ -1,4 +1,5 @@
 -- ENUM 타입 정의
+<<<<<<< HEAD
 CREATE TYPE mission_state_enum AS ENUM ('active', 'inactive'); -- 미션 카테고리 상태
 CREATE TYPE level_enum AS ENUM ('easy', 'medium', 'hard'); -- 미션 난이도
 CREATE TYPE cert_freq_enum AS ENUM ('매일', '평일 매일', '주말 매일'); -- 미션 인증 빈도
@@ -66,13 +67,11 @@ CREATE TABLE mission_rooms (
     content TEXT,
     img_link VARCHAR,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    started_at DATE,
+    ended_at TIMESTAMP,
+    weekly_cert_count INT,
+    cert_freq cert_freq_enum,
     level level_enum,
-    field1 field_enum,
-    field2 field_enum,
-    field3 field_enum,
-    is_secret is_secret_enum DEFAULT 'no',
-    password VARCHAR(255),
+    state VARCHAR(20),
     CONSTRAINT fk_user_number FOREIGN KEY (user_number) REFERENCES users(user_number) ON DELETE CASCADE,
     CONSTRAINT fk_mission_number FOREIGN KEY (mission_number) REFERENCES missions(mission_number) ON DELETE CASCADE
 );
@@ -359,6 +358,9 @@ CREATE TABLE faqs (
     question_category_number INT NOT NULL, -- 질문 카테고리 ID
     content TEXT NOT NULL, -- FAQ 질문 내용
     answer TEXT NOT NULL, -- FAQ 답변 내용
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 생성 시간
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 수정 시간
+    deleted_at TIMESTAMP, -- 삭제 시간
     state faq_state_enum DEFAULT 'active', -- FAQ 상태
     CONSTRAINT fk_question_category FOREIGN KEY (question_category_number) REFERENCES question_classifications(question_category_number) ON DELETE CASCADE
 );
@@ -427,5 +429,11 @@ EXECUTE FUNCTION update_timestamp();
 -- Subscriptions 테이블에 트리거 추가
 CREATE TRIGGER trigger_update_subscriptions
 BEFORE UPDATE ON subscriptions
+FOR EACH ROW
+EXECUTE FUNCTION update_timestamp();
+
+-- updated_at 트리거 추가
+CREATE TRIGGER trigger_update_faqs_updated_at
+BEFORE UPDATE ON faqs
 FOR EACH ROW
 EXECUTE FUNCTION update_timestamp();
