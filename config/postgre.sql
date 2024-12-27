@@ -1,5 +1,4 @@
 -- ENUM 타입 정의
-<<<<<<< HEAD
 CREATE TYPE mission_state_enum AS ENUM ('active', 'inactive'); -- 미션 카테고리 상태
 CREATE TYPE level_enum AS ENUM ('easy', 'medium', 'hard'); -- 미션 난이도
 CREATE TYPE cert_freq_enum AS ENUM ('매일', '평일 매일', '주말 매일'); -- 미션 인증 빈도
