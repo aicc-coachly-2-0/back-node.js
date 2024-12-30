@@ -111,3 +111,29 @@ exports.createMission = async (missionData, user) => {
     throw error;
   }
 };
+
+// 미션 상태 업데이트 함수
+exports.updateMissionStates = async () => {
+  try {
+    // 1. 모집중(recruiting) → 진행중(ongoing): 미션 시작일 도달 시
+    const startQuery = `
+      UPDATE mission_rooms
+      SET state = 'ongoing'
+      WHERE state = 'recruiting' AND started_at = CURRENT_DATE;
+    `;
+    await postgreSQL.query(startQuery);
+
+    // 2. 진행중(ongoing) → 완료(completed): 미션 종료일 도달 시
+    const endQuery = `
+      UPDATE mission_rooms
+      SET state = 'completed'
+      WHERE state = 'ongoing' AND ended_at < CURRENT_DATE;
+    `;
+    await postgreSQL.query(endQuery);
+
+    console.log("Mission states updated successfully.");
+  } catch (error) {
+    console.error("Error updating mission states:", error.message);
+    throw error; // 에러가 발생하면 호출한 곳으로 에러를 던짐
+  }
+};

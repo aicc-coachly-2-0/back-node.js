@@ -15,6 +15,15 @@ const missionRoute = require("./routes/missionRoute");
 const PORT = config.server.port || 8000;
 const app = express();
 
+const runScheduler = require("./schedulers/missionStateScheduler");
+
+// 서버 시작 시 스케줄러 실행
+try {
+  runScheduler();
+} catch (error) {
+  console.error("Error initializing scheduler:", error.message);
+}
+
 app.use(express.json());
 app.use(cors());
 app.use(bodyParser.json());
