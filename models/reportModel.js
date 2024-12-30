@@ -42,6 +42,27 @@ exports.findReportsByDomain = async (domain, { state, report_category }) => {
   return rows;
 };
 
+// 특정 사용자의 신고 내역과 신고 수 조회
+exports.findReportsForUser = async (userNumber) => {
+  const query = `
+    SELECT 
+        reported_user_number AS user_number,
+        COUNT(*) AS report_count,
+        ARRAY_AGG(report_reason) AS report_reasons,
+        ARRAY_AGG(state) AS report_states,
+        ARRAY_AGG(report_at) AS report_dates
+    FROM 
+        user_reports
+    WHERE 
+        reported_user_number = $1
+    GROUP BY 
+        reported_user_number;
+  `;
+  const { rows } = await postgreSQL.query(query, [userNumber]);
+  return rows[0]; // 특정 사용자만 조회하므로 첫 번째 결과만 반환
+};
+
+
 // 특정 신고 조회
 exports.findReportById = async (domain, reportId) => {
   const table = DOMAIN_TABLE_MAP[domain];

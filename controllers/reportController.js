@@ -23,6 +23,20 @@ exports.getReportsByDomain = async (req, res, next) => {
   }
 };
 
+// 특정 사용자의 신고 내역과 신고 수 조회
+exports.getReportsForUser = async (req, res, next) => {
+  try {
+    const { user_number } = req.params; // URL 파라미터에서 user_number 가져오기
+    const reportData = await reportService.getReportsForUser(user_number);
+    if (!reportData) {
+      return res.status(404).json({ message: 'No reports found for this user.' });
+    }
+    res.status(200).json(reportData);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // 특정 신고 조회
 exports.getReport = async (req, res, next) => {
   try {
