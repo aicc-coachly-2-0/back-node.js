@@ -15,7 +15,8 @@ exports.createReport = async (req, res, next) => {
 exports.getReportsByDomain = async (req, res, next) => {
   try {
     const { domain } = req.params;
-    const reports = await reportService.getReportsByDomain(domain, req.query);
+    const { state, report_category } = req.query; // 쿼리 파라미터에서 state와 report_category 가져옴
+    const reports = await reportService.getReportsByDomain(domain, { state, report_category });
     res.status(200).json(reports);
   } catch (error) {
     next(error);

@@ -437,3 +437,32 @@ CREATE TRIGGER trigger_update_faqs_updated_at
 BEFORE UPDATE ON faqs
 FOR EACH ROW
 EXECUTE FUNCTION update_timestamp();
+
+
+-- 유저 신고 테이블에 신고 분류 추가
+ALTER TABLE user_reports
+ADD COLUMN report_category VARCHAR(50);
+
+-- 게시글 신고 테이블에 신고 분류 추가
+ALTER TABLE post_reports
+ADD COLUMN report_category VARCHAR(50);
+
+-- 게시글 댓글 신고 테이블에 신고 분류 추가
+ALTER TABLE post_comment_reports
+ADD COLUMN report_category VARCHAR(50);
+
+-- 피드 신고 테이블에 신고 분류 추가
+ALTER TABLE feed_reports
+ADD COLUMN report_category VARCHAR(50);
+
+-- 피드 댓글 신고 테이블에 신고 분류 추가
+ALTER TABLE feed_comment_reports
+ADD COLUMN report_category VARCHAR(50);
+
+-- 미션 신고 테이블에 신고 분류 추가
+ALTER TABLE mission_reports
+ADD COLUMN report_category VARCHAR(50);
+
+-- 미션 인증 신고 테이블에 신고 분류 추가
+ALTER TABLE mission_validation_reports
+ADD COLUMN report_category VARCHAR(50);

@@ -12,31 +12,33 @@ const DOMAIN_TABLE_MAP = {
 };
 
 // 신고 접수
-exports.insertReport = async (domain, { user_number, target_id, report_reason }) => {
+exports.insertReport = async (domain, { user_number, target_id, report_reason, report_category }) => {
   const table = DOMAIN_TABLE_MAP[domain];
   if (!table) throw new Error('Invalid domain');
 
   const query = `
-    INSERT INTO ${table} (user_number, ${getTargetColumn(domain)}, report_reason, state, report_at)
-    VALUES ($1, $2, $3, 'pending', CURRENT_TIMESTAMP)
+    INSERT INTO ${table} (user_number, ${getTargetColumn(domain)}, report_reason, report_category, state, report_at)
+    VALUES ($1, $2, $3, $4, 'pending', CURRENT_TIMESTAMP)
     RETURNING *;
   `;
-  const values = [user_number, target_id, report_reason];
+  const values = [user_number, target_id, report_reason, report_category];
   const { rows } = await postgreSQL.query(query, values);
   return rows[0];
 };
 
-// 도메인별 신고 조회 (목록)
-exports.findReportsByDomain = async (domain, { state }) => {
+// 도메인별 신고 조회 (목록) - 상태와 카테고리 필터링 추가
+exports.findReportsByDomain = async (domain, { state, report_category }) => {
   const table = DOMAIN_TABLE_MAP[domain];
   if (!table) throw new Error('Invalid domain');
 
   const query = `
     SELECT * FROM ${table}
     WHERE ($1::text IS NULL OR state = $1)
+      AND ($2::text IS NULL OR report_category = $2)
     ORDER BY report_at DESC;
   `;
-  const { rows } = await postgreSQL.query(query, [state]);
+  const values = [state, report_category];
+  const { rows } = await postgreSQL.query(query, values);
   return rows;
 };
 
