@@ -11,7 +11,7 @@ const createUser = async ({
   user_gender,
   profile_picture,
 }) => {
-   const query = `
+  const query = `
     INSERT INTO users (
       user_id, user_name, user_email, user_pw, user_phone, user_date_of_birth, user_gender, profile_picture
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -29,14 +29,11 @@ const createUser = async ({
     profile_picture,
   ];
 
-  try {
-    const { rows } = await postgreSQL.query(query, values);
-    return rows[0]; // 반환된 user_number 포함
-  } catch (error) {
-    console.error('Failed to create user:', error.message);
-    throw error;
-  }
+  const { rows } = await postgreSQL.query(query, values);
+  return rows[0];
 };
+
+module.exports = { createUser };
 
 const findUserById = async (user_id) => {
   const query = `
@@ -90,4 +87,3 @@ module.exports = {
   createAdmin,
   findAdminById,
 };
-

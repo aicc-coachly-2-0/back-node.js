@@ -1,27 +1,65 @@
-const User = require('../models/mongoDBModels');
+const axios = require('axios');
+const bcrypt = require('bcrypt');
+const { postgreSQL, connectFTP } = require('../config/database');
+const authModel = require('../models/authModel');
+const userService = require('./userService');
+const config = require('../config/config');
 
-exports.createMongoUser = async (userData) => {
-  const newUser = new User({
-    user_number: userData.user_number, // PostgreSQL에서 받은 usernumber
-    liked_posts: [],
-    liked_feeds: [],
-    liked_post_comments: [],
-    liked_feed_comments: [],
-    following_users: [],
-    followers: [],
-    blocked_users: [],
-    mission_points: [],
-    total_points: 0,
-    profile_picture: userData.profile_picture || '',
-    nickname: userData.nickname,
-    bio: '',
-    profile_picture_updated_at: userData.profile_picture ? new Date() : null,
-    nickname_updated_at: new Date(),
-    bio_updated_at: null,
-  });
+exports.createUser = async (userData, remoteImageUrl) => {
+  const client = await postgreSQL.connect();
+  try {
+    await client.query('BEGIN');
 
-  return await newUser.save();
+    const hashedPassword = await bcrypt.hash(userData.user_pw, 10);
+    const sanitizedPhone = userData.user_phone.replace(/\D/g, '');
+
+    const profilePictureUrl = await uploadImageToFTP(
+      userData.user_id,
+      remoteImageUrl
+    );
+
+    const createdUser = await authModel.createUser({
+      user_id: userData.user_id,
+      user_name: userData.user_name,
+      user_email: userData.user_email,
+      user_pw: hashedPassword,
+      user_phone: sanitizedPhone,
+      user_date_of_birth: userData.user_date_of_birth,
+      user_gender: userData.user_gender,
+      profile_picture: profilePictureUrl,
+    });
+
+    await client.query('COMMIT');
+    return createdUser;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 };
+
+async function uploadImageToFTP(userId, remoteImageUrl) {
+  const ftpClient = await connectFTP();
+  try {
+    const response = await axios({
+      url: remoteImageUrl,
+      method: 'GET',
+      responseType: 'stream',
+    });
+
+    const remoteImagePath = `/kochiri/profile/${userId}-${Date.now()}.jpg`; // 경로에 /kochiri/profile 추가
+    await ftpClient.uploadFrom(response.data, remoteImagePath);
+
+    // 회원가입 시 반환 URL에 /kochiri/profile 포함
+    return `${config.ftp.baseUrl}${remoteImagePath}`;
+  } catch (error) {
+    console.error('FTP 업로드 실패:', error.message);
+    throw new Error('FTP 업로드 실패');
+  } finally {
+    ftpClient.close();
+  }
+}
 
 exports.followUser = async (currentUser, targetUserId) => {
   await User.updateOne(
