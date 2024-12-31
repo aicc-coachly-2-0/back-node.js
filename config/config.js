@@ -25,5 +25,12 @@ const config = {
     password: process.env.MG_PW, // 비밀번호
     port: process.env.MG_PORT, // 포트
   },
+  ftp: {
+    host: process.env.FTP_HOST || 'localhost', // FTP 호스트
+    port: process.env.FTP_PORT || 21, // FTP 포트
+    user: process.env.FTP_USER, // FTP 사용자
+    password: process.env.FTP_PASSWORD, // FTP 비밀번호
+    secure: process.env.FTP_SECURE === 'true', // FTP 보안 설정 (true/false)
+  },
 };
 module.exports = config;
