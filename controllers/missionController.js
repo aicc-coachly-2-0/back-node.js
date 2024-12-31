@@ -59,3 +59,14 @@ exports.createMission = async (req, res, next) => {
     next(error);
   }
 };
+
+// state 업데이트 (스케쥴러 수동 실행을 위한 함수 호출)
+exports.updateMissionStates = async (req, res, next) => {
+  try {
+    await missionService.updateMissionStates;
+    res.status(200).json({ message: "Mission states updated successfully." });
+  } catch (error) {
+    console.error("Error updating mission states:", error.message);
+    res.status(500).json({ message: "Failed to update mission states." });
+  }
+};

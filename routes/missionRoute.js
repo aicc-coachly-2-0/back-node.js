@@ -5,4 +5,15 @@ const { authenticateToken } = require("../middlewares/authMiddleware");
 
 router.post("/", authenticateToken, missionController.createMission);
 
+// 수동 스케줄러 실행 API 추가
+router.post("/update-mission-states", async (req, res) => {
+  try {
+    await missionController.updateMissionStates;
+    res.status(200).json({ message: "Mission states updated successfully." });
+  } catch (error) {
+    console.error("Error updating mission states:", error.message);
+    res.status(500).json({ message: "Failed to update mission states." });
+  }
+});
+
 module.exports = router;

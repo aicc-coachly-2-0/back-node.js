@@ -105,20 +105,20 @@ exports.createMission = async (missionData, user) => {
   // 데이터 삽입 및 결과 반환
   try {
     // 로그 추가: SQL 쿼리와 값 확인
-    console.log("Executing SQL Query:", query);
-    console.log("With Values:", values);
+    // console.log("Executing SQL Query:", query);
+    // console.log("With Values:", values);
 
     const { rows } = await postgreSQL.query(query, values);
 
-    console.log("Query Result:", rows[0]); // 반환된 결과 로그 출력
+    // console.log("Query Result:", rows[0]); // 반환된 결과 로그 출력
 
     return rows[0]; // 생성된 미션 방 데이터 반환
   } catch (error) {
     console.error("Error creating mission room:", error.message);
 
-    console.error("Failed Query:", query); // 실패한 쿼리 로그
-    console.error("With Values:", values); // 실패한 쿼리에 사용된 값
-    console.error("Full Error:", error); // 전체 에러 객체 출력
+    // console.error("Failed Query:", query); // 실패한 쿼리 로그
+    // console.error("With Values:", values); // 실패한 쿼리에 사용된 값
+    // console.error("Full Error:", error); // 전체 에러 객체 출력
 
     throw error;
   }
@@ -135,7 +135,7 @@ exports.updateMissionStates = async () => {
     `;
     const { rowCount: ongoingCount } = await postgreSQL.query(startQuery); // 진행중(ongoing)으로 업데이트된 행 수 반환
 
-    // console.log(`Updated ${ongoingCount} missions to 'ongoing' state.`);
+    console.log(`Updated ${ongoingCount} missions to 'ongoing' state.`);
 
     // 2. 진행중(ongoing) → 완료(completed): 미션 종료일 도달 시
     const endQuery = `
@@ -144,9 +144,9 @@ exports.updateMissionStates = async () => {
       WHERE state = 'ongoing' AND ended_at < CURRENT_DATE;
     `;
     const { rowCount: completedCount } = await postgreSQL.query(endQuery); // 종료(completed)로 업데이트된 행 수 반환
-    // console.log(`Updated ${completedCount} missions to 'completed' state.`);
+    console.log(`Updated ${completedCount} missions to 'completed' state.`);
 
-    // console.log("Mission states updated successfully.");
+    console.log("Mission states updated successfully.");
   } catch (error) {
     console.error("Error updating mission states:", error.message);
     throw error; // 에러가 발생하면 호출한 곳으로 에러를 던짐
