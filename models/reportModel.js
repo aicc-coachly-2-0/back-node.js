@@ -12,33 +12,56 @@ const DOMAIN_TABLE_MAP = {
 };
 
 // 신고 접수
-exports.insertReport = async (domain, { user_number, target_id, report_reason }) => {
+exports.insertReport = async (domain, { user_number, target_id, report_reason, report_category }) => {
   const table = DOMAIN_TABLE_MAP[domain];
   if (!table) throw new Error('Invalid domain');
 
   const query = `
-    INSERT INTO ${table} (user_number, ${getTargetColumn(domain)}, report_reason, state, report_at)
-    VALUES ($1, $2, $3, 'pending', CURRENT_TIMESTAMP)
+    INSERT INTO ${table} (user_number, ${getTargetColumn(domain)}, report_reason, report_category, state, report_at)
+    VALUES ($1, $2, $3, $4, 'pending', CURRENT_TIMESTAMP)
     RETURNING *;
   `;
-  const values = [user_number, target_id, report_reason];
+  const values = [user_number, target_id, report_reason, report_category];
   const { rows } = await postgreSQL.query(query, values);
   return rows[0];
 };
 
-// 도메인별 신고 조회 (목록)
-exports.findReportsByDomain = async (domain, { state }) => {
+// 도메인별 신고 조회 (목록) - 상태와 카테고리 필터링 추가
+exports.findReportsByDomain = async (domain, { state, report_category }) => {
   const table = DOMAIN_TABLE_MAP[domain];
   if (!table) throw new Error('Invalid domain');
 
   const query = `
     SELECT * FROM ${table}
     WHERE ($1::text IS NULL OR state = $1)
+      AND ($2::text IS NULL OR report_category = $2)
     ORDER BY report_at DESC;
   `;
-  const { rows } = await postgreSQL.query(query, [state]);
+  const values = [state, report_category];
+  const { rows } = await postgreSQL.query(query, values);
   return rows;
 };
+
+// 특정 사용자의 신고 내역과 신고 수 조회
+exports.findReportsForUser = async (userNumber) => {
+  const query = `
+    SELECT 
+        reported_user_number AS user_number,
+        COUNT(*) AS report_count,
+        ARRAY_AGG(report_reason) AS report_reasons,
+        ARRAY_AGG(state) AS report_states,
+        ARRAY_AGG(report_at) AS report_dates
+    FROM 
+        user_reports
+    WHERE 
+        reported_user_number = $1
+    GROUP BY 
+        reported_user_number;
+  `;
+  const { rows } = await postgreSQL.query(query, [userNumber]);
+  return rows[0]; // 특정 사용자만 조회하므로 첫 번째 결과만 반환
+};
+
 
 // 특정 신고 조회
 exports.findReportById = async (domain, reportId) => {
