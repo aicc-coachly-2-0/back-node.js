@@ -15,14 +15,6 @@ CREATE TYPE validation_state_enum AS ENUM ('active', 'inactive'); -- 미션 인�
 
 CREATE TYPE feed_state_enum AS ENUM ('active', 'inactive', 'deleted');
 CREATE TYPE community_state_enum AS ENUM ('active', 'inactive', 'archived');
-CREATE TYPE level_enum AS ENUM ('easy', 'medium', 'hard');
-CREATE TYPE cert_freq_enum AS ENUM ('매일', '주중', '주말');
-CREATE TYPE field_enum AS ENUM ('field1', 'field2', 'field3', 'field4');
-CREATE TYPE is_secret_enum AS ENUM ('yes', 'no');
-CREATE TYPE participant_state_enum AS ENUM ('active', 'banned');
-CREATE TYPE validation_status_enum AS ENUM ('pending', 'approved', 'rejected');
-CREATE TYPE validation_state_enum AS ENUM ('active', 'inactive');
-CREATE TYPE feed_state_enum AS ENUM ('active', 'inactive', 'deleted');
 CREATE TYPE comment_state_enum AS ENUM ('active', 'deleted');
 CREATE TYPE post_state_enum AS ENUM ('active', 'hidden', 'deleted');
 CREATE TYPE payment_status_enum AS ENUM ('success', 'failed', 'pending');
