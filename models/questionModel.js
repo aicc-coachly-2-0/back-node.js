@@ -39,3 +39,16 @@ exports.findAllQuestions = async () => {
   const { rows } = await postgreSQL.query(query);
   return rows;
 };
+
+exports.findUnansweredQuestions = async () => {
+  const query = `
+    SELECT q.*
+    FROM questions q
+    LEFT JOIN answers a ON q.question_number = a.question_number
+    WHERE a.answer_number IS NULL
+    ORDER BY q.created_at ASC;
+  `;
+
+  const { rows } = await postgreSQL.query(query);
+  return rows;
+};

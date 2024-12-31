@@ -18,6 +18,9 @@ router.get('/users/:user_number/questions', questionController.getQuestionsByUse
 // 전체 질문 조회
 router.get('/questions', questionController.getAllQuestions);
 
+// 답변 없는 질문 조회
+router.get('/questions/unanswered', questionController.getUnansweredQuestions);
+
 // 답변 작성
 router.post('/answers', answerController.createAnswer);
 
