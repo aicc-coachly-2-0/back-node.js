@@ -41,14 +41,24 @@ exports.findFaqById = async (faqNumber) => {
 };
 
 // 자주 묻는 질문 전체 조회
-exports.findAllFaqs = async () => {
-  const query = `
+exports.findAllFaqs = async (role) => {
+  const queryForAdmin = `
     SELECT f.*, a.admin_id
     FROM faqs f
     JOIN administrators a ON f.admin_number = a.admin_number
     WHERE f.deleted_at IS NULL
     ORDER BY f.created_at DESC;
   `;
+
+  const queryForUser = `
+    SELECT f.question_category_number, f.content, f.answer
+    FROM faqs f
+    WHERE f.deleted_at IS NULL AND f.state = 'active'
+    ORDER BY f.created_at DESC;
+  `;
+
+  // 관리자일 경우 모든 정보 반환, 유저일 경우 제한된 정보 반환
+  const query = role === 'admin' ? queryForAdmin : queryForUser;
   const { rows } = await postgreSQL.query(query);
   return rows;
 };
