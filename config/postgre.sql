@@ -3,6 +3,8 @@ CREATE TYPE mission_state_enum AS ENUM ('active', 'inactive'); -- 미션 카테�
 CREATE TYPE level_enum AS ENUM ('easy', 'medium', 'hard'); -- 미션 난이도
 CREATE TYPE cert_freq_enum AS ENUM ('매일', '평일 매일', '주말 매일'); -- 미션 인증 빈도
 CREATE TYPE mission_rooms_state_enum AS ENUM ('recruiting', 'ongoing', 'completed'); -- 미션방 상태
+CREATE TYPE duration_enum AS ENUM ('하루', '3일', '일주일', '한 달'); -- 미션방 기간
+
 -- CREATE TYPE field_enum AS ENUM ('field1', 'field2', 'field3', 'field4');
 -- CREATE TYPE is_secret_enum AS ENUM ('yes', 'no');
 
@@ -76,14 +78,16 @@ CREATE TABLE mission_rooms (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     started_at DATE,
     ended_at DATE,
+    duration duration_enum,
     weekly_cert_count INT,
     cert_freq cert_freq_enum,
     level level_enum,
-    state VARCHAR(20),
+    state mission_rooms_state_enum,
     CONSTRAINT fk_user_number FOREIGN KEY (user_number) REFERENCES users(user_number) ON DELETE CASCADE,
     CONSTRAINT fk_mission_number FOREIGN KEY (mission_number) REFERENCES missions(mission_number) ON DELETE CASCADE
 );
- 
+
+
 -- 미션 참가자
 CREATE TABLE mission_participants (
     group_number SERIAL PRIMARY KEY,
