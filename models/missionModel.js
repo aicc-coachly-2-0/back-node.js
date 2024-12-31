@@ -14,7 +14,7 @@ exports.createMission = async (missionData, user) => {
     // 시작일(started_at)을 기준으로 종료일 계산
     const ended_at = new Date(started_at); // started_at 값을 기반으로 새 Date 객체 생성, new Date()로 감싸면 JavaScript의 날짜 객체로 변환
     ended_at.setDate(ended_at.getDate() + durationMapping[duration]); // 시작일 + 기간
-    return ended_at;
+    return ended_at.toISOString().split("T")[0];
   };
 
   // 미션 종료일 계산
@@ -83,7 +83,7 @@ exports.createMission = async (missionData, user) => {
   const query = `
     INSERT INTO mission_rooms 
     (user_number, mission_number, title, content, started_at, ended_at, weekly_cert_count, cert_freq, img_link, level, state)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'recruiting')
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'recruiting')
     RETURNING *;
   `;
 
@@ -104,10 +104,22 @@ exports.createMission = async (missionData, user) => {
 
   // 데이터 삽입 및 결과 반환
   try {
+    // 로그 추가: SQL 쿼리와 값 확인
+    console.log("Executing SQL Query:", query);
+    console.log("With Values:", values);
+
     const { rows } = await postgreSQL.query(query, values);
+
+    console.log("Query Result:", rows[0]); // 반환된 결과 로그 출력
+
     return rows[0]; // 생성된 미션 방 데이터 반환
   } catch (error) {
     console.error("Error creating mission room:", error.message);
+
+    console.error("Failed Query:", query); // 실패한 쿼리 로그
+    console.error("With Values:", values); // 실패한 쿼리에 사용된 값
+    console.error("Full Error:", error); // 전체 에러 객체 출력
+
     throw error;
   }
 };
@@ -122,6 +134,7 @@ exports.updateMissionStates = async () => {
       WHERE state = 'recruiting' AND started_at = CURRENT_DATE;
     `;
     const { rowCount: ongoingCount } = await postgreSQL.query(startQuery); // 진행중(ongoing)으로 업데이트된 행 수 반환
+
     // console.log(`Updated ${ongoingCount} missions to 'ongoing' state.`);
 
     // 2. 진행중(ongoing) → 완료(completed): 미션 종료일 도달 시
