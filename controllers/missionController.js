@@ -2,6 +2,8 @@ const missionService = require("../services/missionService");
 
 exports.createMission = async (req, res, next) => {
   try {
+    // console.log("User from token (req.user):", req.user); // 유저 토큰 확인 로그
+
     // 유저 정보 검증
     if (!req.user || !req.user.user_number) {
       return res.status(403).json({ message: "Unauthorized user" });
