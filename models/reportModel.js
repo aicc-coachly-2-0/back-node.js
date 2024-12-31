@@ -31,16 +31,24 @@ exports.findReportsByDomain = async (domain, { state, report_category }) => {
   const table = DOMAIN_TABLE_MAP[domain];
   if (!table) throw new Error('Invalid domain');
 
+  let orderByClause = 'ORDER BY report_at DESC'; // 기본적으로 최신순 정렬
+
+  // 상태가 'pending'일 경우에는 오래된 순서대로 정렬
+  if (state === 'pending') {
+    orderByClause = 'ORDER BY report_at ASC'; // 오래된 순서대로 정렬
+  }
+
   const query = `
     SELECT * FROM ${table}
     WHERE ($1::text IS NULL OR state = $1)
       AND ($2::text IS NULL OR report_category = $2)
-    ORDER BY report_at DESC;
+    ${orderByClause};
   `;
   const values = [state, report_category];
   const { rows } = await postgreSQL.query(query, values);
   return rows;
 };
+
 
 // 특정 사용자가 받은 신고와 신고 수 조회
 exports.findReportsForUser = async (userNumber) => {
@@ -60,6 +68,76 @@ exports.findReportsForUser = async (userNumber) => {
   `;
   const { rows } = await postgreSQL.query(query, [userNumber]);
   return rows[0]; // 특정 사용자만 조회하므로 첫 번째 결과만 반환
+};
+
+// 1. 사용자가 1주일 내 금지된 도메인 여부 확인
+const checkWeeklyBan = async (userId, domain) => {
+  const now = new Date();
+  const oneWeekAgo = new Date(now.setDate(now.getDate() - 7));
+
+  const { rows: recentSuspensions } = await postgreSQL.query(`
+    SELECT COUNT(*) 
+    FROM report_managements
+    WHERE user_id = $1
+    AND domain = $2
+    AND state = 'resolved'  -- 'resolved' 상태에서만 금지된 것으로 간주
+    AND report_at > $3;    -- 1주일 이내에 신고가 처리된 경우
+  `, [userId, domain, oneWeekAgo]);
+
+  return recentSuspensions[0].count > 0;
+};
+
+// 2. 사용자의 1개월 내 누적 정지 횟수 확인
+const checkMonthlySuspensionCount = async (userId) => {
+  const now = new Date();
+  const oneMonthAgo = new Date(now.setMonth(now.getMonth() - 1));
+
+  const { rows: monthlySuspensions } = await postgreSQL.query(`
+    SELECT COUNT(*) 
+    FROM report_managements
+    WHERE user_id = $1
+    AND state = 'resolved'  -- 'resolved' 상태에서만 정지된 것으로 간주
+    AND report_at > $2;    -- 1개월 이내에 신고가 처리된 경우
+  `, [userId, oneMonthAgo]);
+
+  return monthlySuspensions[0].count;
+};
+
+// 3. 영구 정지 및 도메인 금지 체크
+const checkSuspensionStatus = async (userId, domain) => {
+  const weeklyBan = await checkWeeklyBan(userId, domain);
+  const monthlySuspensionCount = await checkMonthlySuspensionCount(userId);
+
+  if (monthlySuspensionCount >= 3) {
+    return { status: 'permanent-ban', message: '영구 정지되었습니다. AI 도메인 외에 글 작성이 금지됩니다.' };
+  }
+
+  if (weeklyBan) {
+    return { status: 'domain-banned', message: `해당 도메인(${domain})은 1주일 내에 금지되었습니다.` };
+  }
+
+  return { status: 'ok' };
+};
+
+// 4. 계정 정지 상태에 따라 권한 처리
+const handleUserAction = async (userId, domain, action) => {
+  const suspensionStatus = await checkSuspensionStatus(userId, domain);
+
+  if (suspensionStatus.status === 'permanent-ban') {
+    if (domain !== 'AI') {
+      return { success: false, message: suspensionStatus.message };
+    }
+  } else if (suspensionStatus.status === 'domain-banned') {
+    return { success: false, message: suspensionStatus.message };
+  }
+
+  // 정지 상태가 아니면 글 작성 등을 처리하는 로직 진행
+  if (action === 'write') {
+    // 글 작성 로직
+    return { success: true, message: '글 작성이 완료되었습니다.' };
+  }
+
+  return { success: false, message: '알 수 없는 액션입니다.' };
 };
 
 // 특정 유저가 한 신고 조회
