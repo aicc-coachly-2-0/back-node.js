@@ -2,7 +2,8 @@ const missionService = require("../services/missionService");
 
 exports.createMission = async (req, res, next) => {
   try {
-    // console.log("User from token (req.user):", req.user); // 유저 토큰 확인 로그
+    // console.log("[CONTROLLER] User from token (req.user):", req.user); // 유저 정보 확인
+    // console.log("[CONTROLLER] Mission data (req.body):", req.body); // 요청 데이터 확인
 
     // 유저 정보 검증
     if (!req.user || !req.user.user_number) {
@@ -56,6 +57,7 @@ exports.createMission = async (req, res, next) => {
 
     res.status(201).json({ message: "Mission created successfully", mission });
   } catch (error) {
+    console.error("[CONTROLLER ERROR] Exception occurred:", error.message);
     next(error);
   }
 };
