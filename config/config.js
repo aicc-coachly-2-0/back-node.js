@@ -1,12 +1,12 @@
-require('dotenv').config();
+require("dotenv").config();
 
 const config = {
   server: {
-    port: process.env.SERVER_PORT || 8000, // 서버 포트
+    port: process.env.SERVER_PORT || 8080, // 서버 포트
   },
   auth: {
     jwtSecret: process.env.JWT_SECRET, // JWT 시크릿 키
-    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h', // 토큰 만료 시간
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || "1h", // 토큰 만료 시간
   },
   externalApi: {
     apiKey: process.env.EXTERNAL_API_KEY, // 외부 API 키

@@ -100,3 +100,15 @@ exports.unlikeComment = async (currentUser, commentId) => {
     { $pull: { liked_feed_comments: commentId } }
   );
 };
+
+exports.countLikesForPost = async (postId) => {
+  return await User.countDocuments({ liked_posts: postId }); // MongoDB에서 좋아요 수 계산
+};
+
+exports.countLikesForFeed = async (feedId) => {
+  return await User.countDocuments({ liked_feeds: feedId }); // MongoDB에서 좋아요 수 계산
+};
+
+exports.countLikesForComment = async (commentId) => {
+  return await User.countDocuments({ liked_post_comments: commentId }); // MongoDB에서 좋아요 수 계산
+};

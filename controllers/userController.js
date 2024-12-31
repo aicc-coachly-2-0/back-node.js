@@ -110,3 +110,22 @@ exports.unlikeComment = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getLikesCount = async (req, res, next) => {
+  const { type, id } = req.params; // type: post, feed, comment
+  try {
+    let count = 0;
+    if (type === 'post') {
+      count = await userService.countLikesForPost(id); // 서비스 호출
+    } else if (type === 'feed') {
+      count = await userService.countLikesForFeed(id); // 서비스 호출
+    } else if (type === 'comment') {
+      count = await userService.countLikesForComment(id); // 서비스 호출
+    } else {
+      return res.status(400).json({ message: 'Invalid type specified' });
+    }
+    res.status(200).json({ id, type, likes: count });
+  } catch (error) {
+    next(error);
+  }
+};
