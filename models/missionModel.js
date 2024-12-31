@@ -79,16 +79,21 @@ exports.createMission = async (missionData, user) => {
     throw new Error("유효하지 않은 인증 빈도입니다.");
   }
 
-  // 쿼리
-  const query = `
+  // 미션방 생성 쿼리
+  const createRoomQuery = `
     INSERT INTO mission_rooms 
     (user_number, mission_number, title, content, started_at, ended_at, weekly_cert_count, cert_freq, img_link, level, state)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'recruiting')
     RETURNING *;
   `;
 
+  const creatorParticipantQuery = `
+    INSERT INTO mission_participants (user_number, room_number, state)
+    VALUES ($1, $2, 'active');
+  `;
+
   // DB에 전달할 값
-  const values = [
+  const roomValues = [
     user.user_number, // 로그인된 유저 정보
     missionData.mission_number, // 미션 카테고리 번호
     missionData.title, // 미션 제목
@@ -104,22 +109,22 @@ exports.createMission = async (missionData, user) => {
 
   // 데이터 삽입 및 결과 반환
   try {
-    // 로그 추가: SQL 쿼리와 값 확인
-    // console.log("Executing SQL Query:", query);
-    // console.log("With Values:", values);
+    const { rows } = await postgreSQL.query(createRoomQuery, roomValues);
+    const createdRoom = rows[0];
 
-    const { rows } = await postgreSQL.query(query, values);
+    // 방장을 자동으로 참여자로 등록
+    const creatorParticipantValues = [
+      user.user_number,
+      createdRoom.room_number,
+    ];
+    await postgreSQL.query(creatorParticipantQuery, creatorParticipantValues);
 
-    // console.log("Query Result:", rows[0]); // 반환된 결과 로그 출력
-
-    return rows[0]; // 생성된 미션 방 데이터 반환
+    return createdRoom; // 생성된 미션 방 데이터 반환
   } catch (error) {
-    console.error("Error creating mission room:", error.message);
-
-    // console.error("Failed Query:", query); // 실패한 쿼리 로그
-    // console.error("With Values:", values); // 실패한 쿼리에 사용된 값
-    // console.error("Full Error:", error); // 전체 에러 객체 출력
-
+    console.error(
+      "Error creating mission room or adding participant:",
+      error.message
+    );
     throw error;
   }
 };
@@ -150,5 +155,55 @@ exports.updateMissionStates = async () => {
   } catch (error) {
     console.error("Error updating mission states:", error.message);
     throw error; // 에러가 발생하면 호출한 곳으로 에러를 던짐
+  }
+};
+
+// 미션방 참여 -> 사용자를 특정 미션방에 참여자로 등록
+exports.joinMissionRoom = async (user_number, room_number) => {
+  // 중복 참여자 확인
+  const checkQuery = `
+    SELECT EXISTS (
+        SELECT 1
+        FROM mission_participants
+        WHERE user_number = $1 AND room_number = $2 AND state = 'active'
+    ) AS exists;
+`;
+
+  // 참여자 추가
+  const insertQuery = `
+    INSERT INTO mission_participants (user_number, room_number, state)
+    VALUES ($1, $2, 'active')
+    RETURNING *;
+  `;
+
+  try {
+    // 트랜잭션 시작
+    // 트랜잭션이란, 데이터베이스에서 여러 작업을 하나의 묶음으로 처리하는 것
+    // 트랜잭션 안에 있는 작업은 모두 성공해야만 데이터베이스에 실제로 반영됨. 하나라도 실패 시 모두 취소(롤백).
+    await postgreSQL.query("BEGIN");
+
+    // 1. 중복 확인
+    const { rows } = await postgreSQL.query(checkQuery, [
+      user_number,
+      room_number,
+    ]);
+    if (rows[0].exists) {
+      throw new Error("이미 해당 미션방에 참여 중입니다.");
+    }
+
+    // 2. 중복이 아닌 경우 참여자 추가
+    const result = await postgreSQL.query(insertQuery, [
+      user_number,
+      room_number,
+    ]);
+
+    await postgreSQL.query("COMMIT"); // 트랜잭션 커밋
+
+    // 참여자 정보 반환
+    return result.rows[0];
+  } catch (error) {
+    await postgreSQL.query("ROLLBACK"); // 에러 발생 시 롤백
+    console.error("Error adding participant to mission room:", error.message);
+    throw error;
   }
 };

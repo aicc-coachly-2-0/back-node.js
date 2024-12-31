@@ -3,6 +3,7 @@ const router = express.Router();
 const missionController = require("../controllers/missionController");
 const { authenticateToken } = require("../middlewares/authMiddleware");
 
+// 미션방 생성
 router.post("/", authenticateToken, missionController.createMission);
 
 // 수동 스케줄러 실행 API 추가
@@ -15,5 +16,12 @@ router.post("/update-mission-states", async (req, res) => {
     res.status(500).json({ message: "Failed to update mission states." });
   }
 });
+
+// 미션 참여 엔드포인트
+router.post(
+  "/rooms/:room_number/join",
+  authenticateToken,
+  missionController.joinMissionRoom
+);
 
 module.exports = router;

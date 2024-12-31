@@ -1,5 +1,6 @@
 const missionService = require("../services/missionService");
 
+// 미션 방 생성
 exports.createMission = async (req, res, next) => {
   try {
     // console.log("[CONTROLLER] User from token (req.user):", req.user); // 유저 정보 확인
@@ -70,5 +71,48 @@ exports.updateMissionStates = async (req, res, next) => {
   } catch (error) {
     console.error("Error updating mission states:", error.message);
     res.status(500).json({ message: "Failed to update mission states." });
+  }
+};
+
+// 미션 방 참여
+exports.joinMissionRoom = async (req, res, next) => {
+  try {
+    const { room_number } = req.params; // URL에서 미션 방 번호 가져오기
+    const user = req.user; // 인증된 사용자 정보
+
+    // 유저 정보 및 방 번호 확인
+    if (!user || !user.user_number) {
+      return res.status(403).json({ message: "Unauthorized user" });
+    }
+    if (!room_number) {
+      return res.status(400).json({ message: "Room number is required" });
+    }
+
+    // 중복 참여 여부 확인
+    const isAlreadyParticipant = await missionService.checkParticipant(
+      user.user_number,
+      room_number
+    );
+    if (isAlreadyParticipant) {
+      return res
+        .status(409)
+        .json({ message: "이미 해당 미션방에 참여 중입니다." });
+    }
+
+    // 미션 방 참여 서비스 호출
+    const result = await missionService.joinMissionRoom(
+      user.user_number,
+      room_number
+    );
+
+    res
+      .status(201)
+      .json({ message: "Successfully joined the mission room", data: result });
+  } catch (error) {
+    console.error(
+      "[CONTROLLER ERROR] Failed to join mission room:",
+      error.message
+    );
+    next(error); // 에러를 처리 미들웨어로 전달
   }
 };
