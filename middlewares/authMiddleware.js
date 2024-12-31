@@ -28,6 +28,7 @@ exports.authenticateToken = (req, res, next) => {
   }
 };
 
+
 // 관리자 권한 인증
 exports.authenticateAdmin = async (req, res, next) => {
   const { isAdmin, admin_id } = req.user;
@@ -55,6 +56,7 @@ exports.authenticateAdmin = async (req, res, next) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 // 공통 권한 확인 함수
 const authorizeOwnerOrAdmin = async ({ getResource, resourceId, userId, isAdmin }) => {
