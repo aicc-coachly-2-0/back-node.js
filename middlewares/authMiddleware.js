@@ -28,23 +28,33 @@ exports.authenticateToken = (req, res, next) => {
   }
 };
 
-
 // 관리자 권한 인증
-exports.authenticateAdmin = (req, res, next) => {
-  // authenticateToken 미들웨어에서 이미 req.user 설정됨
-  const { isAdmin } = req.user;
+exports.authenticateAdmin = async (req, res, next) => {
+  const { isAdmin, admin_id } = req.user;
 
   if (!isAdmin) {
-    // 관리자가 아니면 기본 역할 유지 (user)
-    return next(); // 관리자 권한이 아니어도 접근을 허용
+    return res.status(403).json({ message: 'Admin access required' });
   }
 
-  // 관리자라면 역할을 'admin'으로 변경
-  req.user.role = 'admin';
+  // 관리자 정보를 가져와 확인
+  try {
+    const admin = await adminModel.getAdminById(admin_id); // 관리자 테이블 조회
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
 
-  next();
+    req.user = {
+      admin_id: admin.admin_id,   // 관리자 ID
+      position: admin.position,  // 관리자 직위
+      role: 'admin'              // 역할 설정
+    };
+
+    next();
+  } catch (error) {
+    console.error('Admin authentication error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
-
 
 // 공통 권한 확인 함수
 const authorizeOwnerOrAdmin = async ({ getResource, resourceId, userId, isAdmin }) => {
