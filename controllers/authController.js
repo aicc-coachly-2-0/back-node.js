@@ -1,11 +1,19 @@
 const authService = require('../services/authService');
 
 // 유저 회원가입
-
 exports.signup = async (req, res, next) => {
   try {
-    const remoteImageUrl = req.body.profilePictureUrl;
-    const newUser = await authService.createUser(req.body, remoteImageUrl);
+    const uploadedFile = req.file; // Multer로 처리된 파일 데이터
+    if (!uploadedFile) {
+      return res.status(400).json({ message: 'Profile picture is required' });
+    }
+
+    const profilePictureUrl = await authService.uploadToFTP(
+      req.body.user_id,
+      uploadedFile
+    );
+
+    const newUser = await authService.createUser(req.body, profilePictureUrl);
 
     res.status(201).json({
       message: 'User created successfully',

@@ -9,12 +9,11 @@ const createUser = async ({
   user_phone,
   user_date_of_birth,
   user_gender,
-  profile_picture,
 }) => {
   const query = `
     INSERT INTO users (
-      user_id, user_name, user_email, user_pw, user_phone, user_date_of_birth, user_gender, profile_picture
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      user_id, user_name, user_email, user_pw, user_phone, user_date_of_birth, user_gender
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
     RETURNING *;
   `;
 
@@ -26,7 +25,6 @@ const createUser = async ({
     user_phone,
     user_date_of_birth,
     user_gender,
-    profile_picture,
   ];
 
   const { rows } = await postgreSQL.query(query, values);
