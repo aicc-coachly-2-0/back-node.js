@@ -82,8 +82,8 @@ exports.createMission = async (missionData, user) => {
   // 쿼리
   const query = `
     INSERT INTO mission_rooms 
-    (user_number, mission_number, title, content, started_at, ended_at, duration, weekly_cert_count, cert_freq, img_link, level, state)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'recruiting')
+    (user_number, mission_number, title, content, started_at, ended_at, weekly_cert_count, cert_freq, img_link, level, state)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'recruiting')
     RETURNING *;
   `;
 
@@ -95,7 +95,6 @@ exports.createMission = async (missionData, user) => {
     missionData.content, // 미션 설명
     missionData.started_at,
     ended_at, // 계산된 종료일
-    missionData.duration, // 미션 수행 기간
     missionData.weekly_cert_count || null, // 주간 인증 횟수 (선택적)
     missionData.cert_freq || null, // 인증 빈도 (선택적)
     missionData.img_link ||
