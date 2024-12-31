@@ -1,8 +1,16 @@
 const authService = require('../services/authService');
+const path = require('path');
 
+// 유저 회원가입
 exports.signup = async (req, res, next) => {
   try {
-    const newUser = await authService.createUser(req.body);
+    const localImagePath = path.resolve(
+      __dirname,
+      '../uploads',
+      req.file.filename
+    );
+    const newUser = await authService.createUser(req.body, localImagePath);
+
     res
       .status(201)
       .json({ message: 'User created successfully', user: newUser });

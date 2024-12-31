@@ -17,6 +17,15 @@ exports.createUser = async (userData) => {
     const hashedPassword = await bcrypt.hash(userData.user_pw, 10);
     const sanitizedPhone = userData.user_phone.replace(/\D/g, "");
 
+     // **FTP 업로드**
+     const ftpClient = await connectFTP();
+     const remoteImagePath = `/kochiri/profile/${
+       userData.user_id
+     }-${Date.now()}.jpg`;
+     await ftpClient.uploadFrom(localImagePath, remoteImagePath);
+     const profilePictureUrl = `${config.ftp.baseUrl}${remoteImagePath}`;
+     ftpClient.close(); 
+
     // PostgreSQL에 사용자 생성
     const createdUser = await authModel.createUser({
       user_id: userData.user_id,
