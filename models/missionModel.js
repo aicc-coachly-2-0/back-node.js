@@ -122,7 +122,7 @@ exports.updateMissionStates = async () => {
       WHERE state = 'recruiting' AND started_at = CURRENT_DATE;
     `;
     const { rowCount: ongoingCount } = await postgreSQL.query(startQuery); // 진행중(ongoing)으로 업데이트된 행 수 반환
-    console.log(`Updated ${ongoingCount} missions to 'ongoing' state.`);
+    // console.log(`Updated ${ongoingCount} missions to 'ongoing' state.`);
 
     // 2. 진행중(ongoing) → 완료(completed): 미션 종료일 도달 시
     const endQuery = `
@@ -131,9 +131,9 @@ exports.updateMissionStates = async () => {
       WHERE state = 'ongoing' AND ended_at < CURRENT_DATE;
     `;
     const { rowCount: completedCount } = await postgreSQL.query(endQuery); // 종료(completed)로 업데이트된 행 수 반환
-    console.log(`Updated ${completedCount} missions to 'completed' state.`);
+    // console.log(`Updated ${completedCount} missions to 'completed' state.`);
 
-    console.log("Mission states updated successfully.");
+    // console.log("Mission states updated successfully.");
   } catch (error) {
     console.error("Error updating mission states:", error.message);
     throw error; // 에러가 발생하면 호출한 곳으로 에러를 던짐
