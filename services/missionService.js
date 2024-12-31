@@ -27,3 +27,19 @@ exports.updateMissionStates = async () => {
     throw new Error("미션 상태 업데이트 중 오류가 발생했습니다.");
   }
 };
+
+// 미션 방 참여 -> 방 번호와 유저 번호를 기반으로 참여 등록
+exports.joinMissionRoom = async (user_number, room_number) => {
+  try {
+    // 로그: 전달된 데이터 확인
+    console.log("[Service] User Number:", user_number);
+    console.log("[Service] Room Number:", room_number);
+
+    const result = await missionModel.joinMissionRoom(user_number, room_number);
+
+    return result;
+  } catch (error) {
+    console.error(`[Service] Error in joinMissionRoom: ${error.message}`);
+    throw new Error("미션 방 참여 중 오류가 발생했습니다.");
+  }
+};
