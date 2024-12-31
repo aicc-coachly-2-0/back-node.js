@@ -15,18 +15,17 @@ exports.getReportsForUser = async (userNumber) => {
   return await reportModel.findReportsForUser(userNumber);
 };
 
-
 // 특정 신고 조회
 exports.getReport = async (domain, reportId) => {
   return await reportModel.findReportById(domain, reportId);
 };
 
-// 신고 처리 (관리자)
-exports.processReport = async (domain, reportId, processData) => {
-  return await reportModel.updateReportState(domain, reportId, processData);
+// 신고 처리 상태 업데이트
+exports.updateReportState = async (domain, reportId, state, admin_number, report_content) => {
+  return await reportModel.updateReportState(domain, reportId, { state, admin_number, report_content });
 };
 
 // 신고 처리 내역 조회
-exports.getReportManagements = async (filters) => {
-  return await reportModel.findReportManagements(filters);
+exports.getReportManagements = async (state) => {
+  return await reportModel.findReportManagements({ state });
 };
