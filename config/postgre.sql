@@ -69,7 +69,6 @@ CREATE TABLE mission_rooms (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     started_at DATE,
     ended_at DATE,
-    duration duration_enum,
     weekly_cert_count INT,
     cert_freq cert_freq_enum,
     level level_enum,
