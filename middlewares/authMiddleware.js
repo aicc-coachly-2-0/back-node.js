@@ -13,32 +13,38 @@ exports.authenticateToken = (req, res, next) => {
 
   try {
     const verified = jwt.verify(token, config.auth.jwtSecret);
-    req.user = verified;
+
+    // 기본적으로 유저로 설정
+    req.user = {
+      user_id: verified.user_id,
+      username: verified.username,
+      isAdmin: verified.isAdmin || false,
+      role: 'user' // 기본 역할을 'user'로 설정
+    };
+
     next();
   } catch (error) {
     res.status(403).json({ message: 'Invalid token' });
   }
 };
+
 
 // 관리자 권한 인증
 exports.authenticateAdmin = (req, res, next) => {
-  const token = req.header('Authorization')?.split(' ')[1];
+  // authenticateToken 미들웨어에서 이미 req.user 설정됨
+  const { isAdmin } = req.user;
 
-  if (!token) {
-    return res.status(401).json({ message: 'Access denied' });
+  if (!isAdmin) {
+    // 관리자가 아니면 기본 역할 유지 (user)
+    return next(); // 관리자 권한이 아니어도 접근을 허용
   }
 
-  try {
-    const verified = jwt.verify(token, config.auth.jwtSecret);
-    if (!verified.isAdmin) {
-      return res.status(403).json({ message: 'Admin access required' });
-    }
-    req.user = verified;
-    next();
-  } catch (error) {
-    res.status(403).json({ message: 'Invalid token' });
-  }
+  // 관리자라면 역할을 'admin'으로 변경
+  req.user.role = 'admin';
+
+  next();
 };
+
 
 // 공통 권한 확인 함수
 const authorizeOwnerOrAdmin = async ({ getResource, resourceId, userId, isAdmin }) => {
