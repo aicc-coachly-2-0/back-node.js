@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const validation = require('../middlewares/validation');
@@ -12,7 +12,7 @@ router.post(
   authController.signup
 );
 router.post(
-  "/admin-signup",
+  '/admin-signup',
   validation.validateAdminSignup,
   authController.adminsignup
 );
