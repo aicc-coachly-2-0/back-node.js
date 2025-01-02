@@ -42,7 +42,7 @@ exports.findReportsByDomain = async (domain, { state, report_category }) => {
   return rows;
 };
 
-// 특정 사용자의 신고 내역과 신고 수 조회
+// 특정 사용자가 받은 신고와 신고 수 조회
 exports.findReportsForUser = async (userNumber) => {
   const query = `
     SELECT 
@@ -62,6 +62,24 @@ exports.findReportsForUser = async (userNumber) => {
   return rows[0]; // 특정 사용자만 조회하므로 첫 번째 결과만 반환
 };
 
+// 특정 유저가 한 신고 조회
+exports.findReportsMadeByUser = async (userNumber) => {
+  const query = `
+    SELECT 
+        report_id,
+        reported_user_number AS user_number,
+        reporter_user_number AS reporter_number,
+        report_reason,
+        state,
+        report_at
+    FROM 
+        user_reports
+    WHERE 
+        reporter_user_number = $1;
+  `;
+  const { rows } = await postgreSQL.query(query, [userNumber]);
+  return rows; // 특정 유저가 한 신고 내역 반환
+};
 
 // 특정 신고 조회
 exports.findReportById = async (domain, reportId) => {

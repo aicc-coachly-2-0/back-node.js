@@ -10,11 +10,15 @@ exports.getReportsByDomain = async (domain, filters) => {
   return await reportModel.findReportsByDomain(domain, filters);
 };
 
-// 특정 사용자의 신고 내역과 신고 수 조회
+// 특정 사용자가 받은 신고 내역과 신고 수 조회
 exports.getReportsForUser = async (userNumber) => {
   return await reportModel.findReportsForUser(userNumber);
 };
 
+// 특정 유저가 한 신고 조회
+exports.getReportsMadeByUser = async (userNumber) => {
+  return await reportModel.findReportsMadeByUser(userNumber);
+};
 
 // 특정 신고 조회
 exports.getReport = async (domain, reportId) => {
