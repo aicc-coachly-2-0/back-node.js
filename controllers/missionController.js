@@ -88,18 +88,7 @@ exports.joinMissionRoom = async (req, res, next) => {
       return res.status(400).json({ message: "Room number is required" });
     }
 
-    // 중복 참여 여부 확인
-    const isAlreadyParticipant = await missionService.checkParticipant(
-      user.user_number,
-      room_number
-    );
-    if (isAlreadyParticipant) {
-      return res
-        .status(409)
-        .json({ message: "이미 해당 미션방에 참여 중입니다." });
-    }
-
-    // 미션 방 참여 서비스 호출
+    // 미션 방 참여 서비스 호출 (중복 확인 및 참여 처리 포함)
     const result = await missionService.joinMissionRoom(
       user.user_number,
       room_number
@@ -113,6 +102,13 @@ exports.joinMissionRoom = async (req, res, next) => {
       "[CONTROLLER ERROR] Failed to join mission room:",
       error.message
     );
-    next(error); // 에러를 처리 미들웨어로 전달
+
+    // 중복 참여 에러 처리
+    if (error.message === "이미 해당 미션방에 참여 중입니다.") {
+      return res.status(409).json({ message: error.message });
+    }
+
+    // 기타 에러는 처리 미들웨어로 전달
+    next(error);
   }
 };
