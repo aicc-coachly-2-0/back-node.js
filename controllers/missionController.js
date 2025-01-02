@@ -112,3 +112,25 @@ exports.joinMissionRoom = async (req, res, next) => {
     next(error);
   }
 };
+
+// "지금 주목받는 미션" 리스트 조회
+exports.getPopularMissions = async (req, res, next) => {
+  try {
+    // 서비스 계층에서 인기 미션 데이터를 가져옴
+    const popularMissions = await missionService.getPopularMissions();
+
+    // 가져온 데이터를 클라이언트에 반환
+    res
+      .status(200)
+      .json({
+        message: "Popular missions retrieved successfully",
+        data: popularMissions,
+      });
+  } catch (error) {
+    console.error(
+      "[CONTROLLER ERROR] Failed to retrieve popular missions:",
+      error.message
+    );
+    next(error); // 에러 처리 미들웨어로 전달
+  }
+};

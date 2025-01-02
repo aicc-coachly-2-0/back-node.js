@@ -43,3 +43,18 @@ exports.joinMissionRoom = async (user_number, room_number) => {
     throw new Error("미션 방 참여 중 오류가 발생했습니다.");
   }
 };
+
+// "지금 주목받는 미션" 리스트 조회
+exports.getPopularMissions = async () => {
+  try {
+    const popularMissions = await missionModel.getPopularMissions();
+
+    // 로그: 가져온 데이터 확인
+    console.log("[Service] Popular Missions:", popularMissions);
+
+    return popularMissions;
+  } catch (error) {
+    console.error(`[Service] Error in getPopularMissions: ${error.message}`);
+    throw new Error("지금 주목받는 미션을 불러오는 중 오류가 발생했습니다.");
+  }
+};

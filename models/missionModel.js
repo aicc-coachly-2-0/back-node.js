@@ -207,3 +207,60 @@ exports.joinMissionRoom = async (user_number, room_number) => {
     throw error;
   }
 };
+
+// 지금 주목받는 미션 5개 조회 (모집중 상태의 미션 중 참여자가 많은 순으로 최대 5개 조회)
+exports.getPopularMissions = async () => {
+  // 쿼리문: 모집중인 미션만 조회하고 참여자가 많은 순서로 정렬
+  const query = `
+    SELECT 
+        mission_rooms.room_number,
+        mission_rooms.title,
+        mission_rooms.started_at,
+        mission_rooms.img_link,
+        COUNT(mission_participants.user_number) AS participant_count,
+        CASE 
+          WHEN mission_rooms.ended_at - mission_rooms.started_at = 0 THEN '하루'
+          WHEN mission_rooms.ended_at - mission_rooms.started_at = 2 THEN '3일'
+          WHEN mission_rooms.ended_at - mission_rooms.started_at = 6 THEN '일주일'
+          WHEN mission_rooms.ended_at - mission_rooms.started_at >= 29 THEN '한 달'
+          ELSE '기간 알 수 없음'
+        END AS duration
+    FROM 
+        mission_rooms
+    LEFT JOIN 
+        mission_participants
+    ON 
+        mission_rooms.room_number = mission_participants.room_number
+    WHERE 
+        mission_rooms.state = 'recruiting'
+    GROUP BY 
+        mission_rooms.room_number, 
+        mission_rooms.title, 
+        mission_rooms.started_at, 
+        mission_rooms.img_link,
+        mission_rooms.ended_at
+    HAVING 
+        COUNT(mission_participants.user_number) <= 2000
+    ORDER BY 
+        participant_count DESC
+    LIMIT 5;
+  `;
+
+  try {
+    // 데이터베이스 쿼리 실행
+    const { rows } = await postgreSQL.query(query);
+
+    // 필요한 데이터만 반환
+    return rows.map((row) => ({
+      room_number: row.room_number,
+      title: row.title,
+      started_at: row.started_at,
+      img_link: row.img_link,
+      participant_count: row.participant_count,
+      duration: row.duration,
+    }));
+  } catch (error) {
+    console.error("[MODEL ERROR] 인기 미션 조회 실패:", error.message);
+    throw new Error("인기 미션 조회 중 데이터베이스 오류가 발생했습니다.");
+  }
+};

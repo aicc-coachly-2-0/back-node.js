@@ -24,4 +24,7 @@ router.post(
   missionController.joinMissionRoom
 );
 
+// "지금 주목받는 미션" 경로 추가
+router.get("/popular", missionController.getPopularMissions);
+
 module.exports = router;
