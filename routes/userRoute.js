@@ -1,78 +1,81 @@
 // routes/userRoute.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const userController = require('../controllers/userController');
-const authMiddleware = require('../middlewares/authMiddleware');
+const userController = require("../controllers/userController");
+const authMiddleware = require("../middlewares/authMiddleware");
 
 // 팔로우, 언팔로우
 router.post(
-  '/:userId/follow',
+  "/:userId/follow",
   authMiddleware.authenticateToken,
   userController.followUser
 );
 router.post(
-  '/:userId/unfollow',
+  "/:userId/unfollow",
   authMiddleware.authenticateToken,
   userController.unfollowUser
 );
 
 // 차단, 차단 해제
 router.post(
-  '/:userId/block',
+  "/:userId/block",
   authMiddleware.authenticateToken,
   userController.blockUser
 );
 router.post(
-  '/:userId/unblock',
+  "/:userId/unblock",
   authMiddleware.authenticateToken,
   userController.unblockUser
 );
 
 // 좋아요
 router.post(
-  '/posts/:postId/like',
+  "/posts/:postId/like",
   authMiddleware.authenticateToken,
   userController.likePost
 );
 router.post(
-  '/posts/:postId/unlike',
+  "/posts/:postId/unlike",
   authMiddleware.authenticateToken,
   userController.unlikePost
 );
 router.post(
-  '/feeds/:feedId/like',
+  "/feeds/:feedId/like",
   authMiddleware.authenticateToken,
   userController.likeFeed
 );
 router.post(
-  '/feeds/:feedId/unlike',
+  "/feeds/:feedId/unlike",
   authMiddleware.authenticateToken,
   userController.unlikeFeed
 );
 router.post(
-  '/comments/:commentId/like',
+  "/comments/:commentId/like",
   authMiddleware.authenticateToken,
   userController.likeComment
 );
 router.post(
-  '/comments/:commentId/unlike',
+  "/comments/:commentId/unlike",
   authMiddleware.authenticateToken,
   userController.unlikeComment
 );
 
-router.get('/likes/:type/:id', userController.getLikesCount);
-
+router.get("/likes/:type/:id", userController.getLikesCount);
 
 // 상태별 유저 조회 (status를 경로 파라미터로)
-router.get('/users/status/:status', userController.getUsersByStatus);
+router.get("/users/status/:status", userController.getUsersByStatus);
 
 // 상태별 유저 조회 (선택적 상태 필터링, status를 쿼리 파라미터로)
-router.get('/users', userController.getUsers);
+router.get("/users", userController.getUsers);
 
 // ID 또는 이름으로 유저 검색
-router.get('/search', userController.searchUsers);
+router.get("/search", userController.searchUsers);
 
 // 사용자 정보 수정 라우트
-router.put('/update', authenticateToken, userController.updateUser);
+router.put(
+  "/update",
+  authMiddleware.authenticateToken,
+  userController.updateUser
+);
 
 module.exports = router;
