@@ -16,3 +16,11 @@ exports.searchUsers = async (keyword) => {
     const { rows } = await postgreSQL.query(query, [`%${keyword}%`]);
     return rows;
 };
+
+// 상태로 유저 조회
+exports.findUsersByStatus = async (status) => {
+    const query = `SELECT * FROM users WHERE status = $1`;
+    const { rows } = await postgreSQL.query(query, [status]);
+    return rows;
+};
+  

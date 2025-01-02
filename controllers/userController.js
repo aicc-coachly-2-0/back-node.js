@@ -130,16 +130,28 @@ exports.getLikesCount = async (req, res, next) => {
 };
 
 
-
-// 전체 유저 조회 컨트롤러
-exports.getAllUsers = async (req, res, next) => {
+// 상태별 유저 조회
+exports.getUsersByStatus = async (req, res, next) => {
+  const { status } = req.params;  // 요청에서 status를 가져옵니다
   try {
-    const users = await userService.getAllUsers();
+    const users = await userService.getUsersByStatus(status);
     res.status(200).json(users);
   } catch (error) {
-    next(error); // 에러 발생 시 에러 핸들러로 전달
+    next(error);
   }
 };
+
+// 상태별 유저 조회 (선택적 필터링)
+exports.getUsers = async (req, res, next) => {
+  const { status } = req.query;  // 요청의 쿼리 파라미터에서 status를 가져옵니다
+  try {
+    const users = await userService.getUsers({ status });
+    res.status(200).json(users);
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 // ID 또는 이름으로 유저 검색 컨트롤러
 exports.searchUsers = async (req, res, next) => {
