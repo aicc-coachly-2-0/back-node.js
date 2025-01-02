@@ -31,6 +31,7 @@ const config = {
     user: process.env.FTP_USER, // FTP 사용자
     password: process.env.FTP_PASSWORD, // FTP 비밀번호
     secure: process.env.FTP_SECURE === 'true', // FTP 보안 설정 (true/false)
+    baseUrl: 'http://222.112.27.120',
   },
 };
 module.exports = config;

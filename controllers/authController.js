@@ -1,20 +1,26 @@
 const authService = require('../services/authService');
-const path = require('path');
 
 // 유저 회원가입
 exports.signup = async (req, res, next) => {
   try {
-    const localImagePath = path.resolve(
-      __dirname,
-      '../uploads',
-      req.file.filename
-    );
-    const newUser = await authService.createUser(req.body, localImagePath);
+    const uploadedFile = req.file; // Multer로 처리된 파일 데이터
+    if (!uploadedFile) {
+      return res.status(400).json({ message: 'Profile picture is required' });
+    }
 
-    res
-      .status(201)
-      .json({ message: 'User created successfully', user: newUser });
+    const profilePictureUrl = await authService.uploadToFTP(
+      req.body.user_id,
+      uploadedFile
+    );
+
+    const newUser = await authService.createUser(req.body, profilePictureUrl);
+
+    res.status(201).json({
+      message: 'User created successfully',
+      user: newUser,
+    });
   } catch (error) {
+    console.error('회원가입 에러:', error.message);
     next(error);
   }
 };

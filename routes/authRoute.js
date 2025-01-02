@@ -3,11 +3,11 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const validation = require('../middlewares/validation');
 const upload = require('../middlewares/fileUpload');
-
 // 회원가입 엔드포인트
+
 router.post(
   '/signup',
-  upload.single('profilePicture'),
+  upload.single('profilePicture'), // Multer로 파일 처리
   validation.validateSignup,
   authController.signup
 );

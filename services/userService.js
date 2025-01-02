@@ -1,4 +1,5 @@
 const User = require('../models/mongoDBModels');
+const userModel = require('../models/userModel');
 
 exports.createMongoUser = async (userData) => {
   const newUser = new User({
@@ -111,4 +112,61 @@ exports.countLikesForFeed = async (feedId) => {
 
 exports.countLikesForComment = async (commentId) => {
   return await User.countDocuments({ liked_post_comments: commentId }); // MongoDB에서 좋아요 수 계산
+};
+
+
+/// 유저 검색
+exports.searchUsers = async (searchTerm) => {
+  // 전화번호 형식인지 확인 (숫자만 포함된 경우)
+  const isPhoneNumber = /^\d+$/.test(searchTerm);
+
+  if (isPhoneNumber) {
+    // 전화번호로 검색
+    return await userModel.findUsersByPhoneNumber(searchTerm);
+  } else {
+    // 아이디나 이름으로 검색
+    return await userModel.findUsersByIdOrName(searchTerm);
+  }
+};
+
+// 상태별 유저 조회
+exports.getUsersByStatus = async (status) => {
+  // status가 유효한 값인지를 확인
+  const validStatuses = ['active', 'inactive', 'deleted', 'suspended'];
+  if (!validStatuses.includes(status)) {
+    throw new Error('Invalid status');
+  }
+
+  return await userModel.findUsersByStatus(status);
+};
+
+// 상태별 유저 조회 (선택적 필터링)
+exports.getUsers = async ({ status }) => {
+  if (status) {
+    return this.getUsersByStatus(status);
+  } else {
+    return await userModel.findAllUsers(); // 상태 필터링 없이 모든 유저 조회
+  }
+};
+
+// 사용자 정보 업데이트 
+exports.updateUser = async (user_id, role, fieldsToUpdate) => {
+  // role에 따라 수정 가능한 필드 제한
+  let allowedFields = {};
+
+  if (role === 'admin') {
+    // 관리자는 모든 필드 수정 가능
+    allowedFields = { ...fieldsToUpdate };
+  } else if (role === 'user') {
+    // 사용자는 user_email, user_phone만 수정 가능
+    allowedFields = { user_email: fieldsToUpdate.user_email, user_phone: fieldsToUpdate.user_phone };
+  }
+
+  // 모델에 전달할 데이터를 준비하여 업데이트
+  try {
+    const updatedUser = await userModel.updateUser(user_id, allowedFields);
+    return updatedUser;
+  } catch (error) {
+    throw error;
+  }
 };

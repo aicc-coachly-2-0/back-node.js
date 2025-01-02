@@ -1,7 +1,8 @@
-const jwt = require("jsonwebtoken");
-const config = require("../config/config");
-const postModel = require("../models/postModel"); // 게시글 모델
-const feedModel = require("../models/feedModel"); // 피드 모델
+const jwt = require('jsonwebtoken');
+const config = require('../config/config');
+const authModel = require('../models/authModel');
+const postModel = require('../models/postModel'); // 게시글 모델
+const feedModel = require('../models/feedModel'); // 피드 모델
 
 // JWT 토큰 인증
 exports.authenticateToken = (req, res, next) => {
@@ -19,8 +20,9 @@ exports.authenticateToken = (req, res, next) => {
       user_number: verified.user_number,
       user_id: verified.user_id,
       username: verified.username,
+      role: verified.isAdmin ? 'admin' : 'user', // admin 여부에 따라 역할 설정
       isAdmin: verified.isAdmin || false,
-      role: "user", // 기본 역할을 'user'로 설정
+      admin_id: verified.isAdmin ? verified.user_id : null, // 관리자일 경우 admin_id 설정
     };
 
     next();
@@ -39,15 +41,14 @@ exports.authenticateAdmin = async (req, res, next) => {
 
   // 관리자 정보를 가져와 확인
   try {
-    const admin = await adminModel.getAdminById(admin_id); // 관리자 테이블 조회
+    const admin = await authModel.findAdminById(admin_id); // 관리자 테이블 조회
     if (!admin) {
       return res.status(404).json({ message: "Admin not found" });
     }
 
     req.user = {
-      admin_id: admin.admin_id, // 관리자 ID
-      position: admin.position, // 관리자 직위
-      role: "admin", // 역할 설정
+      position: admin.position,  // 관리자 직위
+      role: 'admin'              // 역할 설정
     };
 
     next();
