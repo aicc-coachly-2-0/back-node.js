@@ -62,4 +62,11 @@ router.post(
 
 router.get('/likes/:type/:id', userController.getLikesCount);
 
+
+// 전체 유저 조회
+router.get('/', userController.getAllUsers);
+
+// ID 또는 이름으로 유저 검색
+router.get('/search', userController.searchUsers);
+
 module.exports = router;

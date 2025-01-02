@@ -1,4 +1,3 @@
-// controllers/userController.js
 const userService = require('../services/userService');
 
 exports.followUser = async (req, res, next) => {
@@ -125,6 +124,39 @@ exports.getLikesCount = async (req, res, next) => {
       return res.status(400).json({ message: 'Invalid type specified' });
     }
     res.status(200).json({ id, type, likes: count });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+// 전체 유저 조회 컨트롤러
+exports.getAllUsers = async (req, res, next) => {
+  try {
+    const users = await userService.getAllUsers();
+    res.status(200).json(users);
+  } catch (error) {
+    next(error); // 에러 발생 시 에러 핸들러로 전달
+  }
+};
+
+// ID 또는 이름으로 유저 검색 컨트롤러
+exports.searchUsers = async (req, res, next) => {
+  try {
+    const keyword = req.query.keyword;
+
+    if (!keyword) {
+      return res.status(400).json({ message: 'Keyword is required' });
+    }
+
+    const users = await userService.searchUsers(keyword);
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'No users found' });
+    }
+
+    res.status(200).json(users);
   } catch (error) {
     next(error);
   }

@@ -1,4 +1,5 @@
 const User = require('../models/mongoDBModels');
+const userModel = require('../models/userModel');
 
 exports.createMongoUser = async (userData) => {
   const newUser = new User({
@@ -111,4 +112,15 @@ exports.countLikesForFeed = async (feedId) => {
 
 exports.countLikesForComment = async (commentId) => {
   return await User.countDocuments({ liked_post_comments: commentId }); // MongoDB에서 좋아요 수 계산
+};
+
+
+// 전체 유저 조회 서비스
+exports.getAllUsers = async () => {
+  return await userModel.findAllUsers();
+};
+
+// ID 또는 이름으로 유저 검색 서비스
+exports.searchUsers = async (keyword) => {
+  return await userModel.searchUsers(keyword);
 };
