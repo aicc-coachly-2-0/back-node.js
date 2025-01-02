@@ -264,3 +264,46 @@ exports.getPopularMissions = async () => {
     throw new Error("인기 미션 조회 중 데이터베이스 오류가 발생했습니다.");
   }
 };
+
+// 마감 임박 미션 조회
+exports.getUpcomingMissions = async () => {
+  // 모집중 상태의 미션 중 시작일이 가까운 순서대로 조회
+  const query = `
+    SELECT 
+        mission_rooms.room_number, -- 미션 방 번호
+        mission_rooms.title, -- 미션 방 제목
+        mission_rooms.started_at, -- 미션 시작일
+        mission_rooms.img_link, -- 썸네일 이미지
+        COUNT(mission_participants.user_number) AS participant_count -- 참여자 수 계산
+    FROM 
+        mission_rooms
+    LEFT JOIN 
+        mission_participants
+    ON 
+        mission_rooms.room_number = mission_participants.room_number -- 미션 방과 참여자 연결
+    WHERE 
+        mission_rooms.state = 'recruiting' -- 모집중 상태의 미션만 조회
+        AND mission_rooms.started_at > CURRENT_DATE -- 오늘 이후 시작하는 미션만 포함
+    GROUP BY 
+        mission_rooms.room_number, 
+        mission_rooms.title, 
+        mission_rooms.started_at, 
+        mission_rooms.img_link -- 그룹화로 참여자 수 계산
+    HAVING 
+        COUNT(mission_participants.user_number) <= 2000 -- 참여자가 2000명 이하인 방만 포함
+    ORDER BY 
+        mission_rooms.started_at ASC -- 시작일이 가까운 순서로 정렬
+    LIMIT 5; -- 최대 5개만 조회
+  `;
+
+  try {
+    // 데이터베이스 쿼리 실행
+    const { rows } = await postgreSQL.query(query);
+
+    // 결과 반환
+    return rows;
+  } catch (error) {
+    console.error("[MODEL ERROR] 마감 임박 미션 조회 실패:", error.message);
+    throw new Error("마감 임박 미션 조회 중 데이터베이스 오류가 발생했습니다.");
+  }
+};

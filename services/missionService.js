@@ -58,3 +58,18 @@ exports.getPopularMissions = async () => {
     throw new Error("지금 주목받는 미션을 불러오는 중 오류가 발생했습니다.");
   }
 };
+
+// 마감 임박 미션 조회
+exports.getUpcomingMissions = async () => {
+  try {
+    const upcomingMissions = await missionModel.getUpcomingMissions();
+
+    // 로그 추가: 데이터 확인
+    console.log("[Service] Upcoming Missions:", upcomingMissions);
+
+    return upcomingMissions;
+  } catch (error) {
+    console.error(`[Service] Error in getUpcomingMissions: ${error.message}`);
+    throw new Error("마감 임박 미션 조회 중 오류가 발생했습니다.");
+  }
+};

@@ -27,4 +27,7 @@ router.post(
 // "지금 주목받는 미션" 경로 추가
 router.get("/popular", missionController.getPopularMissions);
 
+// 마감 임박 미션 경로 추가
+router.get("/upcoming", missionController.getUpcomingMissions);
+
 module.exports = router;
