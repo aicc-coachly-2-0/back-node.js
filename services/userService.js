@@ -115,9 +115,18 @@ exports.countLikesForComment = async (commentId) => {
 };
 
 
-// ID 또는 이름으로 유저 검색 서비스
-exports.searchUsers = async (keyword) => {
-  return await userModel.searchUsers(keyword);
+/// 유저 검색
+exports.searchUsers = async (searchTerm) => {
+  // 전화번호 형식인지 확인 (숫자만 포함된 경우)
+  const isPhoneNumber = /^\d+$/.test(searchTerm);
+
+  if (isPhoneNumber) {
+    // 전화번호로 검색
+    return await userModel.findUsersByPhoneNumber(searchTerm);
+  } else {
+    // 아이디나 이름으로 검색
+    return await userModel.findUsersByIdOrName(searchTerm);
+  }
 };
 
 // 상태별 유저 조회

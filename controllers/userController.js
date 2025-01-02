@@ -152,22 +152,11 @@ exports.getUsers = async (req, res, next) => {
   }
 };
 
-
-// ID 또는 이름으로 유저 검색 컨트롤러
+// 유저 검색
 exports.searchUsers = async (req, res, next) => {
   try {
-    const keyword = req.query.keyword;
-
-    if (!keyword) {
-      return res.status(400).json({ message: 'Keyword is required' });
-    }
-
-    const users = await userService.searchUsers(keyword);
-
-    if (users.length === 0) {
-      return res.status(404).json({ message: 'No users found' });
-    }
-
+    const searchTerm = req.query.searchTerm;  // 쿼리 파라미터로 검색어 받기
+    const users = await userService.searchUsers(searchTerm);
     res.status(200).json(users);
   } catch (error) {
     next(error);

@@ -7,15 +7,22 @@ exports.findAllUsers = async () => {
   return rows;
 };
 
-// ID 또는 이름으로 유저 검색
-exports.searchUsers = async (keyword) => {
+// 전화번호로 유저 검색
+exports.findUsersByPhoneNumber = async (phoneNumber) => {
+    const query = `SELECT * FROM users WHERE user_phone = $1`;
+    const { rows } = await postgreSQL.query(query, [phoneNumber]);
+    return rows;
+  };
+  
+  // 아이디나 이름으로 유저 검색
+  exports.findUsersByIdOrName = async (searchTerm) => {
     const query = `
       SELECT * FROM users
-      WHERE user_id ILIKE $1 OR username ILIKE $1
+      WHERE user_id LIKE $1 OR user_name LIKE $1
     `;
-    const { rows } = await postgreSQL.query(query, [`%${keyword}%`]);
+    const { rows } = await postgreSQL.query(query, [`%${searchTerm}%`]);
     return rows;
-};
+  };
 
 // 상태로 유저 조회
 exports.findUsersByStatus = async (status) => {
