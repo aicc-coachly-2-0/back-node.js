@@ -162,3 +162,20 @@ exports.searchUsers = async (req, res, next) => {
     next(error);
   }
 };
+
+// 사용자 정보 업데이트
+exports.updateUser = async (req, res) => {
+  const { user_id, role } = req.user;  // 로그인한 사용자의 user_id와 role
+  const { user_name, user_email, user_phone, user_date_of_birth, user_gender, status } = req.body;
+
+  const fieldsToUpdate = { user_name, user_email, user_phone, user_date_of_birth, user_gender, status };
+
+  try {
+    // 사용자 정보 업데이트 서비스 호출
+    const updatedUser = await userService.updateUser(user_id, role, fieldsToUpdate);
+    res.status(200).json({ message: 'User updated successfully', data: updatedUser });
+  } catch (error) {
+    console.error('Error updating user:', error.message);
+    res.status(500).json({ message: 'Failed to update user' });
+  }
+};

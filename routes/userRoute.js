@@ -72,4 +72,7 @@ router.get('/users', userController.getUsers);
 // ID 또는 이름으로 유저 검색
 router.get('/search', userController.searchUsers);
 
+// 사용자 정보 수정 라우트
+router.put('/update', authenticateToken, userController.updateUser);
+
 module.exports = router;
