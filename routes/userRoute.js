@@ -62,7 +62,6 @@ router.post(
 
 router.get('/likes/:type/:id', userController.getLikesCount);
 
-
 // 상태별 유저 조회 (status를 경로 파라미터로)
 router.get('/users/status/:status', userController.getUsersByStatus);
 
@@ -73,6 +72,10 @@ router.get('/users', userController.getUsers);
 router.get('/search', userController.searchUsers);
 
 // 사용자 정보 수정 라우트
-router.put('/update', authenticateToken, userController.updateUser);
+router.put(
+  '/update',
+  authMiddleware.authenticateToken,
+  userController.updateUser
+);
 
 module.exports = router;

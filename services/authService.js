@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const authModel = require('../models/authModel');
 const userService = require('./userService');
 const config = require('../config/config');
+const jwt = require('jsonwebtoken');
 
 exports.uploadToFTP = async (userId, file) => {
   const ftpClient = await connectFTP();
