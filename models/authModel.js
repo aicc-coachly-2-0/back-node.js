@@ -1,7 +1,7 @@
 const { postgreSQL } = require('../config/database');
 
 // 사용자 생성 (회원가입)
-const createUser = async ({
+exports.createUser = async ({
   user_id,
   user_name,
   user_email,
@@ -31,9 +31,8 @@ const createUser = async ({
   return rows[0];
 };
 
-module.exports = { createUser };
-
-const findUserById = async (user_id) => {
+// 사용자 ID로 검색
+exports.findUserById = async (user_id) => {
   const query = `
     SELECT * FROM users WHERE user_id = $1;
   `;
@@ -47,7 +46,7 @@ const findUserById = async (user_id) => {
 };
 
 // 관리자 생성
-const createAdmin = async ({ admin_id, admin_pw }) => {
+exports.createAdmin = async ({ admin_id, admin_pw }) => {
   const query = `
     INSERT INTO administrators (
       admin_id, admin_pw
@@ -66,7 +65,8 @@ const createAdmin = async ({ admin_id, admin_pw }) => {
   }
 };
 
-const findAdminById = async (admin_id) => {
+// 관리자 ID로 검색
+exports.findAdminById = async (admin_id) => {
   const query = `
     SELECT * FROM administrators WHERE admin_id = $1;
   `;
@@ -77,11 +77,4 @@ const findAdminById = async (admin_id) => {
     console.error('Failed to find user:', error.message);
     throw error;
   }
-};
-
-module.exports = {
-  createUser,
-  findUserById,
-  createAdmin,
-  findAdminById,
 };
