@@ -23,5 +23,8 @@ router.put('/reports/:domain/:report_id', reportController.processReport);
 // 신고 처리 내역 조회
 router.get('/reports/managements', reportController.getReportManagements);
 
+// 블랙리스트 조회
+router.get('/blacklists', blacklistController.getBlacklist);
+
 module.exports = router;
 

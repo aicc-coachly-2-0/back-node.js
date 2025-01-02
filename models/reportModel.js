@@ -1,3 +1,4 @@
+// reportModel
 const { postgreSQL } = require('../config/database');
 
 // 도메인별 테이블 맵핑
@@ -11,7 +12,7 @@ const DOMAIN_TABLE_MAP = {
   user: 'user_reports',
 };
 
-// 신고 접수
+// 신고 접수 및 처리 내역 자동 생성
 exports.insertReport = async (domain, { user_number, target_id, report_reason, report_category }) => {
   const table = DOMAIN_TABLE_MAP[domain];
   if (!table) throw new Error('Invalid domain');
@@ -23,7 +24,19 @@ exports.insertReport = async (domain, { user_number, target_id, report_reason, r
   `;
   const values = [user_number, target_id, report_reason, report_category];
   const { rows } = await postgreSQL.query(query, values);
-  return rows[0];
+
+  // 신고가 접수된 후 자동으로 신고 처리 내역을 생성
+  const report = rows[0];
+  await reportModel.insertReportManagement({
+    report_type: domain,
+    report_id: report[`${domain}_report_number`], // 도메인별 보고서 번호
+    admin_number: null, // 초기에는 null로 설정 (관리자가 처리하기 전)
+    report_content: `신고 접수: ${report_reason}`,
+    state: 'pending', // 신고 처리 상태 초기화
+    ban_until: null,  // 영구 정지나 기간이 없는 경우 null로 설정
+  });
+
+  return report;
 };
 
 // 도메인별 신고 조회 (목록) - 상태와 카테고리 필터링 추가
@@ -51,7 +64,7 @@ exports.findReportsByDomain = async (domain, { state, report_category }) => {
 
 
 // 특정 사용자가 받은 신고와 신고 수 조회
-exports.findReportsForUser = async (userNumber) => {
+exports.findReportsForUser = async (user_number) => {
   const query = `
     SELECT 
         reported_user_number AS user_number,
@@ -66,82 +79,12 @@ exports.findReportsForUser = async (userNumber) => {
     GROUP BY 
         reported_user_number;
   `;
-  const { rows } = await postgreSQL.query(query, [userNumber]);
+  const { rows } = await postgreSQL.query(query, [user_number]);
   return rows[0]; // 특정 사용자만 조회하므로 첫 번째 결과만 반환
 };
 
-// 1. 사용자가 1주일 내 금지된 도메인 여부 확인
-const checkWeeklyBan = async (userId, domain) => {
-  const now = new Date();
-  const oneWeekAgo = new Date(now.setDate(now.getDate() - 7));
-
-  const { rows: recentSuspensions } = await postgreSQL.query(`
-    SELECT COUNT(*) 
-    FROM report_managements
-    WHERE user_id = $1
-    AND domain = $2
-    AND state = 'resolved'  -- 'resolved' 상태에서만 금지된 것으로 간주
-    AND report_at > $3;    -- 1주일 이내에 신고가 처리된 경우
-  `, [userId, domain, oneWeekAgo]);
-
-  return recentSuspensions[0].count > 0;
-};
-
-// 2. 사용자의 1개월 내 누적 정지 횟수 확인
-const checkMonthlySuspensionCount = async (userId) => {
-  const now = new Date();
-  const oneMonthAgo = new Date(now.setMonth(now.getMonth() - 1));
-
-  const { rows: monthlySuspensions } = await postgreSQL.query(`
-    SELECT COUNT(*) 
-    FROM report_managements
-    WHERE user_id = $1
-    AND state = 'resolved'  -- 'resolved' 상태에서만 정지된 것으로 간주
-    AND report_at > $2;    -- 1개월 이내에 신고가 처리된 경우
-  `, [userId, oneMonthAgo]);
-
-  return monthlySuspensions[0].count;
-};
-
-// 3. 영구 정지 및 도메인 금지 체크
-const checkSuspensionStatus = async (userId, domain) => {
-  const weeklyBan = await checkWeeklyBan(userId, domain);
-  const monthlySuspensionCount = await checkMonthlySuspensionCount(userId);
-
-  if (monthlySuspensionCount >= 3) {
-    return { status: 'permanent-ban', message: '영구 정지되었습니다. AI 도메인 외에 글 작성이 금지됩니다.' };
-  }
-
-  if (weeklyBan) {
-    return { status: 'domain-banned', message: `해당 도메인(${domain})은 1주일 내에 금지되었습니다.` };
-  }
-
-  return { status: 'ok' };
-};
-
-// 4. 계정 정지 상태에 따라 권한 처리
-const handleUserAction = async (userId, domain, action) => {
-  const suspensionStatus = await checkSuspensionStatus(userId, domain);
-
-  if (suspensionStatus.status === 'permanent-ban') {
-    if (domain !== 'AI') {
-      return { success: false, message: suspensionStatus.message };
-    }
-  } else if (suspensionStatus.status === 'domain-banned') {
-    return { success: false, message: suspensionStatus.message };
-  }
-
-  // 정지 상태가 아니면 글 작성 등을 처리하는 로직 진행
-  if (action === 'write') {
-    // 글 작성 로직
-    return { success: true, message: '글 작성이 완료되었습니다.' };
-  }
-
-  return { success: false, message: '알 수 없는 액션입니다.' };
-};
-
 // 특정 유저가 한 신고 조회
-exports.findReportsMadeByUser = async (userNumber) => {
+exports.findReportsMadeByUser = async (user_number) => {
   const query = `
     SELECT 
         report_id,
@@ -155,59 +98,56 @@ exports.findReportsMadeByUser = async (userNumber) => {
     WHERE 
         reporter_user_number = $1;
   `;
-  const { rows } = await postgreSQL.query(query, [userNumber]);
+  const { rows } = await postgreSQL.query(query, [user_number]);
   return rows; // 특정 유저가 한 신고 내역 반환
 };
 
 // 특정 신고 조회
-exports.findReportById = async (domain, reportId) => {
+exports.findReportById = async (domain, report_id) => {
   const table = DOMAIN_TABLE_MAP[domain];
   if (!table) throw new Error('Invalid domain');
 
   const query = `
     SELECT * FROM ${table} WHERE ${getPrimaryKey(domain)} = $1;
   `;
-  const { rows } = await postgreSQL.query(query, [reportId]);
-  return rows[0];
-};
-
-// 신고 상태 업데이트
-exports.updateReportState = async (domain, reportId, { state, admin_number, report_content }) => {
-  const table = DOMAIN_TABLE_MAP[domain];
-  if (!table) throw new Error('Invalid domain');
-
-  const query = `
-    UPDATE ${table}
-    SET state = $1
-    WHERE ${getPrimaryKey(domain)} = $2
-    RETURNING *;
-  `;
-  const values = [state, reportId];
-  const { rows } = await postgreSQL.query(query, values);
-
-  if (rows[0]) {
-    // 신고 처리 내역 기록
-    await this.insertReportManagement({
-      report_type: domain,
-      report_id: reportId,
-      admin_number,
-      report_content,
-    });
-  }
-
+  const { rows } = await postgreSQL.query(query, [report_id]);
   return rows[0];
 };
 
 // 신고 처리 내역 기록
-exports.insertReportManagement = async ({ report_type, report_id, admin_number, report_content }) => {
+exports.insertReportManagement = async ({ report_type, report_id, admin_number, report_content, state, ban_until }) => {
   const query = `
-    INSERT INTO report_managements (report_type, report_id, admin_number, report_content, resolution_at, state)
-    VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, 'resolved')
+    INSERT INTO report_managements (report_type, report_id, admin_number, report_content, state, resolution_at, ban_until)
+    VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, $6)
     RETURNING *;
   `;
-  const values = [report_type, report_id, admin_number, report_content];
-  const { rows } = await postgreSQL.query(query, values);
-  return rows[0];
+  const values = [report_type, report_id, admin_number, report_content, state, ban_until];
+
+  try {
+    const { rows } = await postgreSQL.query(query, values);
+    return rows[0]; // 삽입된 신고 처리 내역 반환
+  } catch (error) {
+    console.error('Failed to insert report management:', error.message);
+    throw error;
+  }
+};
+
+// 블랙리스트에 영구 정지 기록
+exports.insertToBlacklist = async (report_number, ban_reason) => {
+  const query = `
+    INSERT INTO blacklist (report_number, reason, suspension_at)
+    VALUES ($1, $2, CURRENT_TIMESTAMP)
+    RETURNING *;
+  `;
+  const values = [report_number, ban_reason];
+
+  try {
+    const { rows } = await postgreSQL.query(query, values);
+    return rows[0]; // 블랙리스트 삽입된 내용 반환
+  } catch (error) {
+    console.error('Failed to insert to blacklist:', error.message);
+    throw error;
+  }
 };
 
 // 신고 처리 내역 조회
@@ -248,3 +188,29 @@ function getPrimaryKey(domain) {
   };
   return primaryKeys[domain];
 }
+
+exports.findBlacklist = async (filters = {}) => {
+  try {
+    // 필터링 조건을 적용하여 블랙리스트 데이터를 조회
+    let query = 'SELECT * FROM blacklist WHERE 1=1';
+    const params = [];
+
+    // 필터링 조건이 있으면 query 수정
+    if (filters.state) {
+      query += ' AND state = ?';
+      params.push(filters.state);
+    }
+
+    if (filters.reason) {
+      query += ' AND reason LIKE ?';
+      params.push(`%${filters.reason}%`);
+    }
+
+    // DB에서 블랙리스트 조회
+    const [rows] = await db.execute(query, params);
+    return rows;
+  } catch (error) {
+    console.error('Error in findBlacklist model:', error.message);
+    throw error;
+  }
+};
