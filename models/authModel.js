@@ -27,13 +27,8 @@ const createUser = async ({
     user_gender,
   ];
 
-  try {
-    const { rows } = await postgreSQL.query(query, values);
-    return rows[0]; // 반환된 user_number 포함
-  } catch (error) {
-    console.error("Failed to create user:", error.message);
-    throw error;
-  }
+  const { rows } = await postgreSQL.query(query, values);
+  return rows[0];
 };
 
 const findUserById = async (user_id) => {

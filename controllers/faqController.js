@@ -33,12 +33,14 @@ exports.getFaq = async (req, res, next) => {
   }
 };
 
-// 자주 묻는 질문 전체 조회
+// FAQ 전체 조회 (관리자/유저 역할에 따라 다른 결과 반환)
 exports.getAllFaqs = async (req, res, next) => {
   try {
-    const faqs = await faqService.getAllFaqs();
+    const { role } = req.user; // 역할 정보는 인증 미들웨어에서 추가된다고 가정
+    const faqs = await faqService.getAllFaqs(role);
     res.status(200).json(faqs);
   } catch (error) {
     next(error);
   }
 };
+

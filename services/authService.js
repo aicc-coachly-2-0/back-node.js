@@ -1,12 +1,34 @@
+const { connectFTP, postgreSQL } = require("../config/database");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const { postgreSQL } = require("../config/database");
 const mongoose = require("mongoose");
 const authModel = require("../models/authModel");
 const userService = require("./userService");
 const config = require("../config/config");
+const { Readable } = require("stream"); // Readable 스트림을 사용하기 위해 추가
+const jwt = require("jsonwebtoken");
 
-exports.createUser = async (userData) => {
+exports.uploadToFTP = async (userId, file) => {
+  const ftpClient = await connectFTP();
+  if (!ftpClient) {
+    throw new Error("FTP 클라이언트 연결 실패");
+  }
+
+  try {
+    const fileStream = Readable.from(file.buffer); // Buffer를 스트림으로 변환
+
+    const remoteImagePath = `/kochiri/profile/${userId}-${Date.now()}.jpg`;
+    await ftpClient.uploadFrom(fileStream, remoteImagePath); // Multer 메모리 버퍼 데이터 업로드
+
+    return `${config.ftp.baseUrl}${remoteImagePath}`;
+  } catch (error) {
+    console.error("FTP 업로드 실패:", error.message);
+    throw new Error("FTP 업로드 실패");
+  } finally {
+    ftpClient.close();
+  }
+};
+
+exports.createUser = async (userData, profilePictureUrl) => {
   const client = await postgreSQL.connect(); // PostgreSQL 클라이언트 연결
   const session = await mongoose.startSession(); // MongoDB 세션 시작
 
@@ -17,7 +39,7 @@ exports.createUser = async (userData) => {
     const hashedPassword = await bcrypt.hash(userData.user_pw, 10);
     const sanitizedPhone = userData.user_phone.replace(/\D/g, "");
 
-    // PostgreSQL에 사용자 생성
+    // PostgreSQL에 사용자 데이터 저장
     const createdUser = await authModel.createUser({
       user_id: userData.user_id,
       user_name: userData.user_name,
@@ -28,23 +50,24 @@ exports.createUser = async (userData) => {
       user_gender: userData.user_gender,
     });
 
-    // MongoDB에 사용자 생성
+    // MongoDB에 사용자 데이터 저장
     await userService.createMongoUser(
       {
-        user_number: createdUser.user_number,
+        user_number: createdUser.user_number, // PostgreSQL에서 생성된 user_number
         nickname: userData.nickname,
-        profile_picture: userData.profile_picture,
+        profile_picture: profilePictureUrl,
       },
       session
     );
 
-    await client.query("COMMIT"); // PostgreSQL 커밋
-    await session.commitTransaction(); // MongoDB 커밋
+    await client.query("COMMIT"); // PostgreSQL 트랜잭션 커밋
+    await session.commitTransaction(); // MongoDB 트랜잭션 커밋
 
-    return createdUser; // 생성된 사용자 반환
+    return createdUser; // 생성된 사용자 데이터 반환
   } catch (error) {
-    await client.query("ROLLBACK"); // PostgreSQL 롤백
-    await session.abortTransaction(); // MongoDB 롤백
+    await client.query("ROLLBACK"); // PostgreSQL 트랜잭션 롤백
+    await session.abortTransaction(); // MongoDB 트랜잭션 롤백
+    console.error("사용자 생성 에러:", error.message);
     throw error;
   } finally {
     client.release(); // PostgreSQL 클라이언트 해제
@@ -54,7 +77,7 @@ exports.createUser = async (userData) => {
 
 exports.loginUser = async (userData) => {
   const { user_id, user_pw } = userData;
-  console.log(user_id, user_pw);
+
   const user = await authModel.findUserById(user_id);
   if (!user) {
     throw new Error("User not found");
@@ -66,14 +89,22 @@ exports.loginUser = async (userData) => {
   }
 
   const token = jwt.sign(
-    { user_id: user.user_id, user_email: user.user_email },
+    {
+      user_number: user.user_number,
+      user_id: user.user_id,
+      user_email: user.user_email,
+    },
     config.auth.jwtSecret,
     { expiresIn: config.auth.jwtExpiresIn }
   );
 
   return {
     token,
-    user: { user_id: user.user_id, user_email: user.user_email },
+    user: {
+      user_number: user.user_number,
+      user_id: user.user_id,
+      user_email: user.user_email,
+    },
   };
 };
 

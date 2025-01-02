@@ -16,6 +16,6 @@ exports.getFaq = async (faqNumber) => {
 };
 
 // 자주 묻는 질문 전체 조회
-exports.getAllFaqs = async () => {
-  return await faqModel.findAllFaqs();
+exports.getAllFaqs = async (role) => {
+  return await faqModel.findAllFaqs(role);
 };

@@ -12,6 +12,6 @@ router.put('/faqs/:faq_number', faqController.updateFaq);
 router.get('/faqs/:faq_number', faqController.getFaq);
 
 // 자주 묻는 질문 전체 조회
-router.get('/faqs', faqController.getAllFaqs);
+router.get('/faqs', authMiddleware.authenticateToken, faqController.getAllFaqs);
 
 module.exports = router;
