@@ -36,6 +36,25 @@ exports.findUsersByIdOrName = async (searchTerm) => {
   return rows;
 };
 
+// 특정 유저 조회
+exports.findUserByNumber = async (user_number) => {
+  const query = `
+    SELECT * 
+    FROM users 
+    WHERE user_number = $1;
+  `;
+
+  try {
+    const { rows } = await postgreSQL.query(query, [user_number]);
+
+    // 유저가 없을 경우 null 반환
+    return rows[0] || null;
+  } catch (error) {
+    console.error("Error in model layer:", error.message);
+    throw error;
+  }
+};
+
 // 사용자 정보 수정
 exports.updateUser = async (user_number, fieldsToUpdate) => {
   const query = `
