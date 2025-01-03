@@ -24,10 +24,17 @@ router.post(
   missionController.joinMissionRoom
 );
 
-// "지금 주목받는 미션" 경로 추가
+// "지금 주목받는 미션" 5개 조회
 router.get("/popular", missionController.getPopularMissions);
 
-// 마감 임박 미션 경로 추가
+// 마감 임박 미션 5개 조회
 router.get("/upcoming", missionController.getUpcomingMissions);
+
+// 참여 중인 미션 5개 조회
+router.get(
+  "/participating",
+  authenticateToken, // 로그인된 유저만 접근 가능
+  missionController.getParticipatingMissions
+);
 
 module.exports = router;
