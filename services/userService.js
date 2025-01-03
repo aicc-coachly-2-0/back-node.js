@@ -1,114 +1,158 @@
 const User = require('../models/mongoDBModels');
+const userModel = require('../models/userModel');
 
-exports.createMongoUser = async (userData) => {
-  const newUser = new User({
-    user_number: userData.user_number, // PostgreSQL에서 받은 usernumber
-    liked_posts: [],
-    liked_feeds: [],
-    liked_post_comments: [],
-    liked_feed_comments: [],
-    following_users: [],
-    followers: [],
-    blocked_users: [],
-    mission_points: [],
-    total_points: 0,
-    profile_picture: userData.profile_picture || '',
-    nickname: userData.nickname,
-    bio: '',
-    profile_picture_updated_at: userData.profile_picture ? new Date() : null,
-    nickname_updated_at: new Date(),
-    bio_updated_at: null,
-  });
-
-  return await newUser.save();
+const updateUserField = async (userNumber, field, value, action) => {
+  const update =
+    action === 'add'
+      ? { $addToSet: { [field]: value } }
+      : { $pull: { [field]: value } };
+  return await User.updateOne({ user_number: userNumber }, update);
 };
 
-exports.followUser = async (currentUser, targetUserId) => {
-  await User.updateOne(
-    { user_number: currentUser },
-    { $addToSet: { following_users: targetUserId } }
-  );
-  await User.updateOne(
-    { user_number: targetUserId },
-    { $addToSet: { followers: currentUser } }
-  );
+const updateLike = async (currentUser, type, id, action) => {
+  const field = `liked_${type}s`;
+  const update =
+    action === 'add'
+      ? { $addToSet: { [field]: id } }
+      : { $pull: { [field]: id } };
+  return await User.updateOne({ user_number: currentUser }, update);
 };
 
-exports.unfollowUser = async (currentUser, targetUserId) => {
-  await User.updateOne(
-    { user_number: currentUser },
-    { $pull: { following_users: targetUserId } }
-  );
-  await User.updateOne(
-    { user_number: targetUserId },
-    { $pull: { followers: currentUser } }
-  );
+exports.followUser = async (currentUser, targetNumber) => {
+  await updateUserField(currentUser, 'following_users', targetNumber, 'add');
+  await updateUserField(targetNumber, 'followers', currentUser, 'add');
 };
 
-exports.blockUser = async (currentUser, targetUserId) => {
-  await User.updateOne(
-    { user_number: currentUser },
-    { $addToSet: { blocked_users: targetUserId } }
-  );
+exports.unfollowUser = async (currentUser, targetNumber) => {
+  await updateUserField(currentUser, 'following_users', targetNumber, 'remove');
+  await updateUserField(targetNumber, 'followers', currentUser, 'remove');
 };
 
-exports.unblockUser = async (currentUser, targetUserId) => {
-  await User.updateOne(
-    { user_number: currentUser },
-    { $pull: { blocked_users: targetUserId } }
-  );
+exports.blockUser = async (currentUser, targetNumber) => {
+  await updateUserField(currentUser, 'blocked_users', targetNumber, 'add');
 };
 
-exports.likePost = async (currentUser, postId) => {
-  await User.updateOne(
-    { user_number: currentUser },
-    { $addToSet: { liked_posts: postId } }
-  );
+exports.unblockUser = async (currentUser, targetNumber) => {
+  await updateUserField(currentUser, 'blocked_users', targetNumber, 'remove');
 };
 
-exports.unlikePost = async (currentUser, postId) => {
-  await User.updateOne(
-    { user_number: currentUser },
-    { $pull: { liked_posts: postId } }
-  );
+exports.likePost = async (currentUser, postNumber) => {
+  await updateLike(currentUser, 'post', postNumber, 'add');
+};
+
+exports.unlikePost = async (currentUser, postNumber) => {
+  await updateLike(currentUser, 'post', postNumber, 'remove');
 };
 
 exports.likeFeed = async (currentUser, feedId) => {
-  await User.updateOne(
-    { user_number: currentUser },
-    { $addToSet: { liked_feeds: feedId } }
-  );
+  await updateLike(currentUser, 'feed', feedId, 'add');
 };
 
 exports.unlikeFeed = async (currentUser, feedId) => {
-  await User.updateOne(
-    { user_number: currentUser },
-    { $pull: { liked_feeds: feedId } }
-  );
+  await updateLike(currentUser, 'feed', feedId, 'remove');
 };
 
 exports.likeComment = async (currentUser, commentId) => {
-  await User.updateOne(
-    { user_number: currentUser },
-    { $addToSet: { liked_feed_comments: commentId } }
-  );
+  await updateLike(currentUser, 'feed_comment', commentId, 'add');
 };
 
 exports.unlikeComment = async (currentUser, commentId) => {
-  await User.updateOne(
-    { user_number: currentUser },
-    { $pull: { liked_feed_comments: commentId } }
+  await updateLike(currentUser, 'feed_comment', commentId, 'remove');
+};
+
+exports.countLikesForType = async (type, id) => {
+  const field = `liked_${type}s`;
+  return await User.countDocuments({ [field]: id });
+};
+
+exports.countLikesForType = async (type, id) => {
+  const field = `liked_${type}s`;
+  return await User.countDocuments({ [field]: id });
+};
+
+// 상태에 따른 전체 유저 조회
+exports.getUsers = async ({ status }) => {
+  const users = status
+    ? await userModel.findUsersByStatus(status)
+    : await userModel.findAllUsers();
+
+  const enrichedUsers = await Promise.all(
+    users.map(async (user) => {
+      const additionalData = await User.findOne({
+        user_number: user.user_number,
+      });
+      return { ...user, ...additionalData?._doc };
+    })
   );
+
+  return enrichedUsers;
 };
 
-exports.countLikesForPost = async (postId) => {
-  return await User.countDocuments({ liked_posts: postId }); // MongoDB에서 좋아요 수 계산
+// 유저 검색
+exports.searchUsers = async (searchTerm) => {
+  const users = await userModel.searchUsers(searchTerm);
+
+  const enrichedUsers = await Promise.all(
+    users.map(async (user) => {
+      const additionalData = await User.findOne({
+        user_number: user.user_number,
+      });
+      return { ...user, ...additionalData?._doc };
+    })
+  );
+
+  return enrichedUsers;
 };
 
-exports.countLikesForFeed = async (feedId) => {
-  return await User.countDocuments({ liked_feeds: feedId }); // MongoDB에서 좋아요 수 계산
+// 단일 유저 조회
+exports.getUserByNumber = async (user_number) => {
+  const user = await userModel.findUserByNumber(user_number);
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  const additionalData = await User.findOne({ user_number });
+  return { ...user, ...additionalData?._doc };
 };
 
-exports.countLikesForComment = async (commentId) => {
-  return await User.countDocuments({ liked_post_comments: commentId }); // MongoDB에서 좋아요 수 계산
+// 사용자 정보 업데이트
+exports.updateUser = async (user_number, fieldsToUpdate, role) => {
+  let allowedFields = {};
+
+  if (role === 'admin') {
+    allowedFields = { ...fieldsToUpdate };
+  } else {
+    allowedFields = {
+      user_email: fieldsToUpdate.user_email,
+      user_phone: fieldsToUpdate.user_phone,
+    };
+  }
+
+  try {
+    const existingUser = await userModel.findUserByNumber(user_number);
+
+    if (!existingUser) {
+      throw new Error('User not found');
+    }
+
+    const finalFieldsToUpdate = { ...existingUser, ...allowedFields };
+
+    const updatedUser = await userModel.updateUser(
+      user_number,
+      finalFieldsToUpdate
+    );
+
+    if (fieldsToUpdate.profilePicture) {
+      await User.updateOne(
+        { user_number },
+        { $set: { profile_picture: fieldsToUpdate.profilePicture } },
+        { upsert: true }
+      );
+    }
+
+    return updatedUser;
+  } catch (error) {
+    throw error;
+  }
 };

@@ -1,7 +1,8 @@
 const { postgreSQL } = require('../config/database');
+const User = require('../models/mongoDBModels');
 
-// 사용자 생성 (회원가입)
-const createUser = async ({
+// PostgreSQL 사용자 생성
+exports.createUser = async ({
   user_id,
   user_name,
   user_email,
@@ -16,7 +17,6 @@ const createUser = async ({
     ) VALUES ($1, $2, $3, $4, $5, $6, $7)
     RETURNING *;
   `;
-
   const values = [
     user_id,
     user_name,
@@ -27,41 +27,35 @@ const createUser = async ({
     user_gender,
   ];
 
-  try {
-    const { rows } = await postgreSQL.query(query, values);
-    return rows[0]; // 반환된 user_number 포함
-  } catch (error) {
-    console.error('Failed to create user:', error.message);
-    throw error;
-  }
+  const { rows } = await postgreSQL.query(query, values);
+  return rows[0];
 };
 
-const findUserById = async (user_id) => {
-  const query = `
-    SELECT * FROM users WHERE user_id = $1;
-  `;
-  try {
-    const { rows } = await postgreSQL.query(query, [user_id]);
-    return rows[0];
-  } catch (error) {
-    console.error('Failed to find user:', error.message);
-    throw error;
-  }
+// MongoDB 사용자 생성
+exports.createMongoUser = async (userData, session) => {
+  const newUser = new User({
+    user_number: userData.user_number,
+    profile_picture: userData.profile_picture || '',
+    nickname: userData.nickname,
+  });
+
+  return await newUser.save({ session });
 };
 
 // 관리자 생성
-const createAdmin = async ({ admin_id, admin_pw }) => {
+exports.createAdmin = async ({ admin_id, admin_pw, position }) => {
   const query = `
-    INSERT INTO administrators (
-      admin_id, admin_pw
-    ) VALUES ($1, $2)
+    INSERT INTO administrators (admin_id, admin_pw, position)
+    VALUES ($1, $2, $3)
     RETURNING *;
   `;
 
-  const values = [admin_id, admin_pw];
+  const values = [admin_id, admin_pw, position];
 
   try {
+    console.log('Executing query:', query, 'with values:', values);
     const { rows } = await postgreSQL.query(query, values);
+    console.log('Query result:', rows);
     return rows[0]; // 반환된 user_number 포함
   } catch (error) {
     console.error('Failed to create user:', error.message);
@@ -69,7 +63,8 @@ const createAdmin = async ({ admin_id, admin_pw }) => {
   }
 };
 
-const findAdminById = async (admin_id) => {
+// 관리자 ID로 검색
+exports.findAdminById = async (admin_id) => {
   const query = `
     SELECT * FROM administrators WHERE admin_id = $1;
   `;
@@ -81,11 +76,3 @@ const findAdminById = async (admin_id) => {
     throw error;
   }
 };
-
-module.exports = {
-  createUser,
-  findUserById,
-  createAdmin,
-  findAdminById,
-};
-

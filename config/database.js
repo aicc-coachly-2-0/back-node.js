@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 const mongoose = require('mongoose');
+const ftp = require('basic-ftp'); // FTP 클라이언트 모듈 추가
 const config = require('./config'); // config 파일 불러오기
 
 // PostgreSQL 연결 설정
@@ -43,7 +44,25 @@ async function connectMongoDB() {
 }
 connectMongoDB();
 
+async function connectFTP() {
+  const client = new ftp.Client();
+  try {
+    await client.access({
+      host: config.ftp.host,
+      port: config.ftp.port,
+      user: config.ftp.user,
+      password: config.ftp.password,
+      secure: config.ftp.secure,
+    });
+    console.log('FTP에 성공적으로 연결되었습니다!');
+    client.close();
+  } catch (err) {
+    console.error('FTP 연결 에러:', err.message);
+  }
+}
+connectFTP();
 module.exports = {
   postgreSQL: pool,
-  connectMongoDB,
+  mongoURI,
+  connectFTP,
 };
