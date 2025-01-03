@@ -11,6 +11,7 @@ const postRoute = require('./routes/postRoute');
 const feedRoute = require('./routes/feedRoute');
 const userRoute = require('./routes/userRoute');
 const missionRoute = require('./routes/missionRoute');
+const faqRoute = require('./routes/faqRoutes');
 
 const PORT = config.server.port || 8000;
 const app = express();
@@ -38,6 +39,7 @@ app.use('/posts', postRoute);
 app.use('/feeds', feedRoute);
 app.use('/user', userRoute);
 app.use('/missions', missionRoute);
+app.use('/faqs', faqRoute);
 
 // error route
 app.use(errorHandler);
