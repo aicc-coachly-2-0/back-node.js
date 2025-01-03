@@ -37,4 +37,13 @@ router.get(
   missionController.getParticipatingMissions
 );
 
+// 전체 조회 엔드포인트 추가
+router.get("/popular/all", missionController.getAllPopularMissions);
+router.get("/upcoming/all", missionController.getAllUpcomingMissions);
+router.get(
+  "/participating/all",
+  authenticateToken,
+  missionController.getAllParticipatingMissions
+);
+
 module.exports = router;

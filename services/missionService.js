@@ -1,4 +1,5 @@
 const missionModel = require("../models/missionModel");
+const missionListModel = require("../models/missionListModel");
 
 // 미션 생성 -> 데이터 삽입 실패 시 에러 반환
 exports.createMission = async (missionData, user) => {
@@ -105,5 +106,70 @@ exports.getParticipatingMissions = async (userNumber) => {
       error.message
     );
     throw new Error("참여 중인 미션 조회 중 오류가 발생했습니다.");
+  }
+};
+
+// 지금 주목받는 미션 전체 조회
+exports.getAllPopularMissions = async () => {
+  try {
+    const allPopularMissions = await missionListModel.getAllPopularMissions();
+
+    // 로그: 가져온 데이터 확인
+    console.log("[Service] All Popular Missions:", allPopularMissions);
+
+    return allPopularMissions;
+  } catch (error) {
+    console.error(`[Service] Error in getAllPopularMissions: ${error.message}`);
+    throw new Error("지금 주목받는 미션 전체 조회 중 오류가 발생했습니다.");
+  }
+};
+
+// 마감 임박 미션 전체 조회
+exports.getAllUpcomingMissions = async () => {
+  try {
+    const allUpcomingMissions = await missionListModel.getAllUpcomingMissions();
+
+    // 로그: 가져온 데이터 확인
+    console.log("[Service] All Upcoming Missions:", allUpcomingMissions);
+
+    return allUpcomingMissions;
+  } catch (error) {
+    console.error(
+      `[Service] Error in getAllUpcomingMissions: ${error.message}`
+    );
+    throw new Error("마감 임박 미션 전체 조회 중 오류가 발생했습니다.");
+  }
+};
+
+// 참여 중인 미션 전체 조회
+exports.getAllParticipatingMissions = async (userNumber) => {
+  try {
+    // 모델에서 참여 중인 미션 리스트 전체 조회
+    const allParticipatingMissions =
+      await missionListModel.getAllParticipatingMissions(userNumber);
+
+    // 조회된 데이터 확인
+    console.log(
+      "[Service] All Participating Missions Data:",
+      allParticipatingMissions
+    );
+
+    // 빈 배열이면 로그로 출력하고 빈 배열 반환
+    if (allParticipatingMissions.length === 0) {
+      console.log(
+        "[Service] No participating missions found for user:",
+        userNumber
+      );
+      return [];
+    }
+
+    // 조회된 데이터 반환
+    return allParticipatingMissions;
+  } catch (error) {
+    console.error(
+      "[Service] Error in fetching all participating missions:",
+      error.message
+    );
+    throw new Error("참여 중인 미션 전체 조회 중 오류가 발생했습니다.");
   }
 };
