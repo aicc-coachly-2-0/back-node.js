@@ -164,7 +164,7 @@ exports.getAllParticipatingMissions = async (userNumber) => {
   }
 };
 
-// 완료된 미션 리스트 조회
+// 참여했던 미션 리스트 조회
 exports.getCompletedMissions = async (userNumber) => {
   const query = `
     SELECT

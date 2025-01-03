@@ -174,7 +174,7 @@ exports.getAllParticipatingMissions = async (userNumber) => {
   }
 };
 
-// 완료된 미션 리스트 전체 조회
+// 참여했던 미션 리스트 전체 조회
 exports.getCompletedMissions = async (userNumber) => {
   try {
     // 모델에서 완료된 미션 리스트 전체 조회

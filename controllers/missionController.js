@@ -262,7 +262,7 @@ exports.getAllParticipatingMissions = async (req, res, next) => {
   }
 };
 
-// 완료된 미션 리스트 전체 조회
+// 참여했던 미션 리스트 전체 조회
 exports.getCompletedMissions = async (req, res, next) => {
   try {
     // 로그인된 유저 정보 확인
