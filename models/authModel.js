@@ -1,6 +1,7 @@
 const { postgreSQL } = require('../config/database');
+const User = require('../models/mongoDBModels');
 
-// 사용자 생성 (회원가입)
+// PostgreSQL 사용자 생성
 exports.createUser = async ({
   user_id,
   user_name,
@@ -31,18 +32,15 @@ exports.createUser = async ({
   return rows[0];
 };
 
-// 사용자 ID로 검색
-exports.findUserById = async (user_id) => {
-  const query = `
-    SELECT * FROM users WHERE user_id = $1;
-  `;
-  try {
-    const { rows } = await postgreSQL.query(query, [user_id]);
-    return rows[0];
-  } catch (error) {
-    console.error('Failed to find user:', error.message);
-    throw error;
-  }
+// MongoDB 사용자 생성
+exports.createMongoUser = async (userData, session) => {
+  const newUser = new User({
+    user_number: userData.user_number,
+    profile_picture: userData.profile_picture || '',
+    nickname: userData.nickname,
+  });
+
+  return await newUser.save({ session }); // 세션 사용
 };
 
 // 관리자 생성

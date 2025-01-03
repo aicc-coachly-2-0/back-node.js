@@ -1,26 +1,11 @@
-const { connectFTP, postgreSQL } = require('../config/database');
+const { postgreSQL } = require('../config/database');
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 const authModel = require('../models/authModel');
-const userService = require('./userService');
 const config = require('../config/config');
 const jwt = require('jsonwebtoken');
 
-exports.uploadToFTP = async (userId, file) => {
-  const ftpClient = await connectFTP();
-  try {
-    const remoteImagePath = `/kochiri/profile/${userId}-${Date.now()}.jpg`;
-    await ftpClient.uploadFrom(file.buffer, remoteImagePath); // Multer 메모리 버퍼 데이터 업로드
-
-    return `${config.ftp.baseUrl}${remoteImagePath}`;
-  } catch (error) {
-    console.error('FTP 업로드 실패:', error.message);
-    throw new Error('FTP 업로드 실패');
-  } finally {
-    ftpClient.close();
-  }
-};
-
+// 사용자 생성 (회원가입)
 exports.createUser = async (userData, profilePictureUrl) => {
   const client = await postgreSQL.connect(); // PostgreSQL 클라이언트 연결
   const session = await mongoose.startSession(); // MongoDB 세션 시작
@@ -41,13 +26,12 @@ exports.createUser = async (userData, profilePictureUrl) => {
       user_phone: sanitizedPhone,
       user_date_of_birth: userData.user_date_of_birth,
       user_gender: userData.user_gender,
-      profile_picture: profilePictureUrl,
     });
 
     // MongoDB에 사용자 데이터 저장
-    await userService.createMongoUser(
+    await authModel.createMongoUser(
       {
-        user_number: createdUser.user_number, // PostgreSQL에서 생성된 user_number
+        user_number: createdUser.user_number,
         nickname: userData.nickname,
         profile_picture: profilePictureUrl,
       },
@@ -57,10 +41,20 @@ exports.createUser = async (userData, profilePictureUrl) => {
     await client.query('COMMIT'); // PostgreSQL 트랜잭션 커밋
     await session.commitTransaction(); // MongoDB 트랜잭션 커밋
 
-    return createdUser; // 생성된 사용자 데이터 반환
+    return createdUser;
   } catch (error) {
-    await client.query('ROLLBACK'); // PostgreSQL 트랜잭션 롤백
-    await session.abortTransaction(); // MongoDB 트랜잭션 롤백
+    try {
+      await session.abortTransaction(); // MongoDB 트랜잭션 롤백
+    } catch (mongoError) {
+      console.error('MongoDB 롤백 에러:', mongoError.message);
+    }
+
+    try {
+      await client.query('ROLLBACK'); // PostgreSQL 트랜잭션 롤백
+    } catch (pgError) {
+      console.error('PostgreSQL 롤백 에러:', pgError.message);
+    }
+
     console.error('사용자 생성 에러:', error.message);
     throw error;
   } finally {

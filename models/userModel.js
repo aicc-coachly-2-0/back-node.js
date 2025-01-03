@@ -13,7 +13,7 @@ exports.findUsersByPhoneNumber = async (phoneNumber) => {
   const { rows } = await postgreSQL.query(query, [phoneNumber]);
   return rows;
 };
-  
+
 // 아이디나 이름으로 유저 검색
 exports.findUsersByIdOrName = async (searchTerm) => {
   const query = `
@@ -31,7 +31,7 @@ exports.findUsersByStatus = async (status) => {
   const { rows } = await postgreSQL.query(query, [status]);
   return rows;
 };
-  
+
 // 사용자 정보 수정 (role에 따른 제한 처리)
 exports.updateUser = async (user_id, fieldsToUpdate, role) => {
   // 관리자일 경우 모든 필드 수정 가능, 사용자일 경우 특정 필드만 수정 가능
@@ -67,7 +67,7 @@ exports.updateUser = async (user_id, fieldsToUpdate, role) => {
 
   try {
     const { rows } = await postgreSQL.query(query, values);
-    return rows[0];  // 업데이트된 사용자 정보 반환
+    return rows[0]; // 업데이트된 사용자 정보 반환
   } catch (error) {
     console.error('Failed to update user:', error.message);
     throw error;

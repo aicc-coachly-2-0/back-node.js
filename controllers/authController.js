@@ -8,10 +8,7 @@ exports.signup = async (req, res, next) => {
       return res.status(400).json({ message: 'Profile picture is required' });
     }
 
-    const profilePictureUrl = await authService.uploadToFTP(
-      req.body.user_id,
-      uploadedFile
-    );
+    const profilePictureUrl = req.fileUrl; // fileUpload.js에서 제공된 URL 사용
 
     const newUser = await authService.createUser(req.body, profilePictureUrl);
 

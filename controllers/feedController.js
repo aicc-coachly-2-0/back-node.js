@@ -2,7 +2,12 @@ const feedService = require('../services/feedService');
 
 exports.createFeed = async (req, res, next) => {
   try {
-    const feed = await feedService.createFeed(req.body);
+    const feedData = {
+      ...req.body,
+      img_number: req.fileUrl, // 업로드된 이미지 URL 추가
+    };
+
+    const feed = await feedService.createFeed(feedData);
     res.status(201).json({ message: 'Feed created successfully', feed });
   } catch (error) {
     next(error);
@@ -49,11 +54,18 @@ exports.getCommentsByFeed = async (req, res, next) => {
 
 exports.updateFeed = async (req, res, next) => {
   try {
+    const feedData = {
+      ...req.body, // 요청 본문의 데이터 포함
+      img_number: req.fileUrl || null, // 업로드된 이미지 URL 추가
+    };
+
     const updatedFeed = await feedService.updateFeed(
       req.params.feed_number,
-      req.body
+      feedData
     );
-    res.status(200).json({ message: 'Feed updated successfully', updatedFeed });
+    res
+      .status(200)
+      .json({ message: 'Feed updated successfully', feed: updatedFeed });
   } catch (error) {
     next(error);
   }
