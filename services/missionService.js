@@ -173,3 +173,34 @@ exports.getAllParticipatingMissions = async (userNumber) => {
     throw new Error("참여 중인 미션 전체 조회 중 오류가 발생했습니다.");
   }
 };
+
+// 완료된 미션 리스트 전체 조회
+exports.getCompletedMissions = async (userNumber) => {
+  try {
+    // 모델에서 완료된 미션 리스트 전체 조회
+    const completedMissions = await missionListModel.getCompletedMissions(
+      userNumber
+    );
+
+    // 조회된 데이터 확인
+    console.log("[Service] Completed Missions Data:", completedMissions);
+
+    // 빈 배열이면 로그로 출력하고 빈 배열 반환
+    if (completedMissions.length === 0) {
+      console.log(
+        "[Service] No completed missions found for user:",
+        userNumber
+      );
+      return [];
+    }
+
+    // 조회된 데이터 반환
+    return completedMissions;
+  } catch (error) {
+    console.error(
+      "[Service] Error in fetching completed missions:",
+      error.message
+    );
+    throw new Error("완료된 미션 조회 중 오류가 발생했습니다.");
+  }
+};

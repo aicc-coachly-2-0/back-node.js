@@ -33,17 +33,24 @@ router.get("/upcoming", missionController.getUpcomingMissions);
 // 참여 중인 미션 5개 조회
 router.get(
   "/participating",
-  authenticateToken, // 로그인된 유저만 접근 가능
+  authenticateToken,
   missionController.getParticipatingMissions
 );
 
-// 전체 조회 엔드포인트 추가
+// 전체 조회
 router.get("/popular/all", missionController.getAllPopularMissions);
 router.get("/upcoming/all", missionController.getAllUpcomingMissions);
 router.get(
   "/participating/all",
   authenticateToken,
   missionController.getAllParticipatingMissions
+);
+
+// 참여했던 미션 리스트 조회
+router.get(
+  "/completed",
+  authenticateToken,
+  missionController.getCompletedMissions
 );
 
 module.exports = router;

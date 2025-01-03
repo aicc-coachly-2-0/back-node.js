@@ -123,18 +123,18 @@ exports.getAllParticipatingMissions = async (userNumber) => {
         ),
         '인증 미완료'
       ) AS validation_status,
-      CASE
-        WHEN (mission_rooms.ended_at - mission_rooms.started_at) = 1 THEN '하루'
-        WHEN (mission_rooms.ended_at - mission_rooms.started_at) = 3 THEN '3일'
-        WHEN (mission_rooms.ended_at - mission_rooms.started_at) = 7 THEN '일주일'
-        ELSE '한 달'
+      CASE 
+        WHEN mission_rooms.ended_at - mission_rooms.started_at = 1 THEN '하루'
+        WHEN mission_rooms.ended_at - mission_rooms.started_at = 3 THEN '3일'
+        WHEN mission_rooms.ended_at - mission_rooms.started_at = 7 THEN '일주일'
+        WHEN mission_rooms.ended_at - mission_rooms.started_at = 30 THEN '한 달'
+        ELSE '기간 알 수 없음'
       END AS duration
     FROM mission_participants
     INNER JOIN mission_rooms ON mission_participants.room_number = mission_rooms.room_number
     LEFT JOIN mission_validations
       ON mission_participants.group_number = mission_validations.group_number
     WHERE mission_participants.user_number = $1
-      AND mission_participants.state = 'active'
       AND mission_rooms.state = 'ongoing'
     GROUP BY mission_rooms.room_number
     ORDER BY mission_rooms.started_at ASC;
@@ -160,6 +160,63 @@ exports.getAllParticipatingMissions = async (userNumber) => {
     );
     throw new Error(
       "참여 중인 미션을 불러오는 중 데이터베이스 오류가 발생했습니다."
+    );
+  }
+};
+
+// 완료된 미션 리스트 조회
+exports.getCompletedMissions = async (userNumber) => {
+  const query = `
+    SELECT
+      mission_rooms.room_number,
+      mission_rooms.title,
+      mission_rooms.started_at,
+      mission_rooms.img_link,
+      COUNT(mission_participants.user_number) AS participant_count,
+      CASE
+        WHEN mission_rooms.ended_at - mission_rooms.started_at = 1 THEN '하루'
+        WHEN mission_rooms.ended_at - mission_rooms.started_at = 3 THEN '3일'
+        WHEN mission_rooms.ended_at - mission_rooms.started_at = 7 THEN '일주일'
+        WHEN mission_rooms.ended_at - mission_rooms.started_at = 30 THEN '한 달'
+        ELSE '기간 알 수 없음'
+      END AS duration
+    FROM
+      mission_participants
+    INNER JOIN
+      mission_rooms
+    ON
+      mission_participants.room_number = mission_rooms.room_number
+    WHERE
+      mission_participants.user_number = $1 
+      AND mission_rooms.state = 'completed'
+    GROUP BY
+      mission_rooms.room_number, 
+      mission_rooms.title,
+      mission_rooms.started_at,
+      mission_rooms.img_link,
+      mission_rooms.ended_at
+    ORDER BY
+      mission_rooms.started_at ASC;
+  `;
+
+  const values = [userNumber];
+
+  try {
+    const { rows } = await postgreSQL.query(query, values);
+
+    // 필요한 데이터만 반환
+    return rows.map((row) => ({
+      room_number: row.room_number, // 미션 방 번호
+      title: row.title, // 미션 제목
+      started_at: row.started_at, // 미션 시작일
+      img_link: row.img_link, // 썸네일 이미지 링크
+      participant_count: row.participant_count, // 현재 참여 중인 인원 수
+      duration: row.duration, // 미션 진행 기간
+    }));
+  } catch (error) {
+    console.error("[Model] Error fetching completed missions:", error.message);
+    throw new Error(
+      "완료된 미션 리스트를 불러오는 중 데이터베이스 오류가 발생했습니다."
     );
   }
 };
