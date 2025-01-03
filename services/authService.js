@@ -128,7 +128,9 @@ exports.loginAdmin = async (adminData) => {
   }
 
   const token = jwt.sign(
-    { admin_id: admin.admin_id, isAdmin: true },
+    { admin_number: admin.admin_number,
+      admin_id: admin.admin_id,
+      isAdmin: true },
     config.auth.jwtSecret,
     {
       expiresIn: config.auth.jwtExpiresIn,
@@ -137,6 +139,9 @@ exports.loginAdmin = async (adminData) => {
 
   return {
     token,
-    admin: { admin_id: admin.admin_id },
+    admin: { 
+      admin_number: admin.admin_number,
+      admin_id: admin.admin_id 
+    },
   };
 };
