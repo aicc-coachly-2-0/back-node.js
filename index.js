@@ -2,6 +2,9 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const axios = require("axios");
+const { RestClient } = require("@bootpay/server-rest-client"); // Bootpay 서버 클라이언트
+require("dotenv").config();
+const { Bootpay } = require("@bootpay/backend-js");
 
 const errorHandler = require("./middlewares/errorHandler");
 const config = require("./config/config");
@@ -35,20 +38,79 @@ app.get("/", (req, res) => {
 });
 
 // 정민석이 임시로 한거임 지우지 마세요
-const fastapiUrl = "http://127.0.0.1:8000/report";
-app.post("/send-report", async (req, res) => {
+// const fastapiUrl = "http://127.0.0.1:8000/report";
+// app.post("/send-report", async (req, res) => {
+//   try {
+//     const requestData = req.body; // 클라이언트에서 받은 데이터
+//     console.log("Received data:", requestData); // 요청 본문 데이터 출력
+
+//     // FastAPI 서버로 데이터 전송
+//     const response = await axios.post(fastapiUrl, requestData);
+
+//     // FastAPI 서버의 응답을 클라이언트로 전달
+//     res.json(response.data);
+//   } catch (error) {
+//     console.error("Error sending data to FastAPI:", error);
+//     res.status(500).send("Error communicating with FastAPI server");
+//   }
+// });
+// 여기까지 정민석이 임시로 작업한거 건들 ㄴㄴ
+// 정민석이 임시로 한거임 지우지 마세요
+// const bootpayurl =
+//   "https://api.bootpay.co.kr/v2/subscribe/billing_key/:receipt_id"; // Bootpay API URL
+
+RestClient.setConfig(
+  process.env.BOOTPAY_API_KEY, // Your Application ID
+  process.env.BOOTPAY_PRIVATE_KEY // Your Private Key
+);
+
+// 액세스 토큰을 비동기적으로 받아오는 함수
+async function getAccessToken() {
   try {
-    const requestData = req.body; // 클라이언트에서 받은 데이터
-    console.log("Received data:", requestData); // 요청 본문 데이터 출력
-
-    // FastAPI 서버로 데이터 전송
-    const response = await axios.post(fastapiUrl, requestData);
-
-    // FastAPI 서버의 응답을 클라이언트로 전달
-    res.json(response.data);
+    const response = await RestClient.getAccessToken();
+    if (response.status === 200) {
+      return response.data.token; // 토큰을 반환
+    } else {
+      throw new Error("Failed to get access token");
+    }
   } catch (error) {
-    console.error("Error sending data to FastAPI:", error);
-    res.status(500).send("Error communicating with FastAPI server");
+    console.error("Error getting access token:", error);
+    throw error;
+  }
+}
+
+app.post("/lookup-billingkey", async (req, res) => {
+  const { receiptId } = req.body;
+
+  try {
+    // 액세스 토큰 받아오기
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      return res.status(500).send("Failed to get access token");
+    }
+
+    console.log("Received Access Token:", accessToken);
+
+    // GET 요청으로 부트페이 API 호출 (axios.get)
+    const response = await axios.get(
+      `https://api.bootpay.co.kr/v2/subscribe/billing_key/${receiptId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`, // 액세스 토큰을 Authorization 헤더에 포함
+        },
+      }
+    );
+
+    // 응답 데이터 처리
+    if (response.status === 200) {
+      console.log("부트페이 응답:", response.data);
+      res.json(response.data); // 클라이언트에게 데이터 반환
+    } else {
+      res.status(400).json({ error: "Billing Key 조회 실패" });
+    }
+  } catch (error) {
+    console.error("오류 발생:", error);
+    res.status(500).send("Error communicating with Bootpay server");
   }
 });
 // 여기까지 정민석이 임시로 작업한거 건들 ㄴㄴ

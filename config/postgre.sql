@@ -4,9 +4,7 @@ CREATE TYPE level_enum AS ENUM ('easy', 'medium', 'hard'); -- 미션 난이도
 CREATE TYPE cert_freq_enum AS ENUM ('매일', '평일 매일', '주말 매일'); -- 미션 인증 빈도
 CREATE TYPE mission_rooms_state_enum AS ENUM ('recruiting', 'ongoing', 'completed'); -- 미션방 상태
 CREATE TYPE duration_enum AS ENUM ('하루', '3일', '일주일', '한 달'); -- 미션방 기간
-
--- CREATE TYPE field_enum AS ENUM ('field1', 'field2', 'field3', 'field4');
--- CREATE TYPE is_secret_enum AS ENUM ('yes', 'no');
+CREATE TYPE status_enum AS ENUM ('active', 'inactive', 'deleted', 'suspended'); -- 유저 상태 
 
 CREATE TYPE participant_state_enum AS ENUM ('active', 'banned'); -- 미션 참가자 상태
 
@@ -15,14 +13,6 @@ CREATE TYPE validation_state_enum AS ENUM ('active', 'inactive'); -- 미션 인�
 
 CREATE TYPE feed_state_enum AS ENUM ('active', 'inactive', 'deleted');
 CREATE TYPE community_state_enum AS ENUM ('active', 'inactive', 'archived');
-CREATE TYPE level_enum AS ENUM ('easy', 'medium', 'hard');
-CREATE TYPE cert_freq_enum AS ENUM ('매일', '주중', '주말');
-CREATE TYPE field_enum AS ENUM ('field1', 'field2', 'field3', 'field4');
-CREATE TYPE is_secret_enum AS ENUM ('yes', 'no');
-CREATE TYPE participant_state_enum AS ENUM ('active', 'banned');
-CREATE TYPE validation_status_enum AS ENUM ('pending', 'approved', 'rejected');
-CREATE TYPE validation_state_enum AS ENUM ('active', 'inactive');
-CREATE TYPE feed_state_enum AS ENUM ('active', 'inactive', 'deleted');
 CREATE TYPE comment_state_enum AS ENUM ('active', 'deleted');
 CREATE TYPE post_state_enum AS ENUM ('active', 'hidden', 'deleted');
 CREATE TYPE payment_status_enum AS ENUM ('success', 'failed', 'pending');
@@ -45,7 +35,8 @@ CREATE TABLE users (
     user_email VARCHAR(100),
     user_pw VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status status_enum DEFAULT active
 );
 
 -- 관리자 테이블
@@ -78,7 +69,6 @@ CREATE TABLE mission_rooms (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     started_at DATE,
     ended_at DATE,
-    duration duration_enum,
     weekly_cert_count INT,
     cert_freq cert_freq_enum,
     level level_enum,

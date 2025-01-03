@@ -12,6 +12,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@bootpay/backend-js": "^2.3.2",
+    "@bootpay/server-rest-client": "^1.0.9",
     "axios": "^1.7.9",
     "basic-ftp": "^5.0.5",
     "bcrypt": "^5.1.1",

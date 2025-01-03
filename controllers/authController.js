@@ -21,6 +21,7 @@ exports.signup = async (req, res, next) => {
     });
   } catch (error) {
     console.error("회원가입 에러:", error.message);
+
     next(error);
   }
 };

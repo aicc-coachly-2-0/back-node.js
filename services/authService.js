@@ -16,7 +16,33 @@ exports.uploadToFTP = async (userId, file) => {
   try {
     const fileStream = Readable.from(file.buffer); // Buffer를 스트림으로 변환
 
-    const remoteImagePath = `/kochiri/profile/${userId}-${Date.now()}.jpg`;
+    let fileName = `${userId}.jpg`;
+    let remoteImagePath = `/kochiri/profile/${fileName}`;
+    let counter = 1;
+
+    // 파일 존재 여부 확인 (수동으로 구현)
+    let fileExists = true;
+    while (fileExists) {
+      try {
+        // FTP 서버에서 해당 파일을 찾을 수 있는지 확인 (changeDirectory + file exists 확인)
+        await ftpClient.changeDirectory("/kochiri/profile");
+
+        // 파일이 존재하는지 확인하려면 그 파일을 다운로드 시도하거나
+        // 해당 파일에 대해 예외 처리를 할 수 있는 방법이 필요
+        await ftpClient.getFile(remoteImagePath);
+        // 파일이 존재하면, 예외 발생하지 않고 바로 아래 코드로 넘어갈 것입니다.
+
+        // 파일 이름이 중복되면 숫자 추가
+        fileName = `${userId}_${counter}.jpg`;
+        remoteImagePath = `/kochiri/profile/${fileName}`;
+        counter++;
+      } catch (error) {
+        // 파일이 존재하지 않으면 예외가 발생하므로, 그때서야 업로드 진행
+        fileExists = false;
+      }
+    }
+
+    // 파일 업로드
     await ftpClient.uploadFrom(fileStream, remoteImagePath); // Multer 메모리 버퍼 데이터 업로드
 
     return `${config.ftp.baseUrl}${remoteImagePath}`;
@@ -48,6 +74,7 @@ exports.createUser = async (userData, profilePictureUrl) => {
       user_phone: sanitizedPhone,
       user_date_of_birth: userData.user_date_of_birth,
       user_gender: userData.user_gender,
+      profile_picture: profilePictureUrl,
     });
 
     // MongoDB에 사용자 데이터 저장
@@ -92,7 +119,9 @@ exports.loginUser = async (userData) => {
     {
       user_number: user.user_number,
       user_id: user.user_id,
+      user_name: user.user_name,
       user_email: user.user_email,
+      user_phone: user.user_phone,
     },
     config.auth.jwtSecret,
     { expiresIn: config.auth.jwtExpiresIn }
@@ -103,7 +132,9 @@ exports.loginUser = async (userData) => {
     user: {
       user_number: user.user_number,
       user_id: user.user_id,
+      user_name: user.user_name,
       user_email: user.user_email,
+      user_phone: user.user_phone,
     },
   };
 };
