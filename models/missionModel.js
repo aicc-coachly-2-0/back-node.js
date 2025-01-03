@@ -325,6 +325,7 @@ exports.getUpcomingMissions = async () => {
 
 // 참여 중인 미션 5개 조회
 exports.getParticipatingMissions = async (userNumber) => {
+  // 로그인한 유저가 참여 중인 미션방 리스트 5개 조회
   const query = `
     SELECT
       mission_rooms.room_number,
@@ -359,6 +360,7 @@ exports.getParticipatingMissions = async (userNumber) => {
     LIMIT 5;
   `;
 
+  // 쿼리에 사용할 유저 번호 바인딩
   const values = [userNumber];
 
   try {
