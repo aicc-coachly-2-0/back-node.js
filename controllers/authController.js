@@ -36,11 +36,15 @@ exports.login = async (req, res, next) => {
 
 exports.adminsignup = async (req, res, next) => {
   try {
+    console.log('Controller called with body:', req.body);
+
     const newAdmin = await authService.createAdmin(req.body);
-    res
-      .status(201)
-      .json({ message: 'Admin created successfully', admin: newAdmin });
+
+    console.log('Admin created:', newAdmin);
+
+    res.status(201).json({ message: 'Admin created successfully', admin: newAdmin });
   } catch (error) {
+    console.error('Error in adminsignup:', error.message);
     next(error);
   }
 };

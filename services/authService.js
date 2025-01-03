@@ -103,13 +103,14 @@ exports.loginUser = async (userData) => {
 };
 
 exports.createAdmin = async (adminData) => {
-  const hashedPassword = await bcrypt.hash(adminData.user_pw, 10);
+  const hashedPassword = await bcrypt.hash(adminData.admin_pw, 10);
 
   const createAdmin = await authModel.createAdmin({
     admin_id: adminData.admin_id,
     admin_pw: hashedPassword,
+    position: adminData.position,
   });
-
+  console.log('Admin created in DB:', createAdmin);
   return createAdmin;
 };
 

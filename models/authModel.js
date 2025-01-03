@@ -46,18 +46,19 @@ exports.findUserById = async (user_id) => {
 };
 
 // 관리자 생성
-exports.createAdmin = async ({ admin_id, admin_pw }) => {
+exports.createAdmin = async ({ admin_id, admin_pw, position }) => {
   const query = `
-    INSERT INTO administrators (
-      admin_id, admin_pw
-    ) VALUES ($1, $2)
+    INSERT INTO administrators (admin_id, admin_pw, position)
+    VALUES ($1, $2, $3)
     RETURNING *;
   `;
 
-  const values = [admin_id, admin_pw];
+  const values = [admin_id, admin_pw, position];
 
   try {
+    console.log('Executing query:', query, 'with values:', values);
     const { rows } = await postgreSQL.query(query, values);
+    console.log('Query result:', rows);
     return rows[0]; // 반환된 user_number 포함
   } catch (error) {
     console.error('Failed to create user:', error.message);
