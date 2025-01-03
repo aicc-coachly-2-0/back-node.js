@@ -129,25 +129,17 @@ exports.searchUsers = async (searchTerm) => {
   }
 };
 
-// 상태별 유저 조회
-exports.getUsersByStatus = async (status) => {
-  // status가 유효한 값인지를 확인
-  const validStatuses = ['active', 'inactive', 'deleted', 'suspended'];
-  if (!validStatuses.includes(status)) {
-    throw new Error('Invalid status');
-  }
-
-  return await userModel.findUsersByStatus(status);
-};
-
 // 상태별 유저 조회 (선택적 필터링)
 exports.getUsers = async ({ status }) => {
   if (status) {
-    return this.getUsersByStatus(status);
+    // 상태가 주어지면 상태로 유저 조회
+    return await userModel.findUsersByStatus(status);
   } else {
-    return await userModel.findAllUsers(); // 상태 필터링 없이 모든 유저 조회
+    // 상태가 없으면 모든 유저 조회
+    return await userModel.findAllUsers();
   }
 };
+
 
 // 사용자 정보 업데이트 
 exports.updateUser = async (user_id, role, fieldsToUpdate) => {

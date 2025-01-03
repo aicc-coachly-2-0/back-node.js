@@ -62,13 +62,10 @@ router.post(
 
 router.get('/likes/:type/:id', userController.getLikesCount);
 
-// 상태별 유저 조회 (status를 경로 파라미터로)
-router.get('/users/status/:status', userController.getUsersByStatus);
-
 // 상태별 유저 조회 (선택적 상태 필터링, status를 쿼리 파라미터로)
 router.get('/users', userController.getUsers);
 
-// ID 또는 이름으로 유저 검색
+// ID 또는 이름, 번호로 유저 검색
 router.get('/search', userController.searchUsers);
 
 // 사용자 정보 수정 라우트

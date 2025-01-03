@@ -33,11 +33,11 @@ app.get("/", (req, res) => {
 });
 
 // route
-app.use("/api/auth", authRoute);
-app.use("/api/posts", postRoute);
-app.use("/api/feeds", feedRoute);
-app.use("/api/user", userRoute);
-app.use("/api/missions", missionRoute);
+app.use("/auth", authRoute);
+app.use("/posts", postRoute);
+app.use("/feeds", feedRoute);
+app.use("/user", userRoute);
+app.use("/missions", missionRoute);
 
 // error route
 app.use(errorHandler);

@@ -129,28 +129,30 @@ exports.getLikesCount = async (req, res, next) => {
   }
 };
 
-
-// 상태별 유저 조회
-exports.getUsersByStatus = async (req, res, next) => {
-  const { status } = req.params;  // 요청에서 status를 가져옵니다
-  try {
-    const users = await userService.getUsersByStatus(status);
-    res.status(200).json(users);
-  } catch (error) {
-    next(error);
-  }
-};
-
 // 상태별 유저 조회 (선택적 필터링)
 exports.getUsers = async (req, res, next) => {
   const { status } = req.query;  // 요청의 쿼리 파라미터에서 status를 가져옵니다
+
   try {
+    if (status) {
+      const validStatuses = ['active', 'inactive', 'deleted', 'suspended'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Invalid status value" });
+      }
+    }
+
     const users = await userService.getUsers({ status });
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: "No users found" });
+    }
+
     res.status(200).json(users);
   } catch (error) {
     next(error);
   }
 };
+
 
 // 유저 검색
 exports.searchUsers = async (req, res, next) => {

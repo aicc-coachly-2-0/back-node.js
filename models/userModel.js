@@ -2,11 +2,22 @@ const { postgreSQL } = require('../config/database');
 
 // 전체 유저 조회
 exports.findAllUsers = async () => {
-  const query = `SELECT * FROM users ORDER BY created_at DESC`;
+  const query = `SELECT * FROM users ORDER BY created_at DESC`; 
   const { rows } = await postgreSQL.query(query);
   return rows;
 };
 
+// 상태로 유저 조회
+exports.findUsersByStatus = async (status) => {
+  const validStatuses = ['active', 'inactive', 'deleted', 'suspended'];
+  if (!validStatuses.includes(status)) {
+    throw new Error('Invalid status');
+  }
+  const query = `SELECT * FROM users WHERE status = $1 ORDER BY created_at DESC`;
+  const { rows } = await postgreSQL.query(query, [status]);
+  return rows;
+};
+  
 // 전화번호로 유저 검색
 exports.findUsersByPhoneNumber = async (phoneNumber) => {
   const query = `SELECT * FROM users WHERE user_phone = $1 ORDER BY created_at DESC`;
@@ -14,7 +25,7 @@ exports.findUsersByPhoneNumber = async (phoneNumber) => {
   return rows;
 };
   
-// 아이디나 이름으로 유저 검색
+// 아이디나 이름, 번호로 유저 검색
 exports.findUsersByIdOrName = async (searchTerm) => {
   const query = `
     SELECT * FROM users
@@ -25,13 +36,6 @@ exports.findUsersByIdOrName = async (searchTerm) => {
   return rows;
 };
 
-// 상태로 유저 조회
-exports.findUsersByStatus = async (status) => {
-  const query = `SELECT * FROM users WHERE status = $1 ORDER BY created_at DESC`;
-  const { rows } = await postgreSQL.query(query, [status]);
-  return rows;
-};
-  
 // 사용자 정보 수정 (role에 따른 제한 처리)
 exports.updateUser = async (user_id, fieldsToUpdate, role) => {
   // 관리자일 경우 모든 필드 수정 가능, 사용자일 경우 특정 필드만 수정 가능
