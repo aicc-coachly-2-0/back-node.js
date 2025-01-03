@@ -81,21 +81,14 @@ exports.getLikesCount = async (req, res, next) => {
   }
 };
 
-// 상태별 유저 조회 (선택적 필터링)
+// 상태에 따른 전체 유저 조회
 exports.getUsers = async (req, res, next) => {
-  const { status } = req.query; // 요청의 쿼리 파라미터에서 status를 가져옵니다
+  const { status } = req.query;
   try {
-    if (status) {
-      const validStatuses = ['active', 'inactive', 'deleted', 'suspended'];
-      if (!validStatuses.includes(status)) {
-        return res.status(400).json({ message: "Invalid status value" });
-      }
-    }
-
     const users = await userService.getUsers({ status });
 
     if (users.length === 0) {
-      return res.status(404).json({ message: "No users found" });
+      return res.status(404).json({ message: 'No users found' });
     }
 
     res.status(200).json(users);
@@ -104,12 +97,16 @@ exports.getUsers = async (req, res, next) => {
   }
 };
 
-
-// 유저 검색
+// 검색으로 유저 조회
 exports.searchUsers = async (req, res, next) => {
   try {
-    const searchTerm = req.query.searchTerm; // 쿼리 파라미터로 검색어 받기
+    const searchTerm = req.query.searchTerm;
     const users = await userService.searchUsers(searchTerm);
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'No users found' });
+    }
+
     res.status(200).json(users);
   } catch (error) {
     next(error);
@@ -121,37 +118,69 @@ exports.getUserByNumber = async (req, res) => {
   const { user_number } = req.params;
 
   try {
-    // 서비스 계층에서 유저 정보 가져오기
     const user = await userService.getUserByNumber(user_number);
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    res.status(200).json({ message: "User retrieved successfully", data: user });
+    res
+      .status(200)
+      .json({ message: 'User retrieved successfully', data: user });
   } catch (error) {
-    console.error("Error retrieving user:", error.message);
-    res.status(500).json({ message: "Failed to retrieve user", error: error.message });
+    console.error('Error retrieving user:', error.message);
+    res
+      .status(500)
+      .json({ message: 'Failed to retrieve user', error: error.message });
   }
 };
 
-
-// 사용자 정보 업데이트
+// 회원 정보 업데이트
 exports.updateUser = async (req, res) => {
-  const { role } = req.user;  // 로그인한 사용자의 role (관리자 또는 일반 사용자)
-  const { user_number } = req.params; // URL 파라미터에서 user_number 받기
-  const { user_name, user_email, user_phone, user_date_of_birth, user_gender, status, user_id } = req.body;  // 요청 본문에서 필드 값 받기
+  const { role } = req.user;
+  const { user_number } = req.params;
+  const {
+    user_name,
+    user_email,
+    user_phone,
+    user_date_of_birth,
+    user_gender,
+    status,
+    user_id,
+  } = req.body;
 
-  const fieldsToUpdate = { user_name, user_email, user_phone, user_date_of_birth, user_gender, status, user_id };
-  console.log("Fields to update:", fieldsToUpdate);
+  const fieldsToUpdate = {
+    user_name,
+    user_email,
+    user_phone,
+    user_date_of_birth,
+    user_gender,
+    status,
+    user_id,
+  };
+
+  if (req.fileUrls && req.fileUrls.length > 0) {
+    fieldsToUpdate.profilePicture = req.fileUrls.find(
+      (file) => file.fieldName === 'profilePicture'
+    )?.fileUrl;
+  }
 
   try {
-    // 사용자 정보 업데이트 서비스 호출
-    const updatedUser = await userService.updateUser(user_number, fieldsToUpdate, role);
-    res.status(200).json({ message: "User updated successfully", data: updatedUser });
+    const updatedUser = await userService.updateUser(
+      user_number,
+      fieldsToUpdate,
+      role
+    );
+
+    res.status(200).json({
+      message: 'User updated successfully',
+      data: updatedUser,
+    });
   } catch (error) {
     console.error('Error updating user:', error.message);
-    res.status(500).json({ message: 'Failed to update user', error: error.message });
+    res.status(500).json({
+      message: 'Failed to update user',
+      error: error.message,
+    });
   }
 };
-

@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const authMiddleware = require('../middlewares/authMiddleware');
+const { upload, uploadFileToFTP } = require('../middlewares/fileUpload');
 
 // 팔로우, 언팔로우
 router.post(
@@ -50,12 +51,14 @@ router.get('/', userController.getUsers);
 router.get('/search', userController.searchUsers);
 
 // 특정 유저 조회
-router.get('/users/:user_number', userController.getUserByNumber);
+router.get('/:user_number', userController.getUserByNumber);
 
 // 사용자 정보 수정 라우트
 router.put(
-  '/users/:user_number',
+  '/:user_number',
   authMiddleware.authenticateToken,
+  upload, // Multer로 파일 처리
+  uploadFileToFTP,
   userController.updateUser
 );
 

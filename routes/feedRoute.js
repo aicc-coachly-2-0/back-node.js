@@ -5,12 +5,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const { upload, uploadFileToFTP } = require('../middlewares/fileUpload');
 
 // 피드 작성
-router.post(
-  '/',
-  upload.single('feedImage'), // Multer로 파일 처리
-  uploadFileToFTP,
-  feedController.createFeed
-);
+router.post('/', upload, uploadFileToFTP, feedController.createFeed);
 
 // 피드 댓글 작성
 router.post('/comment', feedController.createFeedComment);
@@ -29,7 +24,7 @@ router.patch(
   '/:feed_number',
   authMiddleware.authenticateToken,
   authMiddleware.authorizeFeedOwnerOrAdmin,
-  upload.single('feedImage'),
+  upload,
   uploadFileToFTP,
   feedController.updateFeed
 );

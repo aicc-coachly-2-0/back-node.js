@@ -3,8 +3,14 @@ const noticeService = require('../services/noticeService');
 // 공지글 작성 (사진 포함)
 exports.createNoticeWithImages = async (req, res, next) => {
   try {
-    const { admin_number, title, content, images } = req.body; // `images`는 배열 형태
-    const notice = await noticeService.createNoticeWithImages({ admin_number, title, content, images });
+    const { admin_number, title, content } = req.body;
+    const images = req.fileUrls?.map((file) => file.fileUrl) || []; // 이미지 배열 처리
+    const notice = await noticeService.createNoticeWithImages({
+      admin_number,
+      title,
+      content,
+      images,
+    });
     res.status(201).json({ message: 'Notice created successfully', notice });
   } catch (error) {
     next(error);
@@ -14,7 +20,14 @@ exports.createNoticeWithImages = async (req, res, next) => {
 // 공지글 수정
 exports.updateNotice = async (req, res, next) => {
   try {
-    const notice = await noticeService.updateNotice(req.params.notice_number, req.body);
+    const { notice_number } = req.params;
+    const { title, content } = req.body;
+    const images = req.fileUrls?.map((file) => file.fileUrl) || null; // 이미지 배열 처리
+    const notice = await noticeService.updateNotice(notice_number, {
+      title,
+      content,
+      images,
+    });
     res.status(200).json({ message: 'Notice updated successfully', notice });
   } catch (error) {
     next(error);
@@ -24,7 +37,9 @@ exports.updateNotice = async (req, res, next) => {
 // 공지글 조회 (단일, 사진 포함)
 exports.getNoticeWithImages = async (req, res, next) => {
   try {
-    const notice = await noticeService.getNoticeWithImages(req.params.notice_number);
+    const notice = await noticeService.getNoticeWithImages(
+      req.params.notice_number
+    );
     if (!notice) {
       return res.status(404).json({ message: 'Notice not found' });
     }

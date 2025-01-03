@@ -86,3 +86,46 @@ createFeed와 updateFeed의 큰 변경점 img
 ### userService.js :
 
 좋아요 기능 통합 위와 같음
+
+# 2025-01-03 오후 feature/all 수정사항
+
+## 0. middlewares
+
+### flieUpload.js:
+
+복수 이미지 저장 기능 구현
+그 결과로 단일 이미지로 저장 되었던 부분 수정 : 일단 배열로 이미지 url를 저장하고 가져온뒤 사용한다.
+
+authRoute authController
+feedRoute feedController
+noticeRoute noticeController
+userRoute userController
+
+fileUplload 사용 예시
+
+```
+<form action="/upload" method="POST" enctype="multipart/form-data">
+  <input type="file" name="profilePicture" />
+  <input type="file" name="feedPicture" />
+  <input type="file" name="noticePicture" multiple />
+  <button type="submit">Upload</button>
+</form>
+```
+
+## 1.notice
+
+### noticeRoute.js :
+
+공지 작성 및 수정에 fileUpload 미들웨어 추가
+
+### noticeController.js :
+
+공지 작성 및 수정기능에 이미지 추가 적용
+
+### noticeService.js :
+
+공지 작성 및 수정기능에 이미지 추가 적용
+
+### noticeModel.js :
+
+공지 작성 및 수정기능에 이미지 추가 적용 및 updateNoticeImages 코드 추가

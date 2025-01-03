@@ -7,17 +7,17 @@ const jwt = require('jsonwebtoken');
 
 // 사용자 생성 (회원가입)
 exports.createUser = async (userData, profilePictureUrl) => {
-  const client = await postgreSQL.connect(); // PostgreSQL 클라이언트 연결
-  const session = await mongoose.startSession(); // MongoDB 세션 시작
+  const client = await postgreSQL.connect();
+  const session = await mongoose.startSession();
 
   try {
-    await client.query('BEGIN'); // PostgreSQL 트랜잭션 시작
-    session.startTransaction(); // MongoDB 트랜잭션 시작
+    await client.query('BEGIN');
+    session.startTransaction();
 
     const hashedPassword = await bcrypt.hash(userData.user_pw, 10);
     const sanitizedPhone = userData.user_phone.replace(/\D/g, '');
 
-    // PostgreSQL에 사용자 데이터 저장
+    // PostgreSQL에 사용자 생성
     const createdUser = await authModel.createUser({
       user_id: userData.user_id,
       user_name: userData.user_name,
@@ -28,7 +28,7 @@ exports.createUser = async (userData, profilePictureUrl) => {
       user_gender: userData.user_gender,
     });
 
-    // MongoDB에 사용자 데이터 저장
+    // MongoDB에 사용자 생성
     await authModel.createMongoUser(
       {
         user_number: createdUser.user_number,
@@ -38,28 +38,17 @@ exports.createUser = async (userData, profilePictureUrl) => {
       session
     );
 
-    await client.query('COMMIT'); // PostgreSQL 트랜잭션 커밋
-    await session.commitTransaction(); // MongoDB 트랜잭션 커밋
+    await client.query('COMMIT');
+    await session.commitTransaction();
 
     return createdUser;
   } catch (error) {
-    try {
-      await session.abortTransaction(); // MongoDB 트랜잭션 롤백
-    } catch (mongoError) {
-      console.error('MongoDB 롤백 에러:', mongoError.message);
-    }
-
-    try {
-      await client.query('ROLLBACK'); // PostgreSQL 트랜잭션 롤백
-    } catch (pgError) {
-      console.error('PostgreSQL 롤백 에러:', pgError.message);
-    }
-
-    console.error('사용자 생성 에러:', error.message);
+    await session.abortTransaction();
+    await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release(); // PostgreSQL 클라이언트 해제
-    session.endSession(); // MongoDB 세션 종료
+    client.release();
+    session.endSession();
   }
 };
 
@@ -122,9 +111,11 @@ exports.loginAdmin = async (adminData) => {
   }
 
   const token = jwt.sign(
-    { admin_number: admin.admin_number,
+    {
+      admin_number: admin.admin_number,
       admin_id: admin.admin_id,
-      isAdmin: true },
+      isAdmin: true,
+    },
     config.auth.jwtSecret,
     {
       expiresIn: config.auth.jwtExpiresIn,
@@ -133,9 +124,9 @@ exports.loginAdmin = async (adminData) => {
 
   return {
     token,
-    admin: { 
+    admin: {
       admin_number: admin.admin_number,
-      admin_id: admin.admin_id 
+      admin_id: admin.admin_id,
     },
   };
 };

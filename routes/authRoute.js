@@ -7,7 +7,7 @@ const { upload, uploadFileToFTP } = require('../middlewares/fileUpload');
 // 회원가입 엔드포인트
 router.post(
   '/user-signup',
-  upload.single('profilePicture'), // Multer로 파일 처리
+  upload,
   uploadFileToFTP,
   validation.validateSignup,
   authController.signup

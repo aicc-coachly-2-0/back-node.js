@@ -17,7 +17,6 @@ exports.createUser = async ({
     ) VALUES ($1, $2, $3, $4, $5, $6, $7)
     RETURNING *;
   `;
-
   const values = [
     user_id,
     user_name,
@@ -40,7 +39,7 @@ exports.createMongoUser = async (userData, session) => {
     nickname: userData.nickname,
   });
 
-  return await newUser.save({ session }); // 세션 사용
+  return await newUser.save({ session });
 };
 
 // 관리자 생성

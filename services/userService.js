@@ -70,69 +70,87 @@ exports.countLikesForType = async (type, id) => {
   return await User.countDocuments({ [field]: id });
 };
 
-/// 유저 검색
-exports.searchUsers = async (searchTerm) => {
-  // 전화번호 형식인지 확인 (숫자만 포함된 경우)
-  const isPhoneNumber = /^\d+$/.test(searchTerm);
-
-  if (isPhoneNumber) {
-    // 전화번호로 검색
-    return await userModel.findUsersByPhoneNumber(searchTerm);
-  } else {
-    // 아이디나 이름으로 검색
-    return await userModel.findUsersByIdOrName(searchTerm);
-  }
-};
-
-// 상태별 유저 조회 (선택적 필터링)
+// 상태에 따른 전체 유저 조회
 exports.getUsers = async ({ status }) => {
-  if (status) {
-    // 상태가 주어지면 상태로 유저 조회
-    return await userModel.findUsersByStatus(status);
-  } else {
-    // 상태가 없으면 모든 유저 조회
-    return await userModel.findAllUsers();
-  }
+  const users = status
+    ? await userModel.findUsersByStatus(status)
+    : await userModel.findAllUsers();
+
+  const enrichedUsers = await Promise.all(
+    users.map(async (user) => {
+      const additionalData = await User.findOne({
+        user_number: user.user_number,
+      });
+      return { ...user, ...additionalData?._doc };
+    })
+  );
+
+  return enrichedUsers;
 };
 
-// 특정 유저 정보 조회
+// 유저 검색
+exports.searchUsers = async (searchTerm) => {
+  const users = await userModel.searchUsers(searchTerm);
+
+  const enrichedUsers = await Promise.all(
+    users.map(async (user) => {
+      const additionalData = await User.findOne({
+        user_number: user.user_number,
+      });
+      return { ...user, ...additionalData?._doc };
+    })
+  );
+
+  return enrichedUsers;
+};
+
+// 단일 유저 조회
 exports.getUserByNumber = async (user_number) => {
-  try {
-    const user = await userModel.findUserByNumber(user_number);
+  const user = await userModel.findUserByNumber(user_number);
 
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    return user;
-  } catch (error) {
-    console.error("Error in service layer:", error.message);
-    throw error;
+  if (!user) {
+    throw new Error('User not found');
   }
+
+  const additionalData = await User.findOne({ user_number });
+  return { ...user, ...additionalData?._doc };
 };
 
-// 사용자 정보 업데이트 
+// 사용자 정보 업데이트
 exports.updateUser = async (user_number, fieldsToUpdate, role) => {
-  // role에 따라 수정 가능한 필드 제한
-  console.log("Role:", role);
-  console.log("Fields to update before filtering:", fieldsToUpdate);
   let allowedFields = {};
 
   if (role === 'admin') {
-    // 관리자는 모든 필드 수정 가능
     allowedFields = { ...fieldsToUpdate };
-  } else if (role !== 'admin') {
-    // 사용자는 user_email, user_phone만 수정 가능
+  } else {
     allowedFields = {
       user_email: fieldsToUpdate.user_email,
       user_phone: fieldsToUpdate.user_phone,
     };
   }
-  console.log("Allowed fields to update:", allowedFields);
 
-  // 모델에 전달할 데이터를 준비하여 업데이트
   try {
-    const updatedUser = await userModel.updateUser(user_number, allowedFields);
+    const existingUser = await userModel.findUserByNumber(user_number);
+
+    if (!existingUser) {
+      throw new Error('User not found');
+    }
+
+    const finalFieldsToUpdate = { ...existingUser, ...allowedFields };
+
+    const updatedUser = await userModel.updateUser(
+      user_number,
+      finalFieldsToUpdate
+    );
+
+    if (fieldsToUpdate.profilePicture) {
+      await User.updateOne(
+        { user_number },
+        { $set: { profile_picture: fieldsToUpdate.profilePicture } },
+        { upsert: true }
+      );
+    }
+
     return updatedUser;
   } catch (error) {
     throw error;

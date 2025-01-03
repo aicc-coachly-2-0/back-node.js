@@ -4,7 +4,7 @@ exports.createFeed = async (req, res, next) => {
   try {
     const feedData = {
       ...req.body,
-      img_number: req.fileUrl, // 업로드된 이미지 URL 추가
+      img_number: req.fileUrls?.[0]?.fileUrl || null, // 첫 번째 이미지 URL 추가
     };
 
     const feed = await feedService.createFeed(feedData);
@@ -55,8 +55,8 @@ exports.getCommentsByFeed = async (req, res, next) => {
 exports.updateFeed = async (req, res, next) => {
   try {
     const feedData = {
-      ...req.body, // 요청 본문의 데이터 포함
-      img_number: req.fileUrl || null, // 업로드된 이미지 URL 추가
+      ...req.body,
+      img_number: req.fileUrls?.[0]?.fileUrl || null, // 첫 번째 이미지 URL 추가
     };
 
     const updatedFeed = await feedService.updateFeed(

@@ -1,17 +1,21 @@
 const multer = require('multer');
-const { Readable } = require('stream'); // Readable 추가
+const { Readable } = require('stream');
 const ftp = require('basic-ftp');
 const config = require('../config/config');
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+});
 
 const uploadFileToFTP = async (req, res, next) => {
-  if (!req.file) {
+  if (!req.files || Object.keys(req.files).length === 0) {
     return next(); // 파일이 없으면 바로 다음 미들웨어로
   }
 
   const client = new ftp.Client();
+  const uploadedFiles = [];
+
   try {
     await client.access({
       host: config.ftp.host,
@@ -21,41 +25,59 @@ const uploadFileToFTP = async (req, res, next) => {
       secure: config.ftp.secure,
     });
 
-    // 이미지 타입 가져오기
-    const imageType = req.body.imageType || 'profile'; // 기본값: 'profile'
-
-    // user_id 또는 admin_id 가져오기
+    const imageType = req.body.imageType || 'profile';
     const uploaderId = req.body.user_id || req.body.admin_id;
     const isAdmin = req.body.admin_id ? true : false;
 
     if (!uploaderId) {
-      return res
-        .status(400)
-        .json({ error: 'Uploader ID (user_id or admin_id) is required' });
+      throw new Error('Uploader ID (user_id or admin_id) is required');
     }
 
-    // 파일 이름 생성
-    const prefix = isAdmin ? 'admin' : 'user';
-    const fileName = `${prefix}${uploaderId}_${Date.now()}`;
+    for (const [fieldName, files] of Object.entries(req.files)) {
+      for (const file of files) {
+        const prefix = isAdmin ? 'admin' : 'user';
+        const fileName = `${prefix}_${uploaderId}_${Date.now()}`;
+        const ftpDirectory = `${imageType}/`;
+        const filePath = `${ftpDirectory}${fileName}`;
 
-    // 업로드 경로 동적 설정
-    const ftpDirectory = `${imageType}/`; // 이미지 성질에 따라 디렉토리 설정
-    await client.uploadFrom(
-      Readable.from(req.file.buffer),
-      `${ftpDirectory}${fileName}`
-    );
+        await client.uploadFrom(Readable.from(file.buffer), filePath);
+        const fileUrl = `${config.ftp.baseUrl}/${filePath}`;
+        uploadedFiles.push({ fieldName, filePath, fileUrl });
+      }
+    }
 
-    req.fileUrl = `${config.ftp.baseUrl}/${ftpDirectory}${fileName}`; // 업로드된 파일 URL 저장
+    req.fileUrls = uploadedFiles.map((file) => ({
+      fieldName: file.fieldName,
+      fileUrl: file.fileUrl,
+    }));
     client.close();
     next();
   } catch (err) {
-    client.close();
     console.error('FTP 업로드 실패:', err.message);
+
+    // 실패 시 업로드된 파일 삭제
+    for (const file of uploadedFiles) {
+      try {
+        await client.remove(file.filePath);
+        console.log(`삭제 완료: ${file.filePath}`);
+      } catch (deleteError) {
+        console.error(
+          `파일 삭제 실패 (${file.filePath}):`,
+          deleteError.message
+        );
+      }
+    }
+
+    client.close();
     res.status(500).json({ error: '파일 업로드 실패' });
   }
 };
 
 module.exports = {
-  upload,
+  upload: upload.fields([
+    { name: 'profilePicture', maxCount: 1 },
+    { name: 'feedPicture', maxCount: 1 },
+    { name: 'noticePicture', maxCount: 10 },
+  ]),
   uploadFileToFTP,
 };

@@ -1,12 +1,22 @@
 const { postgreSQL } = require('../config/database');
 
-exports.insertQuestion = async ({ user_number, question_classification_number, title, question_content }) => {
+exports.insertQuestion = async ({
+  user_number,
+  question_classification_number,
+  title,
+  question_content,
+}) => {
   const query = `
     INSERT INTO questions (user_number, question_classification_number, title, question_content)
     VALUES ($1, $2, $3, $4)
     RETURNING *;
   `;
-  const values = [user_number, question_classification_number, title, question_content];
+  const values = [
+    user_number,
+    question_classification_number,
+    title,
+    question_content,
+  ];
   const { rows } = await postgreSQL.query(query, values);
   return rows[0];
 };
@@ -17,7 +27,10 @@ exports.findQuestionById = async (questionNumber) => {
   return rows[0];
 };
 
-exports.updateQuestion = async (questionNumber, { title, question_content }) => {
+exports.updateQuestion = async (
+  questionNumber,
+  { title, question_content }
+) => {
   const query = `
     UPDATE questions SET title = $1, question_content = $2, updated_at = CURRENT_TIMESTAMP
     WHERE question_number = $3
