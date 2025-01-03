@@ -96,25 +96,28 @@ exports.getUsers = async ({ status }) => {
 };
 
 
-// 사용자 정보 업데이트
-exports.updateUser = async (user_id, role, fieldsToUpdate) => {
+// 사용자 정보 업데이트 
+exports.updateUser = async (user_number, fieldsToUpdate, role) => {
   // role에 따라 수정 가능한 필드 제한
+  console.log("Role:", role);
+  console.log("Fields to update before filtering:", fieldsToUpdate);
   let allowedFields = {};
 
   if (role === 'admin') {
     // 관리자는 모든 필드 수정 가능
     allowedFields = { ...fieldsToUpdate };
-  } else if (role === 'user') {
+  } else if (role !== 'admin') {
     // 사용자는 user_email, user_phone만 수정 가능
     allowedFields = {
       user_email: fieldsToUpdate.user_email,
       user_phone: fieldsToUpdate.user_phone,
     };
   }
+  console.log("Allowed fields to update:", allowedFields);
 
   // 모델에 전달할 데이터를 준비하여 업데이트
   try {
-    const updatedUser = await userModel.updateUser(user_id, allowedFields);
+    const updatedUser = await userModel.updateUser(user_number, allowedFields);
     return updatedUser;
   } catch (error) {
     throw error;

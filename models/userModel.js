@@ -36,16 +36,8 @@ exports.findUsersByIdOrName = async (searchTerm) => {
   return rows;
 };
 
-// 사용자 정보 수정 (role에 따른 제한 처리)
-exports.updateUser = async (user_id, fieldsToUpdate, role) => {
-  // 관리자일 경우 모든 필드 수정 가능, 사용자일 경우 특정 필드만 수정 가능
-  if (role !== 'admin') {
-    fieldsToUpdate = {
-      user_email: fieldsToUpdate.user_email,
-      user_phone: fieldsToUpdate.user_phone,
-    };
-  }
-
+// 사용자 정보 수정
+exports.updateUser = async (user_number, fieldsToUpdate) => {
   const query = `
     UPDATE users
     SET 
@@ -54,8 +46,9 @@ exports.updateUser = async (user_id, fieldsToUpdate, role) => {
       user_phone = COALESCE($3, user_phone),
       user_date_of_birth = COALESCE($4, user_date_of_birth),
       user_gender = COALESCE($5, user_gender),
-      status = COALESCE($6, status)
-    WHERE user_id = $7
+      status = COALESCE($6, status),
+      user_id = COALESCE($7, user_id) -- user_id도 업데이트 가능하도록 추가
+    WHERE user_number = $8
     RETURNING *;
   `;
 
@@ -66,9 +59,11 @@ exports.updateUser = async (user_id, fieldsToUpdate, role) => {
     fieldsToUpdate.user_date_of_birth,
     fieldsToUpdate.user_gender,
     fieldsToUpdate.status,
-    user_id,
+    fieldsToUpdate.user_id, 
+    user_number // 기존 user_number
   ];
 
+  // 쿼리 실행 후 결과 로그
   try {
     const { rows } = await postgreSQL.query(query, values);
     return rows[0]; // 업데이트된 사용자 정보 반환

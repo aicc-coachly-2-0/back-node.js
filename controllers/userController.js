@@ -116,37 +116,20 @@ exports.searchUsers = async (req, res, next) => {
 
 // 사용자 정보 업데이트
 exports.updateUser = async (req, res) => {
-  const { user_id, role } = req.user; // 로그인한 사용자의 user_id와 role
-  const {
-    user_name,
-    user_email,
-    user_phone,
-    user_date_of_birth,
-    user_gender,
-    status,
-  } = req.body;
+  const { role } = req.user;  // 로그인한 사용자의 role (관리자 또는 일반 사용자)
+  const { user_number } = req.params; // URL 파라미터에서 user_number 받기
+  const { user_name, user_email, user_phone, user_date_of_birth, user_gender, status, user_id } = req.body;  // 요청 본문에서 필드 값 받기
 
-  const fieldsToUpdate = {
-    user_name,
-    user_email,
-    user_phone,
-    user_date_of_birth,
-    user_gender,
-    status,
-  };
+  const fieldsToUpdate = { user_name, user_email, user_phone, user_date_of_birth, user_gender, status, user_id };
+  console.log("Fields to update:", fieldsToUpdate);
 
   try {
     // 사용자 정보 업데이트 서비스 호출
-    const updatedUser = await userService.updateUser(
-      user_id,
-      role,
-      fieldsToUpdate
-    );
-    res
-      .status(200)
-      .json({ message: 'User updated successfully', data: updatedUser });
+    const updatedUser = await userService.updateUser(user_number, fieldsToUpdate, role);
+    res.status(200).json({ message: "User updated successfully", data: updatedUser });
   } catch (error) {
     console.error('Error updating user:', error.message);
-    res.status(500).json({ message: 'Failed to update user' });
+    res.status(500).json({ message: 'Failed to update user', error: error.message });
   }
 };
+

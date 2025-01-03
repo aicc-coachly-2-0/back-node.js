@@ -51,7 +51,7 @@ router.get('/search', userController.searchUsers);
 
 // 사용자 정보 수정 라우트
 router.put(
-  '/update',
+  '/users/:user_number',
   authMiddleware.authenticateToken,
   userController.updateUser
 );
