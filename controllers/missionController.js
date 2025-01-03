@@ -188,111 +188,184 @@ exports.getParticipatingMissions = async (req, res, next) => {
   }
 };
 
-// 지금 주목받는 미션 전체 조회
-exports.getAllPopularMissions = async (req, res, next) => {
+// ====================================================================================
+// // 지금 주목받는 미션 전체 조회
+// exports.getAllPopularMissions = async (req, res, next) => {
+//   try {
+//     const allPopularMissions = await missionService.getAllPopularMissions();
+
+//     // 가져온 데이터를 클라이언트에 반환
+//     res.status(200).json({
+//       message: "All popular missions retrieved successfully",
+//       data: allPopularMissions,
+//     });
+//   } catch (error) {
+//     console.error(
+//       "[CONTROLLER ERROR] Failed to retrieve all popular missions:",
+//       error.message
+//     );
+//     next(error);
+//   }
+// };
+
+// // 마감 임박 미션 전체 조회
+// exports.getAllUpcomingMissions = async (req, res, next) => {
+//   try {
+//     const allUpcomingMissions = await missionService.getAllUpcomingMissions();
+
+//     // 성공적으로 데이터를 가져온 경우 클라이언트에 반환
+//     res.status(200).json({
+//       message: "All upcoming missions retrieved successfully",
+//       data: allUpcomingMissions,
+//     });
+//   } catch (error) {
+//     console.error(
+//       "[CONTROLLER ERROR] Failed to retrieve all upcoming missions:",
+//       error.message
+//     );
+//     next(error);
+//   }
+// };
+
+// // 참여 중인 미션 전체 조회
+// exports.getAllParticipatingMissions = async (req, res, next) => {
+//   try {
+//     // 로그인된 유저 정보 확인
+//     if (!req.user || !req.user.user_number) {
+//       return res.status(403).json({ message: "Unauthorized user" });
+//     }
+
+//     const userNumber = req.user.user_number; // 유저 번호 추출
+
+//     // 서비스 호출하여 참여 중인 미션 전체 조회
+//     const allParticipatingMissions =
+//       await missionService.getAllParticipatingMissions(userNumber);
+
+//     // 참여 중인 미션이 없는 경우 처리
+//     if (!allParticipatingMissions || allParticipatingMissions.length === 0) {
+//       return res.status(200).json({
+//         message: "No participating missions found",
+//         data: [],
+//       });
+//     }
+
+//     // 가져온 데이터 클라이언트에 반환
+//     res.status(200).json({
+//       message: "All participating missions retrieved successfully",
+//       data: allParticipatingMissions,
+//     });
+//   } catch (error) {
+//     console.error(
+//       "[CONTROLLER ERROR] Failed to retrieve all participating missions:",
+//       error.message
+//     );
+//     next(error);
+//   }
+// };
+
+// // 참여했던 미션 리스트 전체 조회
+// exports.getCompletedMissions = async (req, res, next) => {
+//   try {
+//     // 로그인된 유저 정보 확인
+//     if (!req.user || !req.user.user_number) {
+//       return res.status(403).json({ message: "Unauthorized user" });
+//     }
+
+//     const userNumber = req.user.user_number; // 유저 번호 추출
+
+//     // 서비스 호출하여 완료된 미션 전체 조회
+//     const completedMissions = await missionService.getCompletedMissions(
+//       userNumber
+//     );
+
+//     // 완료된 미션이 없는 경우 처리
+//     if (!completedMissions || completedMissions.length === 0) {
+//       return res.status(200).json({
+//         message: "No completed missions found",
+//         data: [],
+//       });
+//     }
+
+//     // 가져온 데이터 클라이언트에 반환
+//     res.status(200).json({
+//       message: "Completed missions retrieved successfully",
+//       data: completedMissions,
+//     });
+//   } catch (error) {
+//     console.error(
+//       "[CONTROLLER ERROR] Failed to retrieve completed missions:",
+//       error.message
+//     );
+//     next(error);
+//   }
+// };
+// ====================================================================================
+
+// 1) 로그인 없이 조회 가능한 미션
+exports.getPublicMissions = async (req, res, next) => {
+  const { type, category, start_date } = req.query;
+
   try {
-    const allPopularMissions = await missionService.getAllPopularMissions();
+    let missions;
 
-    // 가져온 데이터를 클라이언트에 반환
-    res.status(200).json({
-      message: "All popular missions retrieved successfully",
-      data: allPopularMissions,
-    });
-  } catch (error) {
-    console.error(
-      "[CONTROLLER ERROR] Failed to retrieve all popular missions:",
-      error.message
-    );
-    next(error);
-  }
-};
-
-// 마감 임박 미션 전체 조회
-exports.getAllUpcomingMissions = async (req, res, next) => {
-  try {
-    const allUpcomingMissions = await missionService.getAllUpcomingMissions();
-
-    // 성공적으로 데이터를 가져온 경우 클라이언트에 반환
-    res.status(200).json({
-      message: "All upcoming missions retrieved successfully",
-      data: allUpcomingMissions,
-    });
-  } catch (error) {
-    console.error(
-      "[CONTROLLER ERROR] Failed to retrieve all upcoming missions:",
-      error.message
-    );
-    next(error);
-  }
-};
-
-// 참여 중인 미션 전체 조회
-exports.getAllParticipatingMissions = async (req, res, next) => {
-  try {
-    // 로그인된 유저 정보 확인
-    if (!req.user || !req.user.user_number) {
-      return res.status(403).json({ message: "Unauthorized user" });
-    }
-
-    const userNumber = req.user.user_number; // 유저 번호 추출
-
-    // 서비스 호출하여 참여 중인 미션 전체 조회
-    const allParticipatingMissions =
-      await missionService.getAllParticipatingMissions(userNumber);
-
-    // 참여 중인 미션이 없는 경우 처리
-    if (!allParticipatingMissions || allParticipatingMissions.length === 0) {
-      return res.status(200).json({
-        message: "No participating missions found",
-        data: [],
+    if (type === "popular") {
+      // 지금 주목받는 미션
+      missions = await missionService.getAllPopularMissions({
+        category,
+        start_date,
       });
+    } else if (type === "upcoming") {
+      // 마감 임박 미션
+      missions = await missionService.getAllUpcomingMissions({
+        category,
+        start_date,
+      });
+    } else {
+      return res.status(400).json({ message: "Invalid type parameter" });
     }
 
-    // 가져온 데이터 클라이언트에 반환
     res.status(200).json({
-      message: "All participating missions retrieved successfully",
-      data: allParticipatingMissions,
+      message: `All ${type} missions retrieved successfully`,
+      data: missions,
     });
   } catch (error) {
     console.error(
-      "[CONTROLLER ERROR] Failed to retrieve all participating missions:",
+      `[CONTROLLER ERROR] Failed to retrieve ${type} missions:`,
       error.message
     );
     next(error);
   }
 };
 
-// 참여했던 미션 리스트 전체 조회
-exports.getCompletedMissions = async (req, res, next) => {
+// 2) 로그인 필요한 미션
+exports.getAuthRequiredMissions = async (req, res, next) => {
+  const { type, category } = req.query;
+
   try {
-    // 로그인된 유저 정보 확인
-    if (!req.user || !req.user.user_number) {
-      return res.status(403).json({ message: "Unauthorized user" });
-    }
+    const userNumber = req.user.user_number; // 로그인 검증은 미들웨어에서 처리
+    let missions;
 
-    const userNumber = req.user.user_number; // 유저 번호 추출
-
-    // 서비스 호출하여 완료된 미션 전체 조회
-    const completedMissions = await missionService.getCompletedMissions(
-      userNumber
-    );
-
-    // 완료된 미션이 없는 경우 처리
-    if (!completedMissions || completedMissions.length === 0) {
-      return res.status(200).json({
-        message: "No completed missions found",
-        data: [],
+    if (type === "participating") {
+      // 참여 중인 미션
+      missions = await missionService.getAllParticipatingMissions(userNumber, {
+        category,
       });
+    } else if (type === "completed") {
+      // 참여했던 미션
+      missions = await missionService.getCompletedMissions(userNumber, {
+        category,
+      });
+    } else {
+      return res.status(400).json({ message: "Invalid type parameter" });
     }
 
-    // 가져온 데이터 클라이언트에 반환
     res.status(200).json({
-      message: "Completed missions retrieved successfully",
-      data: completedMissions,
+      message: `All ${type} missions retrieved successfully`,
+      data: missions,
     });
   } catch (error) {
     console.error(
-      "[CONTROLLER ERROR] Failed to retrieve completed missions:",
+      `[CONTROLLER ERROR] Failed to retrieve ${type} missions:`,
       error.message
     );
     next(error);

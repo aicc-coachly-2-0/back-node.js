@@ -109,12 +109,112 @@ exports.getParticipatingMissions = async (userNumber) => {
   }
 };
 
-// 지금 주목받는 미션 전체 조회
-exports.getAllPopularMissions = async () => {
-  try {
-    const allPopularMissions = await missionListModel.getAllPopularMissions();
+// ====================================================================================
+// // 지금 주목받는 미션 전체 조회
+// exports.getAllPopularMissions = async () => {
+//   try {
+//     const allPopularMissions = await missionListModel.getAllPopularMissions();
 
-    // 로그: 가져온 데이터 확인
+//     // 로그: 가져온 데이터 확인
+//     console.log("[Service] All Popular Missions:", allPopularMissions);
+
+//     return allPopularMissions;
+//   } catch (error) {
+//     console.error(`[Service] Error in getAllPopularMissions: ${error.message}`);
+//     throw new Error("지금 주목받는 미션 전체 조회 중 오류가 발생했습니다.");
+//   }
+// };
+
+// // 마감 임박 미션 전체 조회
+// exports.getAllUpcomingMissions = async () => {
+//   try {
+//     const allUpcomingMissions = await missionListModel.getAllUpcomingMissions();
+
+//     // 로그: 가져온 데이터 확인
+//     console.log("[Service] All Upcoming Missions:", allUpcomingMissions);
+
+//     return allUpcomingMissions;
+//   } catch (error) {
+//     console.error(
+//       `[Service] Error in getAllUpcomingMissions: ${error.message}`
+//     );
+//     throw new Error("마감 임박 미션 전체 조회 중 오류가 발생했습니다.");
+//   }
+// };
+
+// // 참여 중인 미션 전체 조회
+// exports.getAllParticipatingMissions = async (userNumber) => {
+//   try {
+//     // 모델에서 참여 중인 미션 리스트 전체 조회
+//     const allParticipatingMissions =
+//       await missionListModel.getAllParticipatingMissions(userNumber);
+
+//     // 조회된 데이터 확인
+//     console.log(
+//       "[Service] All Participating Missions Data:",
+//       allParticipatingMissions
+//     );
+
+//     // 빈 배열이면 로그로 출력하고 빈 배열 반환
+//     if (allParticipatingMissions.length === 0) {
+//       console.log(
+//         "[Service] No participating missions found for user:",
+//         userNumber
+//       );
+//       return [];
+//     }
+
+//     // 조회된 데이터 반환
+//     return allParticipatingMissions;
+//   } catch (error) {
+//     console.error(
+//       "[Service] Error in fetching all participating missions:",
+//       error.message
+//     );
+//     throw new Error("참여 중인 미션 전체 조회 중 오류가 발생했습니다.");
+//   }
+// };
+
+// // 참여했던 미션 리스트 전체 조회
+// exports.getCompletedMissions = async (userNumber) => {
+//   try {
+//     // 모델에서 완료된 미션 리스트 전체 조회
+//     const completedMissions = await missionListModel.getCompletedMissions(
+//       userNumber
+//     );
+
+//     // 조회된 데이터 확인
+//     console.log("[Service] Completed Missions Data:", completedMissions);
+
+//     // 빈 배열이면 로그로 출력하고 빈 배열 반환
+//     if (completedMissions.length === 0) {
+//       console.log(
+//         "[Service] No completed missions found for user:",
+//         userNumber
+//       );
+//       return [];
+//     }
+
+//     // 조회된 데이터 반환
+//     return completedMissions;
+//   } catch (error) {
+//     console.error(
+//       "[Service] Error in fetching completed missions:",
+//       error.message
+//     );
+//     throw new Error("완료된 미션 조회 중 오류가 발생했습니다.");
+//   }
+// };
+// ====================================================================================
+
+// 지금 주목받는 미션 전체 조회
+exports.getAllPopularMissions = async ({ category, start_date }) => {
+  try {
+    const allPopularMissions = await missionListModel.getMissionsByFilter({
+      category, // 카테고리 필터
+      start_date, // 시작 날짜 필터
+    });
+
     console.log("[Service] All Popular Missions:", allPopularMissions);
 
     return allPopularMissions;
@@ -125,11 +225,13 @@ exports.getAllPopularMissions = async () => {
 };
 
 // 마감 임박 미션 전체 조회
-exports.getAllUpcomingMissions = async () => {
+exports.getAllUpcomingMissions = async ({ category, start_date }) => {
   try {
-    const allUpcomingMissions = await missionListModel.getAllUpcomingMissions();
+    const allUpcomingMissions = await missionListModel.getMissionsByFilter({
+      category, // 카테고리 필터
+      start_date, // 시작 날짜 필터
+    });
 
-    // 로그: 가져온 데이터 확인
     console.log("[Service] All Upcoming Missions:", allUpcomingMissions);
 
     return allUpcomingMissions;
@@ -142,28 +244,28 @@ exports.getAllUpcomingMissions = async () => {
 };
 
 // 참여 중인 미션 전체 조회
-exports.getAllParticipatingMissions = async (userNumber) => {
+exports.getAllParticipatingMissions = async (userNumber, { category }) => {
   try {
-    // 모델에서 참여 중인 미션 리스트 전체 조회
-    const allParticipatingMissions =
-      await missionListModel.getAllParticipatingMissions(userNumber);
-
-    // 조회된 데이터 확인
-    console.log(
-      "[Service] All Participating Missions Data:",
-      allParticipatingMissions
+    const allParticipatingMissions = await missionListModel.getMissionsByFilter(
+      {
+        user_id: userNumber, // 유저 ID 필터
+        category, // 카테고리 필터
+      }
     );
 
-    // 빈 배열이면 로그로 출력하고 빈 배열 반환
-    if (allParticipatingMissions.length === 0) {
+    // 빈 배열 처리
+    if (!allParticipatingMissions || allParticipatingMissions.length === 0) {
       console.log(
-        "[Service] No participating missions found for user:",
-        userNumber
+        `[Service] No participating missions found for user: ${userNumber}`
       );
       return [];
     }
 
-    // 조회된 데이터 반환
+    console.log(
+      "[Service] All Participating Missions:",
+      allParticipatingMissions
+    );
+
     return allParticipatingMissions;
   } catch (error) {
     console.error(
@@ -175,26 +277,23 @@ exports.getAllParticipatingMissions = async (userNumber) => {
 };
 
 // 참여했던 미션 리스트 전체 조회
-exports.getCompletedMissions = async (userNumber) => {
+exports.getCompletedMissions = async (userNumber, { category }) => {
   try {
-    // 모델에서 완료된 미션 리스트 전체 조회
-    const completedMissions = await missionListModel.getCompletedMissions(
-      userNumber
-    );
+    const completedMissions = await missionListModel.getMissionsByFilter({
+      user_id: userNumber, // 유저 ID 필터
+      category, // 카테고리 필터
+    });
 
-    // 조회된 데이터 확인
-    console.log("[Service] Completed Missions Data:", completedMissions);
-
-    // 빈 배열이면 로그로 출력하고 빈 배열 반환
-    if (completedMissions.length === 0) {
+    // 빈 배열 처리
+    if (!completedMissions || completedMissions.length === 0) {
       console.log(
-        "[Service] No completed missions found for user:",
-        userNumber
+        `[Service] No completed missions found for user: ${userNumber}`
       );
       return [];
     }
 
-    // 조회된 데이터 반환
+    console.log("[Service] Completed Missions:", completedMissions);
+
     return completedMissions;
   } catch (error) {
     console.error(

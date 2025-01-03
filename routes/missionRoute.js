@@ -37,20 +37,30 @@ router.get(
   missionController.getParticipatingMissions
 );
 
-// 전체 조회
-router.get("/popular/all", missionController.getAllPopularMissions);
-router.get("/upcoming/all", missionController.getAllUpcomingMissions);
-router.get(
-  "/participating/all",
-  authenticateToken,
-  missionController.getAllParticipatingMissions
-);
+// // 전체 조회
+// router.get("/popular/all", missionController.getAllPopularMissions);
+// router.get("/upcoming/all", missionController.getAllUpcomingMissions);
+// router.get(
+//   "/participating/all",
+//   authenticateToken,
+//   missionController.getAllParticipatingMissions
+// );
 
-// 참여했던 미션 리스트 조회
+// // 참여했던 미션 리스트 조회
+// router.get(
+//   "/completed",
+//   authenticateToken,
+//   missionController.getCompletedMissions
+// );
+
+// 로그인 없이 조회 가능한 API - 지금 주목받는, 마감 임박
+router.get("/public", missionController.getPublicMissions);
+
+// 로그인 필요한 API - 참여 중인, 참여했던
 router.get(
-  "/completed",
+  "/private",
   authenticateToken,
-  missionController.getCompletedMissions
+  missionController.getAuthRequiredMissions
 );
 
 module.exports = router;
