@@ -49,6 +49,9 @@ router.get('/', userController.getUsers);
 // ID 또는 이름, 번호로 유저 검색
 router.get('/search', userController.searchUsers);
 
+// 특정 유저 조회
+router.get('/users/:user_number', userController.getUserByNumber);
+
 // 사용자 정보 수정 라우트
 router.put(
   '/users/:user_number',

@@ -114,6 +114,26 @@ exports.searchUsers = async (req, res, next) => {
   }
 };
 
+// 특정 유저 정보 조회
+exports.getUserByNumber = async (req, res) => {
+  const { user_number } = req.params;
+
+  try {
+    // 서비스 계층에서 유저 정보 가져오기
+    const user = await userService.getUserByNumber(user_number);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ message: "User retrieved successfully", data: user });
+  } catch (error) {
+    console.error("Error retrieving user:", error.message);
+    res.status(500).json({ message: "Failed to retrieve user", error: error.message });
+  }
+};
+
+
 // 사용자 정보 업데이트
 exports.updateUser = async (req, res) => {
   const { role } = req.user;  // 로그인한 사용자의 role (관리자 또는 일반 사용자)

@@ -95,6 +95,21 @@ exports.getUsers = async ({ status }) => {
   }
 };
 
+// 특정 유저 정보 조회
+exports.getUserByNumber = async (user_number) => {
+  try {
+    const user = await userModel.findUserByNumber(user_number);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return user;
+  } catch (error) {
+    console.error("Error in service layer:", error.message);
+    throw error;
+  }
+};
 
 // 사용자 정보 업데이트 
 exports.updateUser = async (user_number, fieldsToUpdate, role) => {
