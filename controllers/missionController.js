@@ -113,7 +113,7 @@ exports.joinMissionRoom = async (req, res, next) => {
   }
 };
 
-// "지금 주목받는 미션" 리스트 조회
+// 지금 주목받는 미션 5개 조회
 exports.getPopularMissions = async (req, res, next) => {
   try {
     const popularMissions = await missionService.getPopularMissions();
@@ -132,21 +132,56 @@ exports.getPopularMissions = async (req, res, next) => {
   }
 };
 
-// 마감 임박 미션 리스트 조회
+// 마감 임박 미션 5개 조회
 exports.getUpcomingMissions = async (req, res, next) => {
   try {
     const upcomingMissions = await missionService.getUpcomingMissions();
 
     // 성공적으로 데이터를 가져온 경우 클라이언트에 반환
-    res
-      .status(200)
-      .json({
-        message: "Upcoming missions retrieved successfully",
-        data: upcomingMissions,
-      });
+    res.status(200).json({
+      message: "Upcoming missions retrieved successfully",
+      data: upcomingMissions,
+    });
   } catch (error) {
     console.error(
       "[CONTROLLER ERROR] Failed to retrieve upcoming missions:",
+      error.message
+    );
+    next(error);
+  }
+};
+
+// 참여 중인 미션 5개 조회
+exports.getParticipatingMissions = async (req, res, next) => {
+  try {
+    // 로그인된 유저 정보 확인
+    if (!req.user || !req.user.user_number) {
+      return res.status(403).json({ message: "Unauthorized user" });
+    }
+
+    const userNumber = req.user.user_number; // 유저 번호 추출
+
+    // 서비스 호출하여 참여 중인 미션 조회
+    const participatingMissions = await missionService.getParticipatingMissions(
+      userNumber
+    );
+
+    // 참여 중인 미션이 없는 경우 처리
+    if (!participatingMissions || participatingMissions.length === 0) {
+      return res.status(200).json({
+        message: "No participating missions found",
+        data: [],
+      });
+    }
+
+    // 가져온 데이터 클라이언트에 반환
+    res.status(200).json({
+      message: "Participating missions retrieved successfully",
+      data: participatingMissions,
+    });
+  } catch (error) {
+    console.error(
+      "[CONTROLLER ERROR] Failed to retrieve participating missions:",
       error.message
     );
     next(error);

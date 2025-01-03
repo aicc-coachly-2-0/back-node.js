@@ -73,3 +73,37 @@ exports.getUpcomingMissions = async () => {
     throw new Error("마감 임박 미션 조회 중 오류가 발생했습니다.");
   }
 };
+
+// 참여 중인 미션 5개 조회
+exports.getParticipatingMissions = async (userNumber) => {
+  try {
+    // 모델에서 참여 중인 미션 리스트 조회
+    const participatingMissions = await missionModel.getParticipatingMissions(
+      userNumber
+    );
+
+    // 조회된 데이터 확인
+    console.log(
+      "[Service] Participating Missions Data:",
+      participatingMissions
+    );
+
+    // 빈 배열이면 로그로 출력하고 빈 배열 반환
+    if (participatingMissions.length === 0) {
+      console.log(
+        "[Service] No participating missions found for user:",
+        userNumber
+      );
+      return [];
+    }
+
+    // 조회된 데이터 반환
+    return participatingMissions;
+  } catch (error) {
+    console.error(
+      "[Service] Error in fetching participating missions:",
+      error.message
+    );
+    throw new Error("참여 중인 미션 조회 중 오류가 발생했습니다.");
+  }
+};

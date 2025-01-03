@@ -219,10 +219,10 @@ exports.getPopularMissions = async () => {
         mission_rooms.img_link,
         COUNT(mission_participants.user_number) AS participant_count,
         CASE 
-          WHEN mission_rooms.ended_at - mission_rooms.started_at = 0 THEN '하루'
-          WHEN mission_rooms.ended_at - mission_rooms.started_at = 2 THEN '3일'
-          WHEN mission_rooms.ended_at - mission_rooms.started_at = 6 THEN '일주일'
-          WHEN mission_rooms.ended_at - mission_rooms.started_at >= 29 THEN '한 달'
+          WHEN mission_rooms.ended_at - mission_rooms.started_at = 1 THEN '하루'
+          WHEN mission_rooms.ended_at - mission_rooms.started_at = 3 THEN '3일'
+          WHEN mission_rooms.ended_at - mission_rooms.started_at = 7 THEN '일주일'
+          WHEN mission_rooms.ended_at - mission_rooms.started_at = 30 THEN '한 달'
           ELSE '기간 알 수 없음'
         END AS duration
     FROM 
@@ -265,45 +265,122 @@ exports.getPopularMissions = async () => {
   }
 };
 
-// 마감 임박 미션 조회
+// 마감 임박 미션 조회 5개 조회
 exports.getUpcomingMissions = async () => {
   // 모집중 상태의 미션 중 시작일이 가까운 순서대로 조회
   const query = `
     SELECT 
-        mission_rooms.room_number, -- 미션 방 번호
-        mission_rooms.title, -- 미션 방 제목
-        mission_rooms.started_at, -- 미션 시작일
-        mission_rooms.img_link, -- 썸네일 이미지
-        COUNT(mission_participants.user_number) AS participant_count -- 참여자 수 계산
+        mission_rooms.room_number,
+        mission_rooms.title,
+        mission_rooms.started_at,
+        mission_rooms.img_link,
+        COUNT(mission_participants.user_number) AS participant_count
+        CASE 
+          WHEN mission_rooms.ended_at - mission_rooms.started_at = 1 THEN '하루'
+          WHEN mission_rooms.ended_at - mission_rooms.started_at = 3 THEN '3일'
+          WHEN mission_rooms.ended_at - mission_rooms.started_at = 7 THEN '일주일'
+          WHEN mission_rooms.ended_at - mission_rooms.started_at = 30 THEN '한 달'
+          ELSE '기간 알 수 없음'
+        END AS duration
     FROM 
         mission_rooms
     LEFT JOIN 
         mission_participants
     ON 
-        mission_rooms.room_number = mission_participants.room_number -- 미션 방과 참여자 연결
+        mission_rooms.room_number = mission_participants.room_number
     WHERE 
-        mission_rooms.state = 'recruiting' -- 모집중 상태의 미션만 조회
-        AND mission_rooms.started_at > CURRENT_DATE -- 오늘 이후 시작하는 미션만 포함
+        mission_rooms.state = 'recruiting'
+        AND mission_rooms.started_at > CURRENT_DATE
     GROUP BY 
         mission_rooms.room_number, 
         mission_rooms.title, 
         mission_rooms.started_at, 
-        mission_rooms.img_link -- 그룹화로 참여자 수 계산
+        mission_rooms.img_link
+        mission_rooms.ended_at
     HAVING 
-        COUNT(mission_participants.user_number) <= 2000 -- 참여자가 2000명 이하인 방만 포함
+        COUNT(mission_participants.user_number) <= 2000
     ORDER BY 
-        mission_rooms.started_at ASC -- 시작일이 가까운 순서로 정렬
-    LIMIT 5; -- 최대 5개만 조회
+        mission_rooms.started_at ASC
+    LIMIT 5;
   `;
 
   try {
     // 데이터베이스 쿼리 실행
     const { rows } = await postgreSQL.query(query);
 
-    // 결과 반환
-    return rows;
+    // 필요한 데이터만 반환
+    return rows.map((row) => ({
+      room_number: row.room_number,
+      title: row.title,
+      started_at: row.started_at,
+      img_link: row.img_link,
+      participant_count: row.participant_count,
+      duration: row.duration,
+    }));
   } catch (error) {
     console.error("[MODEL ERROR] 마감 임박 미션 조회 실패:", error.message);
     throw new Error("마감 임박 미션 조회 중 데이터베이스 오류가 발생했습니다.");
+  }
+};
+
+// 참여 중인 미션 5개 조회
+exports.getParticipatingMissions = async (userNumber) => {
+  const query = `
+    SELECT
+      mission_rooms.room_number,
+      mission_rooms.title,
+      mission_rooms.started_at,
+      mission_rooms.img_link,
+      COUNT(mission_participants.user_number) AS participant_count,
+      COALESCE(
+        MAX(
+          CASE
+            WHEN mission_validations.success_status = 'approved' THEN '인증 완료'
+            ELSE '인증 미완료'
+          END
+        ),
+        '인증 미완료'
+      ) AS validation_status,
+      CASE
+        WHEN (mission_rooms.ended_at - mission_rooms.started_at) = 1 THEN '하루'
+        WHEN (mission_rooms.ended_at - mission_rooms.started_at) = 3 THEN '3일'
+        WHEN (mission_rooms.ended_at - mission_rooms.started_at) = 7 THEN '일주일'
+        ELSE '한 달'
+      END AS duration
+    FROM mission_participants
+    INNER JOIN mission_rooms ON mission_participants.room_number = mission_rooms.room_number
+    LEFT JOIN mission_validations
+      ON mission_participants.group_number = mission_validations.group_number
+    WHERE mission_participants.user_number = $1
+      AND mission_participants.state = 'active'
+      AND mission_rooms.state = 'ongoing'
+    GROUP BY mission_rooms.room_number
+    ORDER BY mission_rooms.started_at ASC
+    LIMIT 5;
+  `;
+
+  const values = [userNumber];
+
+  try {
+    const { rows } = await postgreSQL.query(query, values);
+
+    // 필요한 데이터만 반환
+    return rows.map((row) => ({
+      room_number: row.room_number, // 미션 방 번호
+      title: row.title, // 미션 제목
+      started_at: row.started_at, // 미션 시작일
+      img_link: row.img_link, // 썸네일 이미지 링크
+      participant_count: row.participant_count, // 현재 참여 중인 인원 수
+      validation_status: row.validation_status, // 인증 완료 여부
+      duration: row.duration, // 미션 수행 기간
+    }));
+  } catch (error) {
+    console.error(
+      "[Model] Error fetching participating missions:",
+      error.message
+    );
+    throw new Error(
+      "참여 중인 미션을 불러오는 중 데이터베이스 오류가 발생했습니다."
+    );
   }
 };
