@@ -12,6 +12,7 @@ const feedRoute = require('./routes/feedRoute');
 const userRoute = require('./routes/userRoute');
 const missionRoute = require('./routes/missionRoute');
 const faqRoute = require('./routes/faqRoutes');
+const qnaRoute = require('./routes/qnaRoutes');
 
 const PORT = config.server.port || 8000;
 const app = express();
@@ -40,6 +41,8 @@ app.use('/feeds', feedRoute);
 app.use('/user', userRoute);
 app.use('/missions', missionRoute);
 app.use('/faqs', faqRoute);
+app.use('/qnas', qnaRoute);
+
 
 // error route
 app.use(errorHandler);

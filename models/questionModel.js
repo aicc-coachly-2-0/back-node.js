@@ -53,15 +53,24 @@ exports.findAllQuestions = async () => {
   return rows;
 };
 
+// 답변 없는 질문 조회
 exports.findUnansweredQuestions = async () => {
-  const query = `
-    SELECT q.*
-    FROM questions q
-    LEFT JOIN answers a ON q.question_number = a.question_number
-    WHERE a.answer_number IS NULL
-    ORDER BY q.created_at ASC;
-  `;
-
-  const { rows } = await postgreSQL.query(query);
-  return rows;
+  try {
+    // 답변이 없는 질문을 조회하는 쿼리
+    const query = `
+      SELECT q.*
+      FROM questions q
+      LEFT JOIN answers a ON q.question_number = a.question_number
+      WHERE a.answer_number IS NULL
+      ORDER BY q.created_at ASC;
+    `;
+    
+    // DB 쿼리 실행 후 결과 반환
+    const { rows } = await postgreSQL.query(query);
+    return rows;
+  } catch (error) {
+    console.error("Error in findUnansweredQuestions:", error);
+    throw new Error("Could not execute the query for unanswered questions");
+  }
 };
+
