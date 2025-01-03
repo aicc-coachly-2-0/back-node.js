@@ -10,7 +10,7 @@
 
 ## 프로젝트 데이터 베이스 스키마
 
-### 2025-01-03 오전 feature/all 수정사항
+# 2025-01-03 오전 feature/all 수정사항
 
 ## 0. index.js :
 
@@ -18,20 +18,20 @@ route 엔드포인트 "/api" 제거
 
 ## 1. auth
 
-# config :
+### config :
 
 config.js의 ftp부분 baseUrl => baseUrl: process.env.FTP_URL === 'http://222.112.27.120/kochiri'
 
-# middlewares :
+### middlewares :
 
 fileUpload.js에 authService.js에 있던 uploadFileToFTP을 이동 및 코드 수정 (업로드 코드 통합)
 \*\*\* 이미지 파일 업로드시 클라단에서 imageType을 전달해야한다.
 
-# userService.js :
+### userService.js :
 
 createMongoUser부분을 authModel.js로 위치 변경
 
-# auth :
+### auth :
 
 authRoute.js의 회원가입에 uploadFileToFTP 추가 및 엔드포인트 통일(노션의 api명세서 참조)
 authController.js의 signup 부분 수정
@@ -40,7 +40,7 @@ authModel.js의 createUser 코드 수정 및 createMongoUser추가
 
 ## 2. post
 
-# postRoute.js :
+### postRoute.js :
 
 엔드포인트 수정 index.js의 [ app.use("/api/posts", postRoute) ]의 경우 엔드포인트에 기본으로 /api/posts 이 부분이 존재하기에 중복요소 제거
 수정의 일부 :
@@ -51,20 +51,20 @@ http://localhost8080/api/posts/post => http://localhost8080/api/posts
 
 ## 3. feed
 
-# feedRoute.js :
+### feedRoute.js :
 
 위와 동일한 이유로 엔드포인트 수정
 feed 작성 및 수정에 upload.single('feedImage'), uploadFileToFTP 추가
 
-# feedController.js :
+### feedController.js :
 
 피드 생성 및 수정에 img 추가
 
-# feedService.js :
+### feedService.js :
 
 return 추가
 
-# feedModel.js :
+### feedModel.js :
 
 return할 값 지정 및 where절 state 제거 (클라단에서 필터링 추후 분할 관리 필요하면 엔드포인트 생성)
 createFeed와 updateFeed의 큰 변경점 img
@@ -74,15 +74,15 @@ createFeed와 updateFeed의 큰 변경점 img
 일단 user중에서 팔로우~좋아요 기능까지만 수정
 \*\*\* user get update등 유저에 자체에 관한 사항은 수정 x
 
-# userRoute.js :
+### userRoute.js :
 
 엔드포인트 수정
 좋아요 기능 통합 클라단에서 type 및 id값(post_number, feed_number등) 전달
 
-# userController.js :
+### userController.js :
 
 좋아요 기능 통합 위와 같음
 
-# userService.js :
+### userService.js :
 
 좋아요 기능 통합 위와 같음
