@@ -21,9 +21,10 @@ exports.createNoticeWithImages = async (req, res, next) => {
 exports.updateNotice = async (req, res, next) => {
   try {
     const { notice_number } = req.params;
-    const { title, content } = req.body;
+    const { admin_number, title, content } = req.body;
     const images = req.fileUrls?.map((file) => file.fileUrl) || null; // 이미지 배열 처리
     const notice = await noticeService.updateNotice(notice_number, {
+      admin_number,
       title,
       content,
       images,

@@ -11,7 +11,7 @@ router.post(
 );
 
 // 공지글 수정
-router.put(
+router.patch(
   '/notices/:notice_number',
   upload,
   uploadFileToFTP,
@@ -25,6 +25,6 @@ router.get('/notices/:notice_number', noticeController.getNoticeWithImages);
 router.get('/notices', noticeController.getAllNotices);
 
 // 활성 상태의 공지글 조회
-router.get('/notices/active', noticeController.getActiveNotices);
+router.get('/active', noticeController.getActiveNotices);
 
 module.exports = router;
