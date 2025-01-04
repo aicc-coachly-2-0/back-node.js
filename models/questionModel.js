@@ -41,6 +41,19 @@ exports.updateQuestion = async (
   return rows[0];
 };
 
+exports.updateQuestionState = async (questionNumber, state) => {
+  const query = `
+    UPDATE questions
+    SET state = $1, updated_at = CURRENT_TIMESTAMP
+    WHERE question_number = $2
+    RETURNING *;
+  `;
+  const values = [state, questionNumber];
+
+  const { rows } = await postgreSQL.query(query, values);
+  return rows[0];
+};
+
 exports.findQuestionsByUser = async (userNumber) => {
   const query = `SELECT * FROM questions WHERE user_number = $1`;
   const { rows } = await postgreSQL.query(query, [userNumber]);
