@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const missionController = require("../controllers/missionController");
+const missionDetailsController = require("../controllers/missionDetailsController");
 const { authenticateToken } = require("../middlewares/authMiddleware");
 
 // 미션방 생성
@@ -62,5 +63,14 @@ router.get(
   authenticateToken,
   missionController.getAuthRequiredMissions
 );
+
+// 모집 중인 미션 상세 페이지 조회
+router.get(
+  "/recruiting/:room_number",
+  missionDetailsController.getRecruitingMissionDetails
+);
+
+// 진행 중 또는 완료된 미션 상세 페이지 조회
+router.get("/detail/:room_number", missionDetailsController.getMissionDetails);
 
 module.exports = router;
