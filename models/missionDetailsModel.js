@@ -46,7 +46,7 @@ exports.getMissionDetails = async (room_number) => {
         mission_rooms.started_at,
         mission_rooms.ended_at,
         mission_rooms.cert_freq,
-        COALESCE(mission_rooms.weekly_cert_count, '하루 1회') AS weekly_cert_count,
+        COALESCE(mission_rooms.weekly_cert_count::integer, 1) AS weekly_cert_count,
         mission_rooms.img_link
     FROM mission_rooms
     WHERE mission_rooms.room_number = $1
