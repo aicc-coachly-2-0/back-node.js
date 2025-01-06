@@ -1,53 +1,27 @@
-const missionDetailsService = require("../services/missionDetailsService");
+const missionDetailsModel = require("../models/missionDetailsModel");
 
 // 모집 중인 미션 상세 페이지 조회
-exports.getRecruitingMissionDetails = async (req, res, next) => {
+exports.getRecruitingMissionDetails = async (room_number) => {
   try {
-    const { room_number } = req.params;
-
-    const missionDetails =
-      await missionDetailsService.getRecruitingMissionDetails(room_number);
-
-    return res.status(200).json({
-      message: "Recruiting mission details retrieved successfully",
-      data: missionDetails,
-    });
+    return await missionDetailsModel.getRecruitingMissionDetails(room_number);
   } catch (error) {
     console.error(
-      "[CONTROLLER ERROR] Failed to retrieve recruiting mission details:",
+      "[SERVICE ERROR] Failed to retrieve recruiting mission details:",
       error.message
     );
-    next(error);
+    throw new Error("Failed to retrieve recruiting mission details.");
   }
 };
 
 // 진행 중 또는 완료된 미션 상세 페이지 조회
-exports.getMissionDetails = async (req, res, next) => {
+exports.getMissionDetails = async (room_number) => {
   try {
-    const { room_number } = req.params;
-
-    // 미션 상세 조회
-    const missionDetails = await missionDetailsService.getMissionDetails(
-      room_number
-    );
-
-    // 모집 중 상태에서 접근을 막음
-    if (missionDetails.state === "recruiting") {
-      return res.status(403).json({
-        message:
-          "Cannot access mission details. The mission is still in recruiting state.",
-      });
-    }
-
-    return res.status(200).json({
-      message: "Ongoing or completed mission details retrieved successfully",
-      data: missionDetails,
-    });
+    return await missionDetailsModel.getMissionDetails(room_number);
   } catch (error) {
     console.error(
-      "[CONTROLLER ERROR] Failed to retrieve mission details:",
+      "[SERVICE ERROR] Failed to retrieve mission details:",
       error.message
     );
-    next(error);
+    throw new Error("Failed to retrieve mission details.");
   }
 };
