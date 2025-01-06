@@ -91,7 +91,7 @@ exports.updatePost = async (post_number, { title, content }) => {
 exports.softDeletePost = async (post_number) => {
   const query = `
     UPDATE posts
-    SET state = 'inactive'
+    SET state = 'deleted'
     WHERE post_number = $1;
   `;
   await postgreSQL.query(query, [post_number]);
@@ -100,7 +100,7 @@ exports.softDeletePost = async (post_number) => {
 exports.softDeleteComment = async (post_comment_number) => {
   const query = `
     UPDATE post_comments
-    SET state = 'inactive'
+    SET state = 'deleted'
     WHERE post_comment_number = $1;
   `;
   await postgreSQL.query(query, [post_comment_number]);
