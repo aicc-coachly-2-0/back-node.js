@@ -42,7 +42,7 @@ exports.getReportsMadeByUser = async (req, res) => {
   const { user_id } = req.user;  // 로그인된 사용자의 user_id
 
   try {
-    const reports = await userService.findReportsMadeByUser(user_id);
+    const reports = await reportService.getReportsMadeByUser(user_id);
     res.status(200).json({ message: 'Reports made by user retrieved successfully', data: reports });
   } catch (error) {
     next(error);
