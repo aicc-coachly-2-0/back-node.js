@@ -48,17 +48,9 @@ router.delete(
   postController.deletePost
 );
 
-// 댓글 수정
-router.patch(
-  '/post-comments/:post_comment_number',
-  authMiddleware.authenticateToken,
-  authMiddleware.authorizePostCommentOwnerOrAdmin,
-  postController.updateComment
-);
-
 // 댓글 삭제 (소프트 삭제)
 router.delete(
-  '/post-comments/:post_comment_number',
+  '/comment/:post_comment_number',
   authMiddleware.authenticateToken,
   authMiddleware.authorizePostCommentOwnerOrAdmin,
   postController.deleteComment

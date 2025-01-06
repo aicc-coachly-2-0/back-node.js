@@ -88,20 +88,6 @@ exports.deletePost = async (req, res, next) => {
   }
 };
 
-exports.updateComment = async (req, res, next) => {
-  try {
-    const updatedComment = await postService.updateComment(
-      req.params.post_comment_number,
-      req.body
-    );
-    res
-      .status(200)
-      .json({ message: 'Comment updated successfully', updatedComment });
-  } catch (error) {
-    next(error);
-  }
-};
-
 exports.deleteComment = async (req, res, next) => {
   try {
     await postService.deleteComment(req.params.post_comment_number);
