@@ -80,13 +80,13 @@ const authorizeOwnerOrAdmin = async ({
 
 // 게시글 소유자 또는 관리자 권한 확인
 exports.authorizePostOwnerOrAdmin = async (req, res, next) => {
-  const { user_id, isAdmin } = req.user;
+  const { user_number, isAdmin } = req.user;
   const { post_number } = req.params;
 
   const result = await authorizeOwnerOrAdmin({
     getResource: postModel.getPostById,
     resourceId: post_number,
-    userId: user_id,
+    userId: user_number,
     isAdmin,
   });
 
@@ -99,13 +99,13 @@ exports.authorizePostOwnerOrAdmin = async (req, res, next) => {
 
 // 게시글 댓글 소유자 또는 관리자 권한 확인
 exports.authorizePostCommentOwnerOrAdmin = async (req, res, next) => {
-  const { user_id, isAdmin } = req.user;
+  const { user_number, isAdmin } = req.user;
   const { post_comment_number } = req.params;
 
   const result = await authorizeOwnerOrAdmin({
     getResource: postModel.getCommentById,
     resourceId: post_comment_number,
-    userId: user_id,
+    userId: user_number,
     isAdmin,
   });
 
@@ -118,13 +118,13 @@ exports.authorizePostCommentOwnerOrAdmin = async (req, res, next) => {
 
 // 피드 소유자 또는 관리자 권한 확인
 exports.authorizeFeedOwnerOrAdmin = async (req, res, next) => {
-  const { user_id, isAdmin } = req.user;
+  const { user_number, isAdmin } = req.user;
   const { feed_number } = req.params;
 
   const result = await authorizeOwnerOrAdmin({
     getResource: feedModel.getFeedById,
     resourceId: feed_number,
-    userId: user_id,
+    userId: user_number,
     isAdmin,
   });
 
@@ -137,13 +137,13 @@ exports.authorizeFeedOwnerOrAdmin = async (req, res, next) => {
 
 // 피드 댓글 소유자 또는 관리자 권한 확인
 exports.authorizeFeedCommentOwnerOrAdmin = async (req, res, next) => {
-  const { user_id, isAdmin } = req.user;
+  const { user_number, isAdmin } = req.user;
   const { feed_comment_number } = req.params;
 
   const result = await authorizeOwnerOrAdmin({
     getResource: feedModel.getCommentById,
     resourceId: feed_comment_number,
-    userId: user_id,
+    userId: user_number,
     isAdmin,
   });
 

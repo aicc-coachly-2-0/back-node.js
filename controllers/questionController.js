@@ -6,7 +6,9 @@ const questionService = require('../services/questionService');
 exports.createQuestion = async (req, res, next) => {
   try {
     const question = await questionService.createQuestion(req.body);
-    res.status(201).json({ message: 'Question created successfully', question });
+    res
+      .status(201)
+      .json({ message: 'Question created successfully', question });
   } catch (error) {
     next(error); // 에러 발생 시 에러 핸들러로 전달
   }
@@ -17,7 +19,9 @@ exports.createQuestion = async (req, res, next) => {
 // 성공 시 질문 데이터를 응답으로 반환
 exports.getQuestion = async (req, res, next) => {
   try {
-    const question = await questionService.getQuestion(req.params.question_number);
+    const question = await questionService.getQuestion(
+      req.params.question_number
+    );
     res.status(200).json(question);
   } catch (error) {
     next(error); // 에러 발생 시 에러 핸들러로 전달
@@ -29,8 +33,13 @@ exports.getQuestion = async (req, res, next) => {
 // 성공 시 업데이트된 질문 데이터를 응답으로 반환
 exports.updateQuestion = async (req, res, next) => {
   try {
-    const question = await questionService.updateQuestion(req.params.question_number, req.body);
-    res.status(200).json({ message: 'Question updated successfully', question });
+    const question = await questionService.updateQuestion(
+      req.params.question_number,
+      req.body
+    );
+    res
+      .status(200)
+      .json({ message: 'Question updated successfully', question });
   } catch (error) {
     next(error); // 에러 발생 시 에러 핸들러로 전달
   }
@@ -41,7 +50,9 @@ exports.updateQuestion = async (req, res, next) => {
 // 성공 시 질문 목록 데이터를 응답으로 반환
 exports.getQuestionsByUser = async (req, res, next) => {
   try {
-    const questions = await questionService.getQuestionsByUser(req.params.user_number);
+    const questions = await questionService.getQuestionsByUser(
+      req.params.user_number
+    );
     res.status(200).json(questions);
   } catch (error) {
     next(error); // 에러 발생 시 에러 핸들러로 전달
@@ -61,11 +72,23 @@ exports.getAllQuestions = async (req, res, next) => {
 
 // 답변이 달리지 않은 질문을 오래된 순서대로 조회하는 컨트롤러 함수
 // 서비스 계층의 getUnansweredQuestions 호출 후 해당 데이터를 반환
+// 답변 없는 질문 조회 (컨트롤러)
 exports.getUnansweredQuestions = async (req, res, next) => {
   try {
-    const questions = await questionService.getUnansweredQuestions();
-    res.status(200).json(questions);
+    // 서비스 계층에서 답변이 달리지 않은 질문을 조회
+    const unansweredQuestions = await questionService.getUnansweredQuestions();
+    console.log('Unanswered Questions:', unansweredQuestions);
+
+    // 조회된 질문이 없다면 404 반환
+    if (!unansweredQuestions || unansweredQuestions.length === 0) {
+      return res.status(404).json({ message: 'No unanswered questions found' });
+    }
+    
+    // 답변 없는 질문들 반환
+    res.status(200).json(unansweredQuestions);
   } catch (error) {
-    next(error); // 에러 발생 시 에러 핸들러로 전달
+    // 오류 발생 시 에러 처리
+    next(error);
   }
 };
+

@@ -12,6 +12,10 @@ const postRoute = require("./routes/postRoute");
 const feedRoute = require("./routes/feedRoute");
 const userRoute = require("./routes/userRoute");
 const missionRoute = require("./routes/missionRoute");
+const faqRoute = require("./routes/faqRoutes");
+const qnaRoute = require("./routes/qnaRoutes");
+const noticeRoute = require("./routes/noticeRoute");
+const reportRoute = require("./routes/reportRoutes");
 
 // schedulers and services
 const missionStateScheduler = require("./schedulers/missionStateScheduler");
@@ -31,11 +35,15 @@ app.get("/", (req, res) => {
 });
 
 // route
-app.use("/api/auth", authRoute);
-app.use("/api/posts", postRoute);
-app.use("/api/feeds", feedRoute);
-app.use("/api/user", userRoute);
-app.use("/api/missions", missionRoute);
+app.use("/auth", authRoute);
+app.use("/posts", postRoute);
+app.use("/feeds", feedRoute);
+app.use("/user", userRoute);
+app.use("/missions", missionRoute);
+app.use("/faqs", faqRoute);
+app.use("/qnas", qnaRoute);
+app.use("/notice", noticeRoute);
+app.use("/reports", reportRoute);
 
 // error route
 app.use(errorHandler);
