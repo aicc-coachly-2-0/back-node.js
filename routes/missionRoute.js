@@ -38,31 +38,21 @@ router.get(
   missionController.getParticipatingMissions
 );
 
-// // 전체 조회
-// router.get("/popular/all", missionController.getAllPopularMissions);
-// router.get("/upcoming/all", missionController.getAllUpcomingMissions);
-// router.get(
-//   "/participating/all",
-//   authenticateToken,
-//   missionController.getAllParticipatingMissions
-// );
+// 로그인 없이 조회 가능한 미션 전체 조회
+router.get("/popular-all", missionController.getPublicMissions); // 주목받는 미션
+router.get("/upcoming-all", missionController.getPublicMissions); // 마감 임박 미션
 
-// // 참여했던 미션 리스트 조회
-// router.get(
-//   "/completed",
-//   authenticateToken,
-//   missionController.getCompletedMissions
-// );
-
-// 로그인 없이 조회 가능한 API - 지금 주목받는, 마감 임박
-router.get("/public", missionController.getPublicMissions);
-
-// 로그인 필요한 API - 참여 중인, 참여했던
+// 로그인 필요한 미션 전체 조회
 router.get(
-  "/private",
+  "/participating-all",
   authenticateToken,
   missionController.getAuthRequiredMissions
-);
+); // 참여 중인 미션
+router.get(
+  "/completed-all",
+  authenticateToken,
+  missionController.getAuthRequiredMissions
+); // 참여했던 미션
 
 // 모집 중인 미션 상세 페이지 조회
 router.get(
