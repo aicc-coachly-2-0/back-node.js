@@ -46,7 +46,7 @@ app.use('/missions', missionRoute);
 app.use('/faqs', faqRoute);
 app.use('/qnas', qnaRoute);
 app.use('/notice', noticeRoute);
-app.use('/report', reportRoute);
+app.use('/reports', reportRoute);
 
 
 
