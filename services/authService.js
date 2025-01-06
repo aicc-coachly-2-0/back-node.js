@@ -1,9 +1,10 @@
-const { connectFTP, postgreSQL } = require('../config/database');
-const bcrypt = require('bcrypt');
-const mongoose = require('mongoose');
-const authModel = require('../models/authModel');
-const userService = require('./userService');
-const config = require('../config/config');
+const { connectFTP, postgreSQL } = require("../config/database");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
+const authModel = require("../models/authModel");
+const userService = require("./userService");
+const config = require("../config/config");
 
 exports.uploadToFTP = async (userId, file) => {
   const ftpClient = await connectFTP();
@@ -13,8 +14,8 @@ exports.uploadToFTP = async (userId, file) => {
 
     return `${config.ftp.baseUrl}${remoteImagePath}`;
   } catch (error) {
-    console.error('FTP 업로드 실패:', error.message);
-    throw new Error('FTP 업로드 실패');
+    console.error("FTP 업로드 실패:", error.message);
+    throw new Error("FTP 업로드 실패");
   } finally {
     ftpClient.close();
   }
@@ -25,11 +26,11 @@ exports.createUser = async (userData, profilePictureUrl) => {
   const session = await mongoose.startSession(); // MongoDB 세션 시작
 
   try {
-    await client.query('BEGIN'); // PostgreSQL 트랜잭션 시작
+    await client.query("BEGIN"); // PostgreSQL 트랜잭션 시작
     session.startTransaction(); // MongoDB 트랜잭션 시작
 
     const hashedPassword = await bcrypt.hash(userData.user_pw, 10);
-    const sanitizedPhone = userData.user_phone.replace(/\D/g, '');
+    const sanitizedPhone = userData.user_phone.replace(/\D/g, "");
 
     // PostgreSQL에 사용자 데이터 저장
     const createdUser = await authModel.createUser({
@@ -53,14 +54,14 @@ exports.createUser = async (userData, profilePictureUrl) => {
       session
     );
 
-    await client.query('COMMIT'); // PostgreSQL 트랜잭션 커밋
+    await client.query("COMMIT"); // PostgreSQL 트랜잭션 커밋
     await session.commitTransaction(); // MongoDB 트랜잭션 커밋
 
     return createdUser; // 생성된 사용자 데이터 반환
   } catch (error) {
-    await client.query('ROLLBACK'); // PostgreSQL 트랜잭션 롤백
+    await client.query("ROLLBACK"); // PostgreSQL 트랜잭션 롤백
     await session.abortTransaction(); // MongoDB 트랜잭션 롤백
-    console.error('사용자 생성 에러:', error.message);
+    console.error("사용자 생성 에러:", error.message);
     throw error;
   } finally {
     client.release(); // PostgreSQL 클라이언트 해제
@@ -73,12 +74,12 @@ exports.loginUser = async (userData) => {
 
   const user = await authModel.findUserById(user_id);
   if (!user) {
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
 
   const isPasswordValid = await bcrypt.compare(user_pw, user.user_pw);
   if (!isPasswordValid) {
-    throw new Error('Invalid password');
+    throw new Error("Invalid password");
   }
 
   const token = jwt.sign(
@@ -117,12 +118,12 @@ exports.loginAdmin = async (adminData) => {
 
   const admin = await authModel.findAdminById(admin_id);
   if (!admin) {
-    throw new Error('Admin not found');
+    throw new Error("Admin not found");
   }
 
   const isPasswordValid = await bcrypt.compare(admin_pw, admin.admin_pw);
   if (!isPasswordValid) {
-    throw new Error('Invalid password');
+    throw new Error("Invalid password");
   }
 
   const token = jwt.sign(
