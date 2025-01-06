@@ -10,12 +10,13 @@ const errorHandler = require("./middlewares/errorHandler");
 const config = require("./config/config");
 
 // route
+
 const authRoute = require("./routes/authRoute");
 const postRoute = require("./routes/postRoute");
 const feedRoute = require("./routes/feedRoute");
 const userRoute = require("./routes/userRoute");
-
 const missionRoute = require("./routes/missionRoute");
+const faqRoute = require("./routes/faqRoutes");
 
 const PORT = config.server.port || 8080;
 const app = express();
@@ -116,12 +117,13 @@ app.post("/lookup-billingkey", async (req, res) => {
 // 여기까지 정민석이 임시로 작업한거 건들 ㄴㄴ
 
 // route
-app.use("/api/auth", authRoute);
-app.use("/api/posts", postRoute);
-app.use("/api/feeds", feedRoute);
-app.use("/api/user", userRoute);
 
-app.use("/api/missions", missionRoute);
+app.use("/auth", authRoute);
+app.use("/posts", postRoute);
+app.use("/feeds", feedRoute);
+app.use("/user", userRoute);
+app.use("/missions", missionRoute);
+app.use("/faqs", faqRoute);
 
 // error route
 app.use(errorHandler);

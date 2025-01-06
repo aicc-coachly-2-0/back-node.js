@@ -1,6 +1,10 @@
 const { postgreSQL } = require('../config/database');
 
-exports.insertAnswer = async ({ question_number, admin_number, answer_content }) => {
+exports.insertAnswer = async ({
+  question_number,
+  admin_number,
+  answer_content,
+}) => {
   const query = `
     INSERT INTO answers (question_number, admin_number, answer_content)
     VALUES ($1, $2, $3)

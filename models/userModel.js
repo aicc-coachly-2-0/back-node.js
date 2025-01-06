@@ -1,21 +1,28 @@
 const { postgreSQL } = require('../config/database');
-
 // 전체 유저 조회
 exports.findAllUsers = async () => {
   const query = `SELECT * FROM users ORDER BY created_at DESC`;
   const { rows } = await postgreSQL.query(query);
   return rows;
 };
-
+// 상태로 유저 조회
+exports.findUsersByStatus = async (status) => {
+  const validStatuses = ['active', 'inactive', 'deleted', 'suspended'];
+  if (!validStatuses.includes(status)) {
+    throw new Error('Invalid status');
+  }
+  const query = `SELECT * FROM users WHERE status = $1 ORDER BY created_at DESC`;
+  const { rows } = await postgreSQL.query(query, [status]);
+  return rows;
+};
 // 전화번호로 유저 검색
 exports.findUsersByPhoneNumber = async (phoneNumber) => {
   const query = `SELECT * FROM users WHERE user_phone = $1 ORDER BY created_at DESC`;
   const { rows } = await postgreSQL.query(query, [phoneNumber]);
   return rows;
 };
-  
-// 아이디나 이름으로 유저 검색
-exports.findUsersByIdOrName = async (searchTerm) => {
+// 아이디나 이름, 번호로 유저 검색
+exports.searchUsers = async (searchTerm) => {
   const query = `
     SELECT * FROM users
     WHERE user_id LIKE $1 OR user_name LIKE $1
@@ -24,24 +31,15 @@ exports.findUsersByIdOrName = async (searchTerm) => {
   const { rows } = await postgreSQL.query(query, [`%${searchTerm}%`]);
   return rows;
 };
-
-// 상태로 유저 조회
-exports.findUsersByStatus = async (status) => {
-  const query = `SELECT * FROM users WHERE status = $1 ORDER BY created_at DESC`;
-  const { rows } = await postgreSQL.query(query, [status]);
-  return rows;
+// 특정 유저 조회
+exports.findUserByNumber = async (user_number) => {
+  const query = `SELECT * FROM users WHERE user_number = $1`;
+  const { rows } = await postgreSQL.query(query, [user_number]);
+  return rows[0] || null;
 };
-  
-// 사용자 정보 수정 (role에 따른 제한 처리)
-exports.updateUser = async (user_id, fieldsToUpdate, role) => {
-  // 관리자일 경우 모든 필드 수정 가능, 사용자일 경우 특정 필드만 수정 가능
-  if (role !== 'admin') {
-    fieldsToUpdate = {
-      user_email: fieldsToUpdate.user_email,
-      user_phone: fieldsToUpdate.user_phone,
-    };
-  }
 
+// 사용자 정보 수정
+exports.updateUser = async (user_number, fieldsToUpdate) => {
   const query = `
     UPDATE users
     SET 
@@ -50,8 +48,9 @@ exports.updateUser = async (user_id, fieldsToUpdate, role) => {
       user_phone = COALESCE($3, user_phone),
       user_date_of_birth = COALESCE($4, user_date_of_birth),
       user_gender = COALESCE($5, user_gender),
-      status = COALESCE($6, status)
-    WHERE user_id = $7
+      status = COALESCE($6, status),
+      user_id = COALESCE($7, user_id)
+    WHERE user_number = $8
     RETURNING *;
   `;
 
@@ -62,12 +61,13 @@ exports.updateUser = async (user_id, fieldsToUpdate, role) => {
     fieldsToUpdate.user_date_of_birth,
     fieldsToUpdate.user_gender,
     fieldsToUpdate.status,
-    user_id,
+    fieldsToUpdate.user_id,
+    user_number,
   ];
 
   try {
     const { rows } = await postgreSQL.query(query, values);
-    return rows[0];  // 업데이트된 사용자 정보 반환
+    return rows[0];
   } catch (error) {
     console.error('Failed to update user:', error.message);
     throw error;
