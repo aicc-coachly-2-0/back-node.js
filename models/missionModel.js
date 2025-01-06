@@ -139,7 +139,6 @@ exports.updateMissionStates = async () => {
       WHERE state = 'recruiting' AND started_at = CURRENT_DATE;
     `;
     const { rowCount: ongoingCount } = await postgreSQL.query(startQuery); // 진행중(ongoing)으로 업데이트된 행 수 반환
-
     console.log(`Updated ${ongoingCount} missions to 'ongoing' state.`);
 
     // 2. 진행중(ongoing) → 완료(completed): 미션 종료일 도달 시
