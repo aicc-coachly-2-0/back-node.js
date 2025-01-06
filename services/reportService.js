@@ -10,14 +10,24 @@ exports.getReportsByDomain = async (domain, filters) => {
   return await reportModel.findReportsByDomain(domain, filters);
 };
 
-// 특정 사용자가 받은 신고 내역과 신고 수 조회
-exports.getReportsForUser = async (userNumber) => {
-  return await reportModel.findReportsForUser(userNumber);
+// 특정 사용자가 받은 신고 내역과 신고 수 조회(특정도메인)
+exports.getReportsForUser = async (user_number, domain) => {
+  if (!domain) {
+    // domain이 없으면 모든 도메인에서 조회
+    return await reportModel.findAllReportsForUser(user_number);
+  }
+  // 특정 도메인에서만 조회
+  return await reportModel.findReportsForUser(user_number, domain);
+};
+
+// 특정 사용자가 받은 신고 내역과 신고 수 조회(전체도메인)
+exports.getAllReportsForUser = async (user_number) => {
+  return await reportModel.findAllReportsForUser(user_number);
 };
 
 // 특정 유저가 한 신고 조회
-exports.getReportsMadeByUser = async (userNumber) => {
-  return await reportModel.findReportsMadeByUser(userNumber);
+exports.getReportsMadeByUser = async (user_number) => {
+  return await reportModel.findReportsMadeByUser(user_number);
 };
 
 // 특정 신고 조회
