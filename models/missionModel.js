@@ -62,6 +62,31 @@ exports.createMission = async (missionData, user) => {
     throw new Error("주간 인증 횟수는 필수 입력 사항입니다.");
   }
 
+  // 3-1. 주간 인증 횟수 범위 검증
+  if (missionData.duration === "일주일" || missionData.duration === "한 달") {
+    const validRanges = {
+      매일: [1, 7], // 1~7회
+      "평일 매일": [1, 5], // 1~5회
+      "주말 매일": [1, 2], // 1~2회
+    };
+
+    // 인증 빈도에 따른 유효한 범위 가져오기
+    const [min, max] = validRanges[missionData.cert_freq] || [];
+    if (!min || !max) {
+      throw new Error("유효하지 않은 인증 빈도입니다.");
+    }
+
+    // 주간 인증 횟수가 범위를 벗어날 경우 에러 반환
+    if (
+      missionData.weekly_cert_count < min ||
+      missionData.weekly_cert_count > max
+    ) {
+      throw new Error(
+        `인증 빈도가 '${missionData.cert_freq}'인 경우 주간 인증 횟수는 ${min}~${max}회여야 합니다.`
+      );
+    }
+  }
+
   // 4. 인증 빈도 검증
   // 미션 수행 기간(duration)과 인증 빈도(cert_freq)의 조합이 올바른지 확인
   // 유효하지 않은 조합('하루' + '평일 매일' 등)의 경우 에러 반환.
