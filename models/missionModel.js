@@ -215,15 +215,14 @@ exports.getPopularMissions = async () => {
     SELECT 
         mission_rooms.room_number,
         mission_rooms.title,
-        mission_rooms.started_at,
+        TO_CHAR(mission_rooms.started_at, 'YYYY-MM-DD') AS started_at,
         mission_rooms.img_link,
         COUNT(mission_participants.user_number) AS participant_count,
         CASE 
-          WHEN mission_rooms.ended_at - mission_rooms.started_at = 1 THEN '하루'
-          WHEN mission_rooms.ended_at - mission_rooms.started_at = 3 THEN '3일'
-          WHEN mission_rooms.ended_at - mission_rooms.started_at = 7 THEN '일주일'
-          WHEN mission_rooms.ended_at - mission_rooms.started_at = 30 THEN '한 달'
-          ELSE '기간 알 수 없음'
+          WHEN mission_rooms.ended_at::date - mission_rooms.started_at::date = 1 THEN '하루'
+          WHEN mission_rooms.ended_at::date - mission_rooms.started_at::date = 3 THEN '3일'
+          WHEN mission_rooms.ended_at::date - mission_rooms.started_at::date = 7 THEN '일주일'
+          WHEN mission_rooms.ended_at::date - mission_rooms.started_at::date = 30 THEN '한 달'
         END AS duration
     FROM 
         mission_rooms
@@ -242,7 +241,7 @@ exports.getPopularMissions = async () => {
     HAVING 
         COUNT(mission_participants.user_number) <= 2000
     ORDER BY 
-        participant_count DESC
+        participant_count DESC, mission_rooms.created_at ASC
     LIMIT 5;
   `;
 
@@ -272,14 +271,14 @@ exports.getUpcomingMissions = async () => {
     SELECT 
         mission_rooms.room_number,
         mission_rooms.title,
-        mission_rooms.started_at,
+        TO_CHAR(mission_rooms.started_at, 'YYYY-MM-DD') AS started_at,
         mission_rooms.img_link,
         COUNT(mission_participants.user_number) AS participant_count,
         CASE 
-          WHEN mission_rooms.ended_at - mission_rooms.started_at = 1 THEN '하루'
-          WHEN mission_rooms.ended_at - mission_rooms.started_at = 3 THEN '3일'
-          WHEN mission_rooms.ended_at - mission_rooms.started_at = 7 THEN '일주일'
-          WHEN mission_rooms.ended_at - mission_rooms.started_at = 30 THEN '한 달'
+          WHEN mission_rooms.ended_at::date - mission_rooms.started_at::date = 1 THEN '하루'
+          WHEN mission_rooms.ended_at::date - mission_rooms.started_at::date = 3 THEN '3일'
+          WHEN mission_rooms.ended_at::date - mission_rooms.started_at::date = 7 THEN '일주일'
+          WHEN mission_rooms.ended_at::date - mission_rooms.started_at::date = 30 THEN '한 달'
           ELSE '기간 알 수 없음'
         END AS duration
     FROM 
@@ -290,17 +289,16 @@ exports.getUpcomingMissions = async () => {
         mission_rooms.room_number = mission_participants.room_number
     WHERE 
         mission_rooms.state = 'recruiting'
-        AND mission_rooms.started_at > CURRENT_DATE
     GROUP BY 
         mission_rooms.room_number, 
         mission_rooms.title, 
         mission_rooms.started_at, 
-        mission_rooms.img_link
+        mission_rooms.img_link,
         mission_rooms.ended_at
     HAVING 
         COUNT(mission_participants.user_number) <= 2000
     ORDER BY 
-        mission_rooms.started_at ASC
+        mission_rooms.started_at ASC, mission_rooms.created_at ASC
     LIMIT 5;
   `;
 
@@ -330,7 +328,7 @@ exports.getParticipatingMissions = async (userNumber) => {
     SELECT
       mission_rooms.room_number,
       mission_rooms.title,
-      mission_rooms.started_at,
+      TO_CHAR(mission_rooms.started_at, 'YYYY-MM-DD') AS started_at,
       mission_rooms.img_link,
       COUNT(mission_participants.user_number) AS participant_count,
       COALESCE(
@@ -343,20 +341,28 @@ exports.getParticipatingMissions = async (userNumber) => {
         '인증 미완료'
       ) AS validation_status,
       CASE 
-        WHEN mission_rooms.ended_at - mission_rooms.started_at = 1 THEN '하루'
-        WHEN mission_rooms.ended_at - mission_rooms.started_at = 3 THEN '3일'
-        WHEN mission_rooms.ended_at - mission_rooms.started_at = 7 THEN '일주일'
-        WHEN mission_rooms.ended_at - mission_rooms.started_at = 30 THEN '한 달'
+        WHEN mission_rooms.ended_at::date - mission_rooms.started_at::date = 1 THEN '하루'
+        WHEN mission_rooms.ended_at::date - mission_rooms.started_at::date = 3 THEN '3일'
+        WHEN mission_rooms.ended_at::date - mission_rooms.started_at::date = 7 THEN '일주일'
+        WHEN mission_rooms.ended_at::date - mission_rooms.started_at::date = 30 THEN '한 달'
         ELSE '기간 알 수 없음'
       END AS duration
-    FROM mission_participants
-    INNER JOIN mission_rooms ON mission_participants.room_number = mission_rooms.room_number
-    LEFT JOIN mission_validations
-      ON mission_participants.group_number = mission_validations.group_number
-    WHERE mission_participants.user_number = $1
-      AND mission_rooms.state = 'ongoing'
-    GROUP BY mission_rooms.room_number
-    ORDER BY mission_rooms.started_at ASC
+    FROM 
+        mission_participants
+    INNER JOIN 
+        mission_rooms ON mission_participants.room_number = mission_rooms.room_number
+    LEFT JOIN 
+        mission_validations
+    ON 
+        mission_participants.group_number = mission_validations.group_number
+    WHERE 
+        mission_participants.user_number = $1
+    AND 
+        mission_rooms.state = 'ongoing'
+    GROUP BY 
+        mission_rooms.room_number
+    ORDER BY 
+        mission_rooms.started_at ASC, mission_rooms.created_at ASC
     LIMIT 5;
   `;
 

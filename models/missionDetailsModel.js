@@ -7,8 +7,8 @@ exports.getRecruitingMissionDetails = async (room_number) => {
         mission_rooms.room_number,
         mission_rooms.title AS mission_room_title,
         mission_rooms.content AS mission_room_content,
-        mission_rooms.started_at,
-        mission_rooms.ended_at,
+        TO_CHAR(mission_rooms.started_at, 'YYYY-MM-DD') AS started_at,
+        TO_CHAR(mission_rooms.ended_at, 'YYYY-MM-DD') AS ended_at,
         mission_rooms.cert_freq,
         COALESCE(mission_rooms.weekly_cert_count::integer, 1) AS weekly_cert_count,
         mission_rooms.img_link,
@@ -43,8 +43,8 @@ exports.getMissionDetails = async (room_number) => {
     SELECT 
         mission_rooms.room_number,
         mission_rooms.title AS mission_room_title,
-        mission_rooms.started_at,
-        mission_rooms.ended_at,
+        TO_CHAR(mission_rooms.started_at, 'YYYY-MM-DD') AS started_at,
+        TO_CHAR(mission_rooms.ended_at, 'YYYY-MM-DD') AS ended_at,
         mission_rooms.cert_freq,
         COALESCE(mission_rooms.weekly_cert_count::integer, 1) AS weekly_cert_count,
         mission_rooms.img_link

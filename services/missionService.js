@@ -45,7 +45,7 @@ exports.joinMissionRoom = async (user_number, room_number) => {
   }
 };
 
-// "지금 주목받는 미션" 리스트 조회
+// "지금 주목받는 미션" 리스트 5개 조회
 exports.getPopularMissions = async () => {
   try {
     const popularMissions = await missionModel.getPopularMissions();
@@ -60,7 +60,7 @@ exports.getPopularMissions = async () => {
   }
 };
 
-// 마감 임박 미션 조회
+// 마감 임박 미션 5개 조회
 exports.getUpcomingMissions = async () => {
   try {
     const upcomingMissions = await missionModel.getUpcomingMissions();
