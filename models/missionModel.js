@@ -184,17 +184,24 @@ exports.updateMissionStates = async () => {
 
 // 미션방 참여 -> 사용자를 특정 미션방에 참여자로 등록
 exports.joinMissionRoom = async (user_number, room_number) => {
+  // 미션방 상태 확인
+  const checkStateQuery = `
+    SELECT state
+    FROM mission_rooms
+    WHERE room_number = $1;
+  `;
+
   // 중복 참여자 확인
-  const checkQuery = `
+  const checkParticipantQuery = `
     SELECT EXISTS (
         SELECT 1
         FROM mission_participants
         WHERE user_number = $1 AND room_number = $2 AND state = 'active'
     ) AS exists;
-`;
+  `;
 
   // 참여자 추가
-  const insertQuery = `
+  const insertParticipantQuery = `
     INSERT INTO mission_participants (user_number, room_number, state)
     VALUES ($1, $2, 'active')
     RETURNING *;
@@ -202,21 +209,36 @@ exports.joinMissionRoom = async (user_number, room_number) => {
 
   try {
     // 트랜잭션 시작
-    // 트랜잭션이란, 데이터베이스에서 여러 작업을 하나의 묶음으로 처리하는 것
-    // 트랜잭션 안에 있는 작업은 모두 성공해야만 데이터베이스에 실제로 반영됨. 하나라도 실패 시 모두 취소(롤백).
     await postgreSQL.query("BEGIN");
 
-    // 1. 중복 확인
-    const { rows } = await postgreSQL.query(checkQuery, [
-      user_number,
+    // 1. 미션방 상태 확인
+    const { rows: stateRows } = await postgreSQL.query(checkStateQuery, [
       room_number,
     ]);
-    if (rows[0].exists) {
-      throw new Error("이미 해당 미션방에 참여 중입니다.");
+
+    if (stateRows.length === 0) {
+      throw { status: 404, message: "존재하지 않는 미션방입니다." };
     }
 
-    // 2. 중복이 아닌 경우 참여자 추가
-    const result = await postgreSQL.query(insertQuery, [
+    const roomState = stateRows[0].state;
+    if (roomState !== "recruiting") {
+      throw {
+        status: 403,
+        message: "해당 미션방은 참여할 수 없는 상태입니다.",
+      }; // 상태가 recruiting이 아닌 경우 에러 반환
+    }
+
+    // 2. 중복 확인
+    const { rows: participantRows } = await postgreSQL.query(
+      checkParticipantQuery,
+      [user_number, room_number]
+    );
+    if (participantRows[0].exists) {
+      throw { status: 409, message: "이미 해당 미션방에 참여 중입니다." };
+    }
+
+    // 3. 중복이 아닌 경우 참여자 추가
+    const result = await postgreSQL.query(insertParticipantQuery, [
       user_number,
       room_number,
     ]);

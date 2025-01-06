@@ -41,7 +41,13 @@ exports.joinMissionRoom = async (user_number, room_number) => {
     return result;
   } catch (error) {
     console.error(`[Service] Error in joinMissionRoom: ${error.message}`);
-    throw new Error("미션 방 참여 중 오류가 발생했습니다.");
+
+    if (error.status) {
+      throw error;
+    }
+
+    // 기타 예상치 못한 에러는 500 에러로 처리
+    throw new Error("미션 방 참여 중 알 수 없는 오류가 발생했습니다.");
   }
 };
 
