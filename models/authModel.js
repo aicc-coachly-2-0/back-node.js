@@ -76,3 +76,17 @@ exports.findAdminById = async (admin_id) => {
     throw error;
   }
 };
+
+// 사용자 ID로 검색
+exports.findUserById = async (user_id) => {
+  const query = `
+    SELECT * FROM users WHERE user_id = $1;
+  `;
+  try {
+    const { rows } = await postgreSQL.query(query, [user_id]);
+    return rows[0];
+  } catch (error) {
+    console.error('Failed to find user:', error.message);
+    throw error;
+  }
+};
