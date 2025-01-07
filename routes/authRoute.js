@@ -2,13 +2,13 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const validation = require('../middlewares/validation');
-const { upload, uploadFileToFTP } = require('../middlewares/fileUpload');
+const { upload, uploadFileToSFTP } = require('../middlewares/fileUpload');
 
 // 회원가입 엔드포인트
 router.post(
   '/user-signup',
   upload,
-  uploadFileToFTP,
+  uploadFileToSFTP,
   validation.validateSignup,
   authController.signup
 );

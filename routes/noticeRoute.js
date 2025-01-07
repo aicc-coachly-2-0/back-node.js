@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const noticeController = require('../controllers/noticeController');
-const { upload, uploadFileToFTP } = require('../middlewares/fileUpload');
+const { upload, uploadFileToSFTP } = require('../middlewares/fileUpload');
 // 공지글 작성 (사진들 포함)
 router.post(
   '/notices',
   upload, // 여러개 업로드
-  uploadFileToFTP,
+  uploadFileToSFTP,
   noticeController.createNoticeWithImages
 );
 
@@ -14,7 +14,7 @@ router.post(
 router.patch(
   '/notices/:notice_number',
   upload,
-  uploadFileToFTP,
+  uploadFileToSFTP,
   noticeController.updateNotice
 );
 

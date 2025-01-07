@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const authMiddleware = require('../middlewares/authMiddleware');
-const { upload, uploadFileToFTP } = require('../middlewares/fileUpload');
+const { upload, uploadFileToSFTP } = require('../middlewares/fileUpload');
 
 // 팔로우, 언팔로우
 router.post(
@@ -58,7 +58,7 @@ router.put(
   '/:user_number',
   authMiddleware.authenticateToken,
   upload, // Multer로 파일 처리
-  uploadFileToFTP,
+  uploadFileToSFTP,
   userController.updateUser
 );
 
