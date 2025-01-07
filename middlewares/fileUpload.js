@@ -38,7 +38,7 @@ const uploadFileToFTP = async (req, res, next) => {
         const prefix = isAdmin ? 'admin' : 'user';
         const fileName = `${prefix}_${uploaderId}_${Date.now()}`;
         const ftpDirectory = `${imageType}/`;
-        const filePath = `${ftpDirectory}${fileName}`;
+        const filePath = `kochiri/${ftpDirectory}${fileName}`;
 
         await client.uploadFrom(Readable.from(file.buffer), filePath);
         const fileUrl = `${config.ftp.baseUrl}/${filePath}`;
