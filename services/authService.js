@@ -8,11 +8,9 @@ const jwt = require('jsonwebtoken');
 // 사용자 생성 (회원가입)
 exports.createUser = async (userData, profilePictureUrl) => {
   const client = await postgreSQL.connect();
-  const session = await mongoose.startSession();
 
   try {
     await client.query('BEGIN');
-    session.startTransaction();
 
     const hashedPassword = await bcrypt.hash(userData.user_pw, 10);
     const sanitizedPhone = userData.user_phone.replace(/\D/g, '');
@@ -28,27 +26,21 @@ exports.createUser = async (userData, profilePictureUrl) => {
       user_gender: userData.user_gender,
     });
 
-    // MongoDB에 사용자 생성
-    await authModel.createMongoUser(
-      {
-        user_number: createdUser.user_number,
-        nickname: userData.nickname,
-        profile_picture: profilePictureUrl,
-      },
-      session
-    );
+    // MongoDB에 사용자 생성 (트랜잭션 없이 실행)
+    await authModel.createMongoUser({
+      user_number: createdUser.user_number,
+      nickname: userData.nickname,
+      profile_picture: profilePictureUrl,
+    });
 
-    await client.query('COMMIT');
-    await session.commitTransaction();
+    await client.query('COMMIT'); // PostgreSQL 트랜잭션 커밋
 
     return createdUser;
   } catch (error) {
-    await session.abortTransaction();
-    await client.query('ROLLBACK');
+    await client.query('ROLLBACK'); // PostgreSQL 트랜잭션 롤백
     throw error;
   } finally {
-    client.release();
-    session.endSession();
+    client.release(); // PostgreSQL 클라이언트 해제
   }
 };
 
