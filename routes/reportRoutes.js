@@ -14,10 +14,8 @@ router.get('/report/:domain', reportController.getReportsByDomain);
 // 특정 사용자의 신고 내역과 신고 수 조회
 router.get('/user/:user_number', reportController.getReportsForUser);
 
-
-
 // 특정 신고 조회
-router.get('/detail/:domain/:report_number', reportController.getReport);
+router.get('/report/:domain/:report_number', reportController.getReport);
 
 // 신고 처리 (관리자)
 router.put('/process/:domain/:report_number', reportController.processReport);

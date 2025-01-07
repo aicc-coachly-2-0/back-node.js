@@ -61,8 +61,8 @@ exports.getReportsMadeByUser = async (req, res, next) => {
 // 특정 신고 조회
 exports.getReport = async (req, res, next) => {
   try {
-    const { domain, report_id } = req.params;
-    const report = await reportService.getReport(domain, report_id);
+    const { domain, report_number } = req.params;
+    const report = await reportService.getReport(domain, report_number);
     if (!report) {
       return res.status(404).json({ message: 'Report not found' });
     }
@@ -75,8 +75,8 @@ exports.getReport = async (req, res, next) => {
 // 신고 처리 (관리자)
 exports.processReport = async (req, res, next) => {
   try {
-    const { domain, report_id } = req.params;
-    const updatedReport = await reportService.processReport(domain, report_id, req.body);
+    const { domain, report_number } = req.params;
+    const updatedReport = await reportService.processReport(domain, report_number, req.body);
     res.status(200).json({ message: 'Report processed successfully', updatedReport });
   } catch (error) {
     next(error);

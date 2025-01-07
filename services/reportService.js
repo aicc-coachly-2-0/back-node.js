@@ -31,13 +31,13 @@ exports.getReportsMadeByUser = async (user_number) => {
 };
 
 // 특정 신고 조회
-exports.getReport = async (domain, reportId) => {
-  return await reportModel.findReportById(domain, reportId);
+exports.getReport = async (domain, report_number) => {
+  return await reportModel.findReportById(domain, report_number);
 };
 
 // 신고 처리 상태 업데이트
-exports.updateReportState = async (domain, reportId, state, admin_number, report_content) => {
-  return await reportModel.updateReportState(domain, reportId, { state, admin_number, report_content });
+exports.updateReportState = async (domain, report_number, state, admin_number, report_content) => {
+  return await reportModel.updateReportState(domain, report_number, { state, admin_number, report_content });
 };
 
 // 신고 처리 내역 조회
