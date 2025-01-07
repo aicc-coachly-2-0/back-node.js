@@ -76,18 +76,23 @@ exports.getReport = async (req, res, next) => {
 exports.processReport = async (req, res, next) => {
   try {
     const { domain, report_number } = req.params;
-    const updatedReport = await reportService.processReport(domain, report_number, req.body);
-    res.status(200).json({ message: 'Report processed successfully', updatedReport });
-  } catch (error) {
-    next(error);
-  }
-};
+    const { state, admin_number, report_content, ban_until } = req.body;
 
-// 신고 처리 내역 조회
-exports.getReportManagements = async (req, res, next) => {
-  try {
-    const managements = await reportService.getReportManagements(req.query);
-    res.status(200).json(managements);
+    // ban_until이 없으면 처리일로부터 7일 뒤로 설정
+    const resolutionDate = new Date();  // 현재 시간
+    const banUntilDate = ban_until ? new Date(ban_until) : new Date(resolutionDate.setDate(resolutionDate.getDate() + 7));  // 7일 뒤 기본 설정
+
+    // 신고 처리 상태 업데이트
+    const updatedReport = await reportService.updateReportState(domain, report_number, state, admin_number, report_content, banUntilDate);
+
+     // 신고 처리 내역 조회
+     const reportManagement = await reportService.getReportManagementByReportNumber(report_number);
+
+    res.status(200).json({
+      message: 'Report processed successfully',
+      updatedReport,
+      reportManagement
+    });
   } catch (error) {
     next(error);
   }

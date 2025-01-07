@@ -289,10 +289,11 @@ exports.findReportById = async (domain, reportId) => {
 };
 
 // 신고 상태 업데이트
-exports.updateReportState = async (domain, report_number, { state, admin_number, report_content }) => {
+exports.updateReportState = async (domain, report_number, state, admin_number, report_content, ban_until) => {
   const table = DOMAIN_TABLE_MAP[domain];
   if (!table) throw new Error('Invalid domain');
 
+  // 신고 상태 업데이트
   const query = `
     UPDATE ${table}
     SET state = $1
@@ -303,37 +304,65 @@ exports.updateReportState = async (domain, report_number, { state, admin_number,
   const { rows } = await postgreSQL.query(query, values);
 
   if (rows[0]) {
-    // 신고 처리 내역 기록
-    await this.insertReportManagement({
+    // 신고 처리 내역 기록 (report_managements 테이블만)
+    const reportManagement = await this.insertOrUpdateReportManagement({
       report_type: domain,
-      report_number: report_number,
+      report_number,
       admin_number,
       report_content,
+      ban_until
     });
+    return reportManagement; // 업데이트된 또는 삽입된 신고 처리 내역 반환
   }
 
   return rows[0];
 };
 
-// 신고 처리 내역 기록
-exports.insertReportManagement = async ({ report_type, report_number, admin_number, report_content }) => {
-  const query = `
-    INSERT INTO report_managements (report_type, report_number, admin_number, report_content, resolution_at, state)
-    VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, 'resolved')
-    RETURNING *;
+// 신고 처리 내역 기록 (업데이트 또는 삽입)
+exports.insertOrUpdateReportManagement = async ({ report_type, report_number, admin_number, report_content, ban_until }) => {
+  // 신고 처리 내역이 이미 존재하는지 확인
+  const checkQuery = `
+    SELECT * FROM report_managements
+    WHERE report_number = $1;
   `;
-  const values = [report_type, report_number, admin_number, report_content];
-  const { rows } = await postgreSQL.query(query, values);
-  return rows[0];
+  const checkResult = await postgreSQL.query(checkQuery, [report_number]);
+
+  if (checkResult.rows.length > 0) {
+    // 신고 처리 내역이 존재하면 업데이트
+    const updateQuery = `
+      UPDATE report_managements
+      SET admin_number = $2,
+          report_content = $3,
+          resolution_at = CURRENT_TIMESTAMP,
+          state = 'resolved',
+          ban_until = $4
+      WHERE report_number = $1
+      RETURNING *;
+    `;
+    const updateValues = [report_number, admin_number, report_content, ban_until];
+    const { rows } = await postgreSQL.query(updateQuery, updateValues);
+    return rows[0]; // 업데이트된 내역 반환
+  } else {
+    // 신고 처리 내역이 없으면 삽입
+    const insertQuery = `
+      INSERT INTO report_managements (report_type, report_number, admin_number, report_content, resolution_at, state, ban_until)
+      VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, 'resolved', $5)
+      RETURNING *;
+    `;
+    const insertValues = [report_type, report_number, admin_number, report_content, ban_until];
+    const { rows } = await postgreSQL.query(insertQuery, insertValues);
+    return rows[0]; // 삽입된 내역 반환
+  }
 };
 
-// 신고 처리 내역 조회
-exports.findReportManagements = async ({ state }) => {
+
+// 신고 처리 내역 조회 (특정 신고에 대한 처리 내역)
+exports.findReportManagementByReportNumber = async (report_number) => {
   const query = `
-    SELECT * FROM report_managements
-    WHERE ($1::text IS NULL OR state = $1)
+    SELECT * FROM report_managements 
+    WHERE report_number = $1
     ORDER BY resolution_at DESC;
   `;
-  const { rows } = await postgreSQL.query(query, [state]);
+  const { rows } = await postgreSQL.query(query, [report_number]);
   return rows;
 };

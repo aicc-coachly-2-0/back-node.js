@@ -36,11 +36,11 @@ exports.getReport = async (domain, report_number) => {
 };
 
 // 신고 처리 상태 업데이트
-exports.updateReportState = async (domain, report_number, state, admin_number, report_content) => {
-  return await reportModel.updateReportState(domain, report_number, { state, admin_number, report_content });
-};
+exports.updateReportState = async (domain, report_number, state, admin_number, report_content, ban_until) => {
+  return await reportModel.updateReportState(domain, report_number, state, admin_number, report_content, ban_until);
+}
 
-// 신고 처리 내역 조회
-exports.getReportManagements = async (state) => {
-  return await reportModel.findReportManagements({ state });
+// 신고 처리 내역 조회 (특정 신고에 대한 처리 내역)
+exports.getReportManagementByReportNumber = async (report_number) => {
+  return await reportModel.findReportManagementByReportNumber(report_number);
 };
