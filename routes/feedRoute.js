@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const feedController = require('../controllers/feedController');
 const authMiddleware = require('../middlewares/authMiddleware');
-const { upload, uploadFileToFTP } = require('../middlewares/fileUpload');
+const { upload, uploadFileToSFTP } = require('../middlewares/fileUpload');
 
 // 피드 작성
-router.post('/', upload, uploadFileToFTP, feedController.createFeed);
+router.post('/', upload, uploadFileToSFTP, feedController.createFeed);
 
 // 피드 댓글 작성
 router.post('/comment', feedController.createFeedComment);
@@ -25,7 +25,7 @@ router.patch(
   authMiddleware.authenticateToken,
   authMiddleware.authorizeFeedOwnerOrAdmin,
   upload,
-  uploadFileToFTP,
+  uploadFileToSFTP,
   feedController.updateFeed
 );
 
