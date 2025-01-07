@@ -34,11 +34,11 @@ router.get(
   missionController.getParticipatingMissions
 );
 
-// 로그인 없이 조회 가능한 미션 전체 조회
+// 로그인 없이 조회 가능한 미션 전체 조회 + 필터링(카테고리/ 시작일)
 router.get('/popular-all', missionController.getPublicMissions); // 주목받는 미션
 router.get('/upcoming-all', missionController.getPublicMissions); // 마감 임박 미션
 
-// 로그인 필요한 미션 전체 조회
+// 로그인 필요한 미션 전체 조회 + 필터링(카테고리)
 router.get(
   '/participating-all',
   authenticateToken,
