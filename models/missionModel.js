@@ -1,4 +1,4 @@
-const { postgreSQL } = require("../config/database");
+const { postgreSQL } = require('../config/database');
 
 // 미션 생성
 exports.createMission = async (missionData, user) => {
@@ -6,15 +6,15 @@ exports.createMission = async (missionData, user) => {
   const calculateEndedAt = (started_at, duration) => {
     const durationMapping = {
       하루: 1,
-      "3일": 3,
+      '3일': 3,
       일주일: 7,
-      "한 달": 30,
+      '한 달': 30,
     };
 
     // 시작일(started_at)을 기준으로 종료일 계산
     const ended_at = new Date(started_at); // started_at 값을 기반으로 새 Date 객체 생성, new Date()로 감싸면 JavaScript의 날짜 객체로 변환
     ended_at.setDate(ended_at.getDate() + durationMapping[duration]); // 시작일 + 기간
-    return ended_at.toISOString().split("T")[0];
+    return ended_at.toISOString().split('T')[0];
   };
 
   // 미션 종료일 계산
@@ -26,22 +26,22 @@ exports.createMission = async (missionData, user) => {
   // 2. 미션 난이도 매칭 로직
   const missionLevels = {
     1: {
-      "하루 1회 운동하기": "easy",
+      '하루 1회 운동하기': 'easy',
     },
     2: {
-      "1끼 인증하기": "easy",
-      "2끼 인증하기": "medium",
-      "3끼 인증하기": "hard",
+      '1끼 인증하기': 'easy',
+      '2끼 인증하기': 'medium',
+      '3끼 인증하기': 'hard',
     },
     3: {
-      "3천보 걷기": "easy",
-      "5천보 걷기": "medium",
-      "1만보 걷기": "hard",
+      '3천보 걷기': 'easy',
+      '5천보 걷기': 'medium',
+      '1만보 걷기': 'hard',
     },
     4: {
-      "3km 뛰기": "easy",
-      "5km 뛰기": "medium",
-      "10km 뛰기": "hard",
+      '3km 뛰기': 'easy',
+      '5km 뛰기': 'medium',
+      '10km 뛰기': 'hard',
     },
   };
 
@@ -50,30 +50,44 @@ exports.createMission = async (missionData, user) => {
     missionLevels[missionData.mission_number]?.[missionData.selected_mission];
   if (!level) {
     // 카테고리나 미션 이름이 잘못되었을 경우 에러
-    throw new Error("유효하지 않은 미션 이름이나 카테고리입니다.");
+    throw new Error('유효하지 않은 미션 이름이나 카테고리입니다.');
   }
 
-  // 3. 주간 인증 횟수 검증
+  // 3. 디폴트 이미지 URL 설정 로직
+  const baseUrl = 'http://222.112.27.120/coachly/mission';
+
+  const defaultImages = {
+    1: `${baseUrl}/운동_default.jpg`,
+    2: `${baseUrl}/식단_default.jpg`,
+    3: `${baseUrl}/걸음수_default.jpg`,
+    4: `${baseUrl}/러닝_default.jpg`,
+  };
+
+  // 유저가 이미지 업로드를 하지 않았을 경우 디폴트 이미지 설정
+  const img_link =
+    missionData.img_link || `${defaultImages[missionData.mission_number]}`;
+
+  // 4. 주간 인증 횟수 검증
   // 미션 수행 기간(duration)이 '일주일' 또는 '한 달' 선택 시 주간 인증 횟수가 비어있다면 에러
   if (
-    (missionData.duration === "일주일" || missionData.duration === "한 달") &&
+    (missionData.duration === '일주일' || missionData.duration === '한 달') &&
     !missionData.weekly_cert_count
   ) {
-    throw new Error("주간 인증 횟수는 필수 입력 사항입니다.");
+    throw new Error('주간 인증 횟수는 필수 입력 사항입니다.');
   }
 
-  // 3-1. 주간 인증 횟수 범위 검증
-  if (missionData.duration === "일주일" || missionData.duration === "한 달") {
+  // 4-1. 주간 인증 횟수 범위 검증
+  if (missionData.duration === '일주일' || missionData.duration === '한 달') {
     const validRanges = {
       매일: [1, 7], // 1~7회
-      "평일 매일": [1, 5], // 1~5회
-      "주말 매일": [1, 2], // 1~2회
+      '평일 매일': [1, 5], // 1~5회
+      '주말 매일': [1, 2], // 1~2회
     };
 
     // 인증 빈도에 따른 유효한 범위 가져오기
     const [min, max] = validRanges[missionData.cert_freq] || [];
     if (!min || !max) {
-      throw new Error("유효하지 않은 인증 빈도입니다.");
+      throw new Error('유효하지 않은 인증 빈도입니다.');
     }
 
     // 주간 인증 횟수가 범위를 벗어날 경우 에러 반환
@@ -87,21 +101,21 @@ exports.createMission = async (missionData, user) => {
     }
   }
 
-  // 4. 인증 빈도 검증
+  // 5. 인증 빈도 검증
   // 미션 수행 기간(duration)과 인증 빈도(cert_freq)의 조합이 올바른지 확인
   // 유효하지 않은 조합('하루' + '평일 매일' 등)의 경우 에러 반환.
   const validCertFreqByDuration = {
-    하루: ["매일"],
-    "3일": ["매일"],
-    일주일: ["매일", "평일 매일", "주말 매일"],
-    "한 달": ["매일", "평일 매일", "주말 매일"],
+    하루: ['매일'],
+    '3일': ['매일'],
+    일주일: ['매일', '평일 매일', '주말 매일'],
+    '한 달': ['매일', '평일 매일', '주말 매일'],
   };
   if (
     !validCertFreqByDuration[missionData.duration]?.includes(
       missionData.cert_freq
     )
   ) {
-    throw new Error("유효하지 않은 인증 빈도입니다.");
+    throw new Error('유효하지 않은 인증 빈도입니다.');
   }
 
   // 미션방 생성 쿼리
@@ -127,8 +141,7 @@ exports.createMission = async (missionData, user) => {
     ended_at, // 계산된 종료일
     missionData.weekly_cert_count || null, // 주간 인증 횟수 (선택적)
     missionData.cert_freq || null, // 인증 빈도 (선택적)
-    missionData.img_link ||
-      `default_image_path/${missionData.mission_number}.png`, // 이미지 링크 (없을 경우 기본값 사용)
+    img_link, // 이미지 링크 (유저 업로드 또는 디폴트 이미지)
     level, // 난이도 (매칭된 값)
   ];
 
@@ -147,7 +160,7 @@ exports.createMission = async (missionData, user) => {
     return createdRoom; // 생성된 미션 방 데이터 반환
   } catch (error) {
     console.error(
-      "Error creating mission room or adding participant:",
+      'Error creating mission room or adding participant:',
       error.message
     );
     throw error;
@@ -170,14 +183,14 @@ exports.updateMissionStates = async () => {
     const endQuery = `
       UPDATE mission_rooms
       SET state = 'completed'
-      WHERE state = 'ongoing' AND ended_at < CURRENT_DATE;
+      WHERE state = 'ongoing' AND ended_at <= CURRENT_DATE;
     `;
     const { rowCount: completedCount } = await postgreSQL.query(endQuery); // 종료(completed)로 업데이트된 행 수 반환
     console.log(`Updated ${completedCount} missions to 'completed' state.`);
 
-    console.log("Mission states updated successfully.");
+    console.log('Mission states updated successfully.');
   } catch (error) {
-    console.error("Error updating mission states:", error.message);
+    console.error('Error updating mission states:', error.message);
     throw error; // 에러가 발생하면 호출한 곳으로 에러를 던짐
   }
 };
@@ -209,7 +222,7 @@ exports.joinMissionRoom = async (user_number, room_number) => {
 
   try {
     // 트랜잭션 시작
-    await postgreSQL.query("BEGIN");
+    await postgreSQL.query('BEGIN');
 
     // 1. 미션방 상태 확인
     const { rows: stateRows } = await postgreSQL.query(checkStateQuery, [
@@ -217,14 +230,14 @@ exports.joinMissionRoom = async (user_number, room_number) => {
     ]);
 
     if (stateRows.length === 0) {
-      throw { status: 404, message: "존재하지 않는 미션방입니다." };
+      throw { status: 404, message: '존재하지 않는 미션방입니다.' };
     }
 
     const roomState = stateRows[0].state;
-    if (roomState !== "recruiting") {
+    if (roomState !== 'recruiting') {
       throw {
         status: 403,
-        message: "해당 미션방은 참여할 수 없는 상태입니다.",
+        message: '해당 미션방은 참여할 수 없는 상태입니다.',
       }; // 상태가 recruiting이 아닌 경우 에러 반환
     }
 
@@ -234,7 +247,7 @@ exports.joinMissionRoom = async (user_number, room_number) => {
       [user_number, room_number]
     );
     if (participantRows[0].exists) {
-      throw { status: 409, message: "이미 해당 미션방에 참여 중입니다." };
+      throw { status: 409, message: '이미 해당 미션방에 참여 중입니다.' };
     }
 
     // 3. 중복이 아닌 경우 참여자 추가
@@ -243,13 +256,13 @@ exports.joinMissionRoom = async (user_number, room_number) => {
       room_number,
     ]);
 
-    await postgreSQL.query("COMMIT"); // 트랜잭션 커밋
+    await postgreSQL.query('COMMIT'); // 트랜잭션 커밋
 
     // 참여자 정보 반환
     return result.rows[0];
   } catch (error) {
-    await postgreSQL.query("ROLLBACK"); // 에러 발생 시 롤백
-    console.error("Error adding participant to mission room:", error.message);
+    await postgreSQL.query('ROLLBACK'); // 에러 발생 시 롤백
+    console.error('Error adding participant to mission room:', error.message);
     throw error;
   }
 };
@@ -305,8 +318,8 @@ exports.getPopularMissions = async () => {
       duration: row.duration,
     }));
   } catch (error) {
-    console.error("[MODEL ERROR] 인기 미션 조회 실패:", error.message);
-    throw new Error("인기 미션 조회 중 데이터베이스 오류가 발생했습니다.");
+    console.error('[MODEL ERROR] 인기 미션 조회 실패:', error.message);
+    throw new Error('인기 미션 조회 중 데이터베이스 오류가 발생했습니다.');
   }
 };
 
@@ -362,8 +375,8 @@ exports.getUpcomingMissions = async () => {
       duration: row.duration,
     }));
   } catch (error) {
-    console.error("[MODEL ERROR] 마감 임박 미션 조회 실패:", error.message);
-    throw new Error("마감 임박 미션 조회 중 데이터베이스 오류가 발생했습니다.");
+    console.error('[MODEL ERROR] 마감 임박 미션 조회 실패:', error.message);
+    throw new Error('마감 임박 미션 조회 중 데이터베이스 오류가 발생했습니다.');
   }
 };
 
@@ -430,11 +443,11 @@ exports.getParticipatingMissions = async (userNumber) => {
     }));
   } catch (error) {
     console.error(
-      "[Model] Error fetching participating missions:",
+      '[Model] Error fetching participating missions:',
       error.message
     );
     throw new Error(
-      "참여 중인 미션을 불러오는 중 데이터베이스 오류가 발생했습니다."
+      '참여 중인 미션을 불러오는 중 데이터베이스 오류가 발생했습니다.'
     );
   }
 };

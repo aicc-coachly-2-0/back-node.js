@@ -3,14 +3,14 @@ const router = express.Router();
 const missionController = require('../controllers/missionController');
 const missionDetailsController = require('../controllers/missionDetailsController');
 const { authenticateToken } = require('../middlewares/authMiddleware');
-const { upload, uploadFileToFTP } = require('../middlewares/fileUpload');
+const { upload, uploadFileToSFTP } = require('../middlewares/fileUpload');
 
-// 미션방 생성 (이미지 업로드 추가)
+// 미션방 생성 (SFTP 이미지 업로드 적용)
 router.post(
   '/',
   authenticateToken, // 사용자 인증
-  upload, // 이미지 업로드 처리 (multer)
-  uploadFileToFTP, // FTP 서버 업로드 및 URL 생성
+  upload, // multer로 파일 처리
+  uploadFileToSFTP, // SFTP 서버로 파일 업로드 및 URL 생성
   missionController.createMission // 미션방 생성 컨트롤러
 );
 
