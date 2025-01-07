@@ -22,7 +22,7 @@ router.get(
 router.get('/questions', questionController.getAllQuestions);
 
 // 답변 없는 질문 조회
-router.get('/questions/unanswered', questionController.getUnansweredQuestions);
+router.get('/unanswered', questionController.getUnansweredQuestions);
 
 // 답변 작성
 router.post('/answers', answerController.createAnswer);

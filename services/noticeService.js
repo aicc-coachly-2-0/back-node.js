@@ -19,8 +19,9 @@ exports.createNoticeWithImages = async ({
 };
 
 // 공지글 수정
-exports.updateNotice = async (noticeNumber, { title, content, images }) => {
+exports.updateNotice = async (noticeNumber, { admin_number, title, content, images }) => {
   const updatedNotice = await noticeModel.updateNotice(noticeNumber, {
+    admin_number,
     title,
     content,
   });

@@ -12,10 +12,16 @@ exports.createUser = async (userData, profilePictureUrl) => {
 
   try {
     await client.query("BEGIN");
-    session.startTransaction();
 
     const hashedPassword = await bcrypt.hash(userData.user_pw, 10);
     const sanitizedPhone = userData.user_phone.replace(/\D/g, "");
+
+    // 트랜잭션을 사용할지 여부를 체크 (로컬 환경에서는 트랜잭션을 사용하지 않음)
+    const isReplicaSet = config.mongoReplicaSet; // 설정 파일에서 replica set 여부 체크
+
+    if (isReplicaSet) {
+      session.startTransaction();
+    }
 
     // PostgreSQL에 사용자 생성
     const createdUser = await authModel.createUser({
@@ -38,12 +44,19 @@ exports.createUser = async (userData, profilePictureUrl) => {
       session
     );
 
+    // 트랜잭션을 사용할 경우 커밋
+    if (isReplicaSet) {
+      await session.commitTransaction();
+    }
+
     await client.query("COMMIT");
-    await session.commitTransaction();
 
     return createdUser;
   } catch (error) {
-    await session.abortTransaction();
+    // 트랜잭션을 사용할 경우 롤백
+    if (isReplicaSet) {
+      await session.abortTransaction();
+    }
     await client.query("ROLLBACK");
     throw error;
   } finally {

@@ -1,6 +1,6 @@
 const { Pool } = require("pg");
 const mongoose = require("mongoose");
-const ftp = require("basic-ftp"); // FTP 클라이언트 모듈 추가
+const Client = require("ssh2-sftp-client"); // FTP 클라이언트 모듈 추가
 const config = require("./config"); // config 파일 불러오기
 
 // PostgreSQL 연결 설정
@@ -44,27 +44,37 @@ async function connectMongoDB() {
 }
 connectMongoDB();
 
-async function connectFTP() {
-  const client = new ftp.Client();
-  // client.ftp.verbose = true; // 디버깅을 위한 로그 출력
+async function connectSFTP() {
+  const sftp = new Client();
 
   try {
-    await client.access({
+    await sftp.connect({
       host: config.ftp.host,
       port: config.ftp.port,
-      user: config.ftp.user,
+      username: config.ftp.user,
       password: config.ftp.password,
       secure: config.ftp.secure,
+      readyTimeout: 120000, // Timeout을 2분으로 늘려보기
     });
-    console.log("FTP에 성공적으로 연결되었습니다!");
-    return client; // FTP 클라이언트를 반환
+    console.log("SFTP에 성공적으로 연결되었습니다!");
+
+    // 필요한 경우, 디렉토리 변경 (sftp.cwd 사용)
+    const currentDir = await sftp.cwd(); // 현재 디렉토리 확인
+    console.log("현재 디렉토리:", currentDir);
+
+    // 예: /kochiri/profile로 이동 (디렉토리 변경)
+    await sftp.cwd("/profile");
+    console.log("디렉토리 변경 완료");
+
+    return sftp; // FTP 클라이언트를 반환
   } catch (err) {
     console.error("FTP 연결 에러:", err.message);
   }
 }
-// connectFTP();
+connectSFTP(); // 연결 함수 호출
+
 module.exports = {
   postgreSQL: pool,
   mongoURI,
-  connectFTP,
+  connectSFTP,
 };

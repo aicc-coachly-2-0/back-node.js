@@ -72,11 +72,23 @@ exports.getAllQuestions = async (req, res, next) => {
 
 // 답변이 달리지 않은 질문을 오래된 순서대로 조회하는 컨트롤러 함수
 // 서비스 계층의 getUnansweredQuestions 호출 후 해당 데이터를 반환
+// 답변 없는 질문 조회 (컨트롤러)
 exports.getUnansweredQuestions = async (req, res, next) => {
   try {
-    const questions = await questionService.getUnansweredQuestions();
-    res.status(200).json(questions);
+    // 서비스 계층에서 답변이 달리지 않은 질문을 조회
+    const unansweredQuestions = await questionService.getUnansweredQuestions();
+    console.log('Unanswered Questions:', unansweredQuestions);
+
+    // 조회된 질문이 없다면 404 반환
+    if (!unansweredQuestions || unansweredQuestions.length === 0) {
+      return res.status(404).json({ message: 'No unanswered questions found' });
+    }
+    
+    // 답변 없는 질문들 반환
+    res.status(200).json(unansweredQuestions);
   } catch (error) {
-    next(error); // 에러 발생 시 에러 핸들러로 전달
+    // 오류 발생 시 에러 처리
+    next(error);
   }
 };
+

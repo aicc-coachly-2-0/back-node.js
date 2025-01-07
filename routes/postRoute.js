@@ -13,7 +13,7 @@ router.post('/comment', postController.createPostComment);
 // 커뮤니티 종류 생성
 router.post(
   '/communities',
-  authMiddleware.authenticateAdmin,
+  authMiddleware.authenticateToken,
   postController.createCommunity
 );
 

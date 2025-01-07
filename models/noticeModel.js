@@ -13,18 +13,20 @@ exports.insertNotice = async ({ admin_number, title, content }) => {
 };
 
 // 공지글 수정
-exports.updateNotice = async (noticeNumber, { title, content }) => {
+exports.updateNotice = async (noticeNumber, { admin_number, title, content }) => {
+  // 수정할 값이 있을 경우 업데이트 쿼리 실행
   const query = `
     UPDATE notices
-    SET title = $1,
-        content = $2,
+    SET admin_number = $1,
+        title = COALESCE($2, title),
+        content = COALESCE($3, content),
         updated_at = CURRENT_TIMESTAMP
-    WHERE notice_number = $3
+    WHERE notice_number = $4
     RETURNING *;
   `;
-  const values = [title, content, noticeNumber];
+  const values = [admin_number, title, content, noticeNumber];
   const { rows } = await postgreSQL.query(query, values);
-  return rows[0];
+  return rows[0]; // 수정된 공지글 반환
 };
 
 // 공지글 이미지 삽입

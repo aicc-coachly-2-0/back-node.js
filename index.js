@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const bodyParser = require("body-parser");
+// const bodyParser = require("body-parser");
 const axios = require("axios");
 const { RestClient } = require("@bootpay/server-rest-client"); // Bootpay 서버 클라이언트
 require("dotenv").config();
@@ -17,6 +17,8 @@ const feedRoute = require("./routes/feedRoute");
 const userRoute = require("./routes/userRoute");
 const missionRoute = require("./routes/missionRoute");
 const faqRoute = require("./routes/faqRoutes");
+const qnaRoute = require("./routes/qnaRoutes");
+const noticeRoute = require("./routes/noticeRoute");
 
 const PORT = config.server.port || 8080;
 const app = express();
@@ -32,7 +34,7 @@ try {
 
 app.use(express.json());
 app.use(cors());
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
 
 app.get("/", (req, res) => {
   res.send("Hello World! Test Server Running.");
@@ -124,6 +126,8 @@ app.use("/feeds", feedRoute);
 app.use("/user", userRoute);
 app.use("/missions", missionRoute);
 app.use("/faqs", faqRoute);
+app.use("/qnas", qnaRoute);
+app.use("/notice", noticeRoute);
 
 // error route
 app.use(errorHandler);
