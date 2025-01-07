@@ -2,23 +2,25 @@ const express = require('express');
 const router = express.Router();
 const reportController = require('../controllers/reportController');
 
+// 특정 유저가 한 신고 조회 라우터
+router.get('/my_reports/:user_number', reportController.getReportsMadeByUser);
+
 // 도메인별 신고 접수
-router.post('/:domain', reportController.createReport);
+router.post('/report/:domain', reportController.createReport);
 
 // 도메인별 신고 조회 (목록)
-router.get('/:domain', reportController.getReportsByDomain);
+router.get('/report/:domain', reportController.getReportsByDomain);
 
 // 특정 사용자의 신고 내역과 신고 수 조회
 router.get('/user/:user_number', reportController.getReportsForUser);
 
-// 특정 유저가 한 신고 조회 라우터
-router.get('/my_reports', reportController.getReportsMadeByUser);
+
 
 // 특정 신고 조회
-router.get('/:domain/:report_id', reportController.getReport);
+router.get('/detail/:domain/:report_number', reportController.getReport);
 
 // 신고 처리 (관리자)
-router.put('/:domain/:report_id', reportController.processReport);
+router.put('/process/:domain/:report_number', reportController.processReport);
 
 // 신고 처리 내역 조회
 router.get('/managements', reportController.getReportManagements);

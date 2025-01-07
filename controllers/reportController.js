@@ -47,11 +47,11 @@ exports.getReportsForUser = async (req, res, next) => {
 };
 
 // 특정 유저가 한 신고 조회
-exports.getReportsMadeByUser = async (req, res) => {
-  const { user_id } = req.user;  // 로그인된 사용자의 user_id
+exports.getReportsMadeByUser = async (req, res, next) => {
+  const { user_number } = req.params; 
 
   try {
-    const reports = await reportService.getReportsMadeByUser(user_id);
+    const reports = await reportService.getReportsMadeByUser(user_number);
     res.status(200).json({ message: 'Reports made by user retrieved successfully', data: reports });
   } catch (error) {
     next(error);

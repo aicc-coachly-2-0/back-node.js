@@ -101,7 +101,6 @@ exports.findReportsByDomain = async (domain, { state }) => {
   return rows;
 };
 
-
 // 도메인별 특정 사용자가 받은 신고와 신고 수 조회
 exports.findReportsForUser = async (user_number, domain) => {
   const table = getDomainTable(domain);
@@ -243,21 +242,38 @@ const handleUserAction = async (userId, domain, action) => {
 
 // 특정 유저가 한 신고 조회
 exports.findReportsMadeByUser = async (user_number) => {
-  const query = `
-    SELECT 
-        report_id,
-        reported_user_number AS user_number,
-        reporter_user_number AS reporter_number,
-        report_reason,
-        state,
-        report_at
-    FROM 
-        user_reports
-    WHERE 
-        reporter_user_number = $1;
+  //  도메인 리스트 가져오기
+  const domains = Object.keys(DOMAIN_TABLE_MAP);
+
+  // 각 도메인에 대한 신고 조회 쿼리 실행
+  const reportPromises = domains.map(async (domain) => {
+    const table = getDomainTable(domain);
+    const targetColumn = getTargetColumn(domain);
+
+    // 'user' 도메인 처리
+    const userColumn = domain === 'user' ? 'reporting_user_number' : 'user_number';
+   // 쿼리 작성
+   const query = `
+   SELECT
+       '${domain}' AS domain, -- 도메인 이름 추가
+       ${targetColumn} AS target_id,   -- 신고 고유 번호
+       report_reason,         -- 신고 사유
+       state,                 -- 신고 상태
+       report_at              -- 신고 날짜
+   FROM
+       ${table}
+   WHERE
+       ${userColumn} = $1;      -- 특정 유저가 한 신고
   `;
+
+  // 쿼리 실행
   const { rows } = await postgreSQL.query(query, [user_number]);
-  return rows; // 특정 유저가 한 신고 내역 반환
+  return rows;
+});
+
+// 모든 쿼리 결과를 병합
+const allReports = await Promise.all(reportPromises);
+return allReports.flat(); // 결과를 평탄화하여 반환
 };
 
 // 특정 신고 조회
@@ -273,7 +289,7 @@ exports.findReportById = async (domain, reportId) => {
 };
 
 // 신고 상태 업데이트
-exports.updateReportState = async (domain, reportId, { state, admin_number, report_content }) => {
+exports.updateReportState = async (domain, report_number, { state, admin_number, report_content }) => {
   const table = DOMAIN_TABLE_MAP[domain];
   if (!table) throw new Error('Invalid domain');
 
@@ -283,14 +299,14 @@ exports.updateReportState = async (domain, reportId, { state, admin_number, repo
     WHERE ${getPrimaryKey(domain)} = $2
     RETURNING *;
   `;
-  const values = [state, reportId];
+  const values = [state, report_number];
   const { rows } = await postgreSQL.query(query, values);
 
   if (rows[0]) {
     // 신고 처리 내역 기록
     await this.insertReportManagement({
       report_type: domain,
-      report_id: reportId,
+      report_number: report_number,
       admin_number,
       report_content,
     });
@@ -300,13 +316,13 @@ exports.updateReportState = async (domain, reportId, { state, admin_number, repo
 };
 
 // 신고 처리 내역 기록
-exports.insertReportManagement = async ({ report_type, report_id, admin_number, report_content }) => {
+exports.insertReportManagement = async ({ report_type, report_number, admin_number, report_content }) => {
   const query = `
-    INSERT INTO report_managements (report_type, report_id, admin_number, report_content, resolution_at, state)
+    INSERT INTO report_managements (report_type, report_number, admin_number, report_content, resolution_at, state)
     VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, 'resolved')
     RETURNING *;
   `;
-  const values = [report_type, report_id, admin_number, report_content];
+  const values = [report_type, report_number, admin_number, report_content];
   const { rows } = await postgreSQL.query(query, values);
   return rows[0];
 };
