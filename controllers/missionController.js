@@ -1,3 +1,4 @@
+const { postgreSQL } = require('../config/database');
 const missionService = require('../services/missionService');
 
 // 미션 방 생성
@@ -11,18 +12,17 @@ exports.createMission = async (req, res, next) => {
       return res.status(403).json({ message: 'Unauthorized user' });
     }
 
-    // 제목, 미션 카테고리(의 고유 넘버), 미션 수행 기간, 미션 시작일, 참가 인원 데이터 전달
-    const { title, mission_number, started_at, duration, max_participants } =
-      req.body;
+    // 제목, 미션 카테고리, 미션 수행 기간, 미션 시작일, 참가 인원 데이터 전달
+    const { title, mission_title, started_at, duration } = req.body;
 
     // 필수 입력값 검증 -> 제목, 미션 카테고리, 미션 수행 기간, 미션 시작일 값이 비어있다면 에러 반환
     if (!title || title.trim() === '') {
       return res.status(400).json({ message: 'Title is required.' });
     }
-    if (!mission_number) {
+    if (!mission_title) {
       return res
         .status(400)
-        .json({ message: 'Mission category (mission_number) is required.' });
+        .json({ message: 'Mission category (mission_title) is required.' });
     }
     if (!duration) {
       return res.status(400).json({ message: 'Mission duration is required.' });
@@ -33,9 +33,48 @@ exports.createMission = async (req, res, next) => {
         .json({ message: 'Mission start date is required.' });
     }
 
+    // 프론트에서 mission_title(예: '러닝')을 보내주기 때문에 이를 기반으로 mission_number를 조회
+    const getMissionNumberQuery = `
+      SELECT mission_number 
+      FROM missions 
+      WHERE mission_type = $1; -- mission_title에 해당하는 DB 컬럼
+    `;
+
+    let mission_number; // 조회된 mission_number를 저장할 변수
+    try {
+      console.log('[DEBUG] mission_title:', mission_title);
+
+      const result = await postgreSQL.query(getMissionNumberQuery, [
+        mission_title,
+      ]); // mission_title을 쿼리 파라미터로 전달
+
+      console.log('[DEBUG] DB Query Result:', result.rows);
+
+      // 조회 결과 확인
+      if (result.rows.length === 0) {
+        return res.status(400).json({
+          message: `Invalid mission category: ${mission_title}`,
+        });
+      }
+
+      mission_number = result.rows[0].mission_number; // 조회된 mission_number 설정
+
+      console.log('[DEBUG] Retrieved mission_number:', mission_number);
+    } catch (error) {
+      console.error(
+        '[CONTROLLER ERROR] Failed to fetch mission_number:',
+        error.message
+      );
+      return res.status(500).json({
+        message: 'Failed to fetch mission category.',
+        error: error.message,
+      });
+    }
+
     // 이미지 URL 처리
     const missionData = {
       ...req.body, // 기존 요청 데이터
+      mission_number,
       img_url: req.fileUrls?.[0]?.fileUrl || null, // 첫 번째 이미지 URL (없으면 null)
     };
 
