@@ -11,6 +11,8 @@ CREATE TYPE participant_state_enum AS ENUM ('active', 'banned'); -- 미션 참�
 CREATE TYPE validation_status_enum AS ENUM ('pending', 'approved', 'rejected'); -- 미션 성공 상태
 CREATE TYPE validation_state_enum AS ENUM ('active', 'inactive'); -- 미션 인증 상태
 
+CREATE TYPE approvals_state_enum AS ENUM ('active', 'inactive'); -- 미션 확인 상태
+
 CREATE TYPE feed_state_enum AS ENUM ('active', 'inactive', 'deleted');
 CREATE TYPE community_state_enum AS ENUM ('active', 'inactive', 'archived');
 CREATE TYPE comment_state_enum AS ENUM ('active', 'deleted');
@@ -97,6 +99,18 @@ CREATE TABLE mission_validations (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     state validation_state_enum DEFAULT 'active',
     CONSTRAINT fk_group_number FOREIGN KEY (group_number) REFERENCES mission_participants(group_number) ON DELETE CASCADE
+);
+
+-- 미션 인증 확인
+CREATE TABLE validation_approvals (
+  approval_id SERIAL PRIMARY KEY,
+  mission_validation_number INT NOT NULL,
+  group_number INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  state approvals_state_enum DEFAULT 'active',
+  UNIQUE (mission_validation_number, group_number),
+  FOREIGN KEY (mission_validation_number) REFERENCES mission_validations (mission_validation_number),
+  FOREIGN KEY (group_number) REFERENCES mission_participants (group_number)
 );
 
 -- 커뮤니티
