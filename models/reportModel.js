@@ -8,28 +8,81 @@ const DOMAIN_TABLE_MAP = {
   post_comment: 'post_comment_reports',
   mission: 'mission_reports',
   mission_validation: 'mission_validation_reports',
-  user: 'user_reports',
+  user: 'user_reports'
 };
 
-// 신고 접수
-exports.insertReport = async (domain, { user_number, target_id, report_reason, report_category }) => {
+// 도메인 테이블 맵핑 가져오기
+function getDomainTable(domain) {
+  console.log("Received domain:", domain); // 로그 추가
   const table = DOMAIN_TABLE_MAP[domain];
   if (!table) throw new Error('Invalid domain');
+  return table;
+}
+
+
+// Helper: 도메인별 컬럼 반환
+function getTargetColumn(domain) {
+  const targetColumns = {
+    feed: 'feed_number',
+    feed_comment: 'feed_comment_number',
+    post: 'post_number',
+    post_comment: 'post_comment_number',
+    mission: 'room_number',
+    mission_validation: 'mission_validation_number',
+    user: 'reported_user_number'
+  };
+  return targetColumns[domain];
+}
+
+// Helper: 도메인별 기본 키 반환
+function getPrimaryKey(domain) {
+  const primaryKeys = {
+    feed: 'feed_report_number',
+    feed_comment: 'feed_comment_report_number',
+    post: 'post_report_number',
+    post_comment: 'post_comment_report_number',
+    mission: 'mission_report_number',
+    mission_validation: 'mission_validation_report_number',
+    user: 'user_report_number'
+  };
+  return primaryKeys[domain];
+}
+
+// 도메인별 user_number를 찾는 쿼리
+function getUserNumberTable(domain) {
+  const DOMAIN_USER_TABLE_MAP = {
+    feed: 'feeds',  
+    comment: 'comments',  
+    post: 'posts', 
+    post_comment: 'post_comments',
+    mission: 'missions',
+    mission_validation: 'mission_validations',
+    user: 'users'
+  };
+  return DOMAIN_USER_TABLE_MAP[domain] || null;
+}
+
+// 신고 접수
+exports.insertReport = async (domain, { user_number, target_id, report_reason }) => {
+  const table = getDomainTable(domain);
+  const targetColumn = getTargetColumn(domain);
 
   const query = `
-    INSERT INTO ${table} (user_number, ${getTargetColumn(domain)}, report_reason, report_category, state, report_at)
-    VALUES ($1, $2, $3, $4, 'pending', CURRENT_TIMESTAMP)
+    INSERT INTO ${table} (user_number, ${targetColumn}, report_reason, state, report_at)
+    VALUES ($1, $2, $3, 'pending', CURRENT_TIMESTAMP)
     RETURNING *;
   `;
-  const values = [user_number, target_id, report_reason, report_category];
+
+  const values = [user_number, target_id, report_reason];
+
   const { rows } = await postgreSQL.query(query, values);
   return rows[0];
+  
 };
 
 // 도메인별 신고 조회 (목록) - 상태와 카테고리 필터링 추가
-exports.findReportsByDomain = async (domain, { state, report_category }) => {
-  const table = DOMAIN_TABLE_MAP[domain];
-  if (!table) throw new Error('Invalid domain');
+exports.findReportsByDomain = async (domain, { state }) => {
+  const table = getDomainTable(domain);
 
   let orderByClause = 'ORDER BY report_at DESC'; // 기본적으로 최신순 정렬
 
@@ -41,34 +94,82 @@ exports.findReportsByDomain = async (domain, { state, report_category }) => {
   const query = `
     SELECT * FROM ${table}
     WHERE ($1::text IS NULL OR state = $1)
-      AND ($2::text IS NULL OR report_category = $2)
     ${orderByClause};
   `;
-  const values = [state, report_category];
+  const values = [state];
   const { rows } = await postgreSQL.query(query, values);
   return rows;
 };
 
 
-// 특정 사용자가 받은 신고와 신고 수 조회
-exports.findReportsForUser = async (userNumber) => {
+// 도메인별 특정 사용자가 받은 신고와 신고 수 조회
+exports.findReportsForUser = async (user_number, domain) => {
+  const table = getDomainTable(domain);
+  const targetColumn = getTargetColumn(domain);
+  const userTable = getUserNumberTable(domain);
+  console.log("Received domain!!!:", domain); // 로그 추가
+
+  // 'user' 도메인일 경우, 'f.user_number' 대신 'f.reporting_user_number' 사용
+  const userColumn = domain === 'user' ? 'reporting_user_number' : 'user_number';
+  
   const query = `
     SELECT 
-        reported_user_number AS user_number,
-        COUNT(*) AS report_count,
-        ARRAY_AGG(report_reason) AS report_reasons,
-        ARRAY_AGG(state) AS report_states,
-        ARRAY_AGG(report_at) AS report_dates
-    FROM 
-        user_reports
-    WHERE 
-        reported_user_number = $1
-    GROUP BY 
-        reported_user_number;
+          fr.${targetColumn} AS target_id,
+          COUNT(*) AS report_count,
+          ARRAY_AGG(fr.report_reason) AS report_reasons,
+          ARRAY_AGG(fr.state) AS report_states,
+          ARRAY_AGG(fr.report_at) AS report_dates
+      FROM 
+          ${userTable} f
+      JOIN 
+          ${table} fr ON fr.${targetColumn} = f.${targetColumn}  -- 해당 피드의 신고 내역을 연결
+      WHERE 
+          f.${userColumn} = $1  -- 특정 사용자의 user_number로 필터링
+      GROUP BY 
+          fr.${targetColumn};  -- 신고된 피드의 고유 ID를 기준으로 그룹화
   `;
-  const { rows } = await postgreSQL.query(query, [userNumber]);
-  return rows[0]; // 특정 사용자만 조회하므로 첫 번째 결과만 반환
+  const { rows } = await postgreSQL.query(query, [user_number]);
+  return rows;
 };
+
+// 전체 도메인에서 특정 사용자가 받은 신고와 신고 수 조회
+exports.findAllReportsForUser = async (user_number) => {
+  const domains = Object.keys(DOMAIN_TABLE_MAP);
+  console.log("Received domain!:", domains); // 로그 추가
+  const reportPromises = domains.map(async (domain) => {
+    const table = getDomainTable(domain);
+    const targetColumn = getTargetColumn(domain);
+    const userTable = getUserNumberTable(domain);
+
+    // 'user' 도메인일 경우, 'f.user_number' 대신 'f.reporting_user_number' 사용
+  const userColumn = domain === 'user' ? 'reporting_user_number' : 'user_number';
+
+    const query = `
+      SELECT 
+          fr.${targetColumn} AS target_id,
+          COUNT(*) AS report_count,
+          ARRAY_AGG(fr.report_reason) AS report_reasons,
+          ARRAY_AGG(fr.state) AS report_states,
+          ARRAY_AGG(fr.report_at) AS report_dates
+      FROM 
+          ${userTable} f
+      JOIN 
+          ${table} fr ON fr.${targetColumn} = f.${targetColumn}  -- 해당 피드의 신고 내역을 연결
+      WHERE 
+          f.${userColumn} = $1  -- 특정 사용자의 user_number로 필터링
+      GROUP BY 
+          fr.${targetColumn};  -- 신고된 피드의 고유 ID를 기준으로 그룹화
+    `;
+    console.log("Executing query:", query); // 실행되는 쿼리 출력
+    const { rows } = await postgreSQL.query(query, [user_number]);
+    return rows;
+  });
+
+  // 모든 도메인의 데이터를 병합
+  const allReports = await Promise.all(reportPromises);
+  return allReports.flat(); // 배열을 평탄화하여 결과 반환
+};
+
 
 // 1. 사용자가 1주일 내 금지된 도메인 여부 확인
 const checkWeeklyBan = async (userId, domain) => {
@@ -141,7 +242,7 @@ const handleUserAction = async (userId, domain, action) => {
 };
 
 // 특정 유저가 한 신고 조회
-exports.findReportsMadeByUser = async (userNumber) => {
+exports.findReportsMadeByUser = async (user_number) => {
   const query = `
     SELECT 
         report_id,
@@ -155,7 +256,7 @@ exports.findReportsMadeByUser = async (userNumber) => {
     WHERE 
         reporter_user_number = $1;
   `;
-  const { rows } = await postgreSQL.query(query, [userNumber]);
+  const { rows } = await postgreSQL.query(query, [user_number]);
   return rows; // 특정 유저가 한 신고 내역 반환
 };
 
@@ -220,31 +321,3 @@ exports.findReportManagements = async ({ state }) => {
   const { rows } = await postgreSQL.query(query, [state]);
   return rows;
 };
-
-// Helper: 도메인별 컬럼 반환
-function getTargetColumn(domain) {
-  const targetColumns = {
-    feed: 'feed_number',
-    feed_comment: 'feed_comment_number',
-    post: 'post_number',
-    post_comment: 'post_comment_number',
-    mission: 'room_number',
-    mission_validation: 'mission_validation_number',
-    user: 'reported_user_number',
-  };
-  return targetColumns[domain];
-}
-
-// Helper: 도메인별 기본 키 반환
-function getPrimaryKey(domain) {
-  const primaryKeys = {
-    feed: 'feed_report_number',
-    feed_comment: 'feed_comment_report_number',
-    post: 'post_report_number',
-    post_comment: 'post_comment_report_number',
-    mission: 'mission_report_number',
-    mission_validation: 'mission_validation_report_number',
-    user: 'user_report_number',
-  };
-  return primaryKeys[domain];
-}

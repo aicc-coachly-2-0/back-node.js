@@ -36,10 +36,6 @@ exports.deletePost = async (post_number) => {
   return await postModel.softDeletePost(post_number);
 };
 
-exports.updateComment = async (post_comment_number, commentData) => {
-  return await postModel.updateComment(post_comment_number, commentData);
-};
-
 exports.deleteComment = async (post_comment_number) => {
   return await postModel.softDeleteComment(post_comment_number);
 };

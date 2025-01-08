@@ -40,6 +40,7 @@ const uploadFileToSFTP = async (req, res, next) => {
 
     console.log("파일 업로드 시작");
     console.log("파일 개수:", Object.keys(req.files).length);
+    console.log("이미지 타입:", imageType);
 
     const uploadDir = `${imageType}/`;
     await sftp.mkdir(uploadDir, true);
@@ -117,6 +118,7 @@ module.exports = {
   upload: upload.fields([
     { name: "profilePicture", maxCount: 1 },
     { name: "feedPicture", maxCount: 1 },
+    { name: "postPicture", maxCount: 1 },
     { name: "noticePicture", maxCount: 10 },
   ]),
   uploadFileToSFTP,

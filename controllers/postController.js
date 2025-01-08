@@ -1,9 +1,14 @@
-const postService = require('../services/postService');
+const postService = require("../services/postService");
 
 exports.createPost = async (req, res, next) => {
   try {
-    const post = await postService.createPost(req.body);
-    res.status(201).json({ message: 'Post created successfully', post });
+    const postData = {
+      ...req.body,
+      img_path: req.fileUrls?.[0]?.fileUrl || null, // 첫 번째 이미지 URL 추가
+    };
+
+    const post = await postService.createPost(postData);
+    res.status(201).json({ message: "Post created successfully", post });
   } catch (error) {
     next(error);
   }
@@ -12,7 +17,7 @@ exports.createPost = async (req, res, next) => {
 exports.createPostComment = async (req, res, next) => {
   try {
     const comment = await postService.createComment(req.body);
-    res.status(201).json({ message: 'Comment created successfully', comment });
+    res.status(201).json({ message: "Comment created successfully", comment });
   } catch (error) {
     next(error);
   }
@@ -23,7 +28,7 @@ exports.createCommunity = async (req, res, next) => {
     const community = await postService.createCommunity(req.body);
     res
       .status(201)
-      .json({ message: 'Community created successfully', community });
+      .json({ message: "Community created successfully", community });
   } catch (error) {
     next(error);
   }
@@ -73,7 +78,7 @@ exports.updatePost = async (req, res, next) => {
       req.params.post_number,
       req.body
     );
-    res.status(200).json({ message: 'Post updated successfully', updatedPost });
+    res.status(200).json({ message: "Post updated successfully", updatedPost });
   } catch (error) {
     next(error);
   }
@@ -82,21 +87,7 @@ exports.updatePost = async (req, res, next) => {
 exports.deletePost = async (req, res, next) => {
   try {
     await postService.deletePost(req.params.post_number);
-    res.status(200).json({ message: 'Post deleted successfully' });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.updateComment = async (req, res, next) => {
-  try {
-    const updatedComment = await postService.updateComment(
-      req.params.post_comment_number,
-      req.body
-    );
-    res
-      .status(200)
-      .json({ message: 'Comment updated successfully', updatedComment });
+    res.status(200).json({ message: "Post deleted successfully" });
   } catch (error) {
     next(error);
   }
@@ -105,7 +96,7 @@ exports.updateComment = async (req, res, next) => {
 exports.deleteComment = async (req, res, next) => {
   try {
     await postService.deleteComment(req.params.post_comment_number);
-    res.status(200).json({ message: 'Comment deleted successfully' });
+    res.status(200).json({ message: "Comment deleted successfully" });
   } catch (error) {
     next(error);
   }

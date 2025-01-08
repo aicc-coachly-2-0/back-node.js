@@ -1,17 +1,18 @@
-const { postgreSQL } = require('../config/database');
+const { postgreSQL } = require("../config/database");
 
 exports.insertPost = async ({
   user_number,
   community_number,
   title,
   content,
+  img_path,
 }) => {
   const query = `
-    INSERT INTO posts (user_number, community_number, title, content)
-    VALUES ($1, $2, $3, $4)
+    INSERT INTO posts (user_number, community_number, title, content, img_path)
+    VALUES ($1, $2, $3, $4, $5)
     RETURNING *;
   `;
-  const values = [user_number, community_number, title, content];
+  const values = [user_number, community_number, title, content, img_path];
   const { rows } = await postgreSQL.query(query, values);
   return rows[0];
 };
@@ -91,28 +92,16 @@ exports.updatePost = async (post_number, { title, content }) => {
 exports.softDeletePost = async (post_number) => {
   const query = `
     UPDATE posts
-    SET state = 'inactive'
+    SET state = 'deleted'
     WHERE post_number = $1;
   `;
   await postgreSQL.query(query, [post_number]);
 };
 
-exports.updateComment = async (post_comment_number, { content }) => {
-  const query = `
-    UPDATE post_comments
-    SET content = $1, updated_at = CURRENT_TIMESTAMP
-    WHERE post_comment_number = $2 AND state = 'active'
-    RETURNING *;
-  `;
-  const values = [content, post_comment_number];
-  const { rows } = await postgreSQL.query(query, values);
-  return rows[0];
-};
-
 exports.softDeleteComment = async (post_comment_number) => {
   const query = `
     UPDATE post_comments
-    SET state = 'inactive'
+    SET state = 'deleted'
     WHERE post_comment_number = $1;
   `;
   await postgreSQL.query(query, [post_comment_number]);

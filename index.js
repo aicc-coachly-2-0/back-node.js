@@ -19,6 +19,7 @@ const missionRoute = require("./routes/missionRoute");
 const faqRoute = require("./routes/faqRoutes");
 const qnaRoute = require("./routes/qnaRoutes");
 const noticeRoute = require("./routes/noticeRoute");
+const reportRoute = require("./routes/reportRoutes");
 
 const PORT = config.server.port || 8080;
 const app = express();
@@ -46,6 +47,16 @@ app.get("/", (req, res) => {
 //   try {
 //     const requestData = req.body; // 클라이언트에서 받은 데이터
 //     console.log("Received data:", requestData); // 요청 본문 데이터 출력
+// route
+app.use("/auth", authRoute);
+app.use("/posts", postRoute);
+app.use("/feeds", feedRoute);
+app.use("/user", userRoute);
+app.use("/missions", missionRoute);
+app.use("/faqs", faqRoute);
+app.use("/qnas", qnaRoute);
+app.use("/notice", noticeRoute);
+app.use("/reports", reportRoute);
 
 //     // FastAPI 서버로 데이터 전송
 //     const response = await axios.post(fastapiUrl, requestData);
@@ -119,15 +130,6 @@ app.post("/lookup-billingkey", async (req, res) => {
 // 여기까지 정민석이 임시로 작업한거 건들 ㄴㄴ
 
 // route
-
-app.use("/auth", authRoute);
-app.use("/posts", postRoute);
-app.use("/feeds", feedRoute);
-app.use("/user", userRoute);
-app.use("/missions", missionRoute);
-app.use("/faqs", faqRoute);
-app.use("/qnas", qnaRoute);
-app.use("/notice", noticeRoute);
 
 // error route
 app.use(errorHandler);
