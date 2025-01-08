@@ -34,8 +34,10 @@ exports.getAnswersByQuestion = async (question_number) => {
   }
 
   const answers = await answerModel.findAnswersByQuestion(question_number);
+  
+  // 답변이 없으면 빈 배열 반환
   if (!answers || answers.length === 0) {
-    throw new Error(`No answers found for question number ${question_number}`);
+    return [];  // 빈 배열 반환 (에러 대신 빈 배열)
   }
 
   return answers;
