@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const missionController = require('../controllers/missionController');
 const missionDetailsController = require('../controllers/missionDetailsController');
+const validationController = require('../controllers/validationController');
 const { authenticateToken } = require('../middlewares/authMiddleware');
 const { upload, uploadFileToSFTP } = require('../middlewares/fileUpload');
 
@@ -65,7 +66,7 @@ router.get('/detail/:room_number', missionDetailsController.getMissionDetails);
 //   authenticateToken, // 사용자 인증
 //   upload, // 이미지 처리 (multer)
 //   uploadFileToSFTP, // FTP 서버로 이미지 업로드
-//   missionController.uploadMissionValidation // 인증샷 업로드 컨트롤러
+//   validationController.uploadMissionValidation // 인증샷 업로드 컨트롤러
 // );
 
 module.exports = router;

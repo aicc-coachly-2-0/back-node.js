@@ -1,4 +1,4 @@
-const { postgreSQL } = require("../config/database");
+const { postgreSQL } = require('../config/database');
 
 // 지금 주목받는 미션 전체 조회
 exports.getAllPopularMissions = async ({ category, start_date }) => {
@@ -36,12 +36,12 @@ exports.getAllPopularMissions = async ({ category, start_date }) => {
   // 카테고리 필터링 (하나만 선택 가능)
   if (category) {
     // 카테고리가 하나 이상 선택되었는지 확인 (두 개 이상의 값이 들어오면 에러 처리)
-    const selectedCategories = category.split(","); // ,로 나누어 배열로 분리
+    const selectedCategories = category.split(','); // ,로 나누어 배열로 분리
     if (selectedCategories.length > 1) {
-      throw new Error("카테고리는 하나만 선택할 수 있습니다.");
+      throw new Error('카테고리는 하나만 선택할 수 있습니다.');
     }
 
-    const validCategories = ["운동", "식단", "걸음수", "러닝"];
+    const validCategories = ['운동', '식단', '걸음수', '러닝'];
     if (!validCategories.includes(selectedCategories[0])) {
       throw new Error(
         "유효하지 않은 카테고리입니다. 선택할 수 있는 카테고리는 '운동', '식단', '걸음수', '러닝'입니다."
@@ -50,15 +50,15 @@ exports.getAllPopularMissions = async ({ category, start_date }) => {
 
     // 카테고리 값이 유효하면 values 배열에 추가
     values.push(selectedCategories[0]); // 첫 번째 카테고리만 values 배열에 추가
-    query += ` AND missions.title = $${values.length}`; // 'missions.title'을 기준으로 카테고리 필터링
+    query += ` AND missions.mission_type = $${values.length}`; // 'missions.mission_type'을 기준으로 카테고리 필터링
   }
 
   // 시작 날짜 필터링 (하나만 선택 가능)
   if (start_date) {
     // 시작 날짜가 여러 개 선택되었는지 확인 (여러 날짜가 들어오면 에러 처리)
-    const startDateArray = start_date.split(","); // ,로 여러 날짜가 들어온 경우 처리
+    const startDateArray = start_date.split(','); // ,로 여러 날짜가 들어온 경우 처리
     if (startDateArray.length > 1) {
-      throw new Error("시작 날짜는 하나만 선택할 수 있습니다.");
+      throw new Error('시작 날짜는 하나만 선택할 수 있습니다.');
     }
 
     // 시작 날짜 값이 있으면 values 배열에 추가
@@ -91,9 +91,9 @@ exports.getAllPopularMissions = async ({ category, start_date }) => {
       duration: row.duration,
     }));
   } catch (error) {
-    console.error("[MODEL ERROR] 인기 미션 조회 실패:", error.message);
+    console.error('[MODEL ERROR] 인기 미션 조회 실패:', error.message);
     throw new Error(
-      "지금 주목받는 미션 리스트를 불러오는 중 데이터베이스 오류가 발생했습니다."
+      '지금 주목받는 미션 리스트를 불러오는 중 데이터베이스 오류가 발생했습니다.'
     );
   }
 };
@@ -134,12 +134,12 @@ exports.getAllUpcomingMissions = async ({ category, start_date }) => {
   // 카테고리 필터링 (하나만 선택 가능)
   if (category) {
     // 카테고리가 하나 이상 선택되었는지 확인 (예: "운동, 식단" 형태로 두 개 이상의 값이 들어오면 에러 처리)
-    const selectedCategories = category.split(","); // ,로 나누어 배열로 분리
+    const selectedCategories = category.split(','); // ,로 나누어 배열로 분리
     if (selectedCategories.length > 1) {
-      throw new Error("카테고리는 하나만 선택할 수 있습니다.");
+      throw new Error('카테고리는 하나만 선택할 수 있습니다.');
     }
 
-    const validCategories = ["운동", "식단", "걸음수", "러닝"];
+    const validCategories = ['운동', '식단', '걸음수', '러닝'];
     if (!validCategories.includes(selectedCategories[0])) {
       throw new Error(
         "유효하지 않은 카테고리입니다. 선택할 수 있는 카테고리는 '운동', '식단', '걸음수', '러닝'입니다."
@@ -148,15 +148,15 @@ exports.getAllUpcomingMissions = async ({ category, start_date }) => {
 
     // 카테고리 값이 유효하면 values 배열에 추가
     values.push(selectedCategories[0]); // 첫 번째 카테고리만 values 배열에 추가
-    query += ` AND missions.title = $${values.length}`; // 'missions.title'을 기준으로 카테고리 필터링
+    query += ` AND missions.mission_type = $${values.length}`; // 'missions.mission_type'을 기준으로 카테고리 필터링
   }
 
   // 시작 날짜 필터링 (하나만 선택 가능)
   if (start_date) {
     // 시작 날짜가 여러 개 선택되었는지 확인 (예: "2024-01-01, 2024-01-02" 형태로 여러 날짜가 들어오면 에러 처리)
-    const startDateArray = start_date.split(","); // ,로 여러 날짜가 들어온 경우 처리
+    const startDateArray = start_date.split(','); // ,로 여러 날짜가 들어온 경우 처리
     if (startDateArray.length > 1) {
-      throw new Error("시작 날짜는 하나만 선택할 수 있습니다.");
+      throw new Error('시작 날짜는 하나만 선택할 수 있습니다.');
     }
 
     // 시작 날짜 값이 있으면 values 배열에 추가
@@ -189,9 +189,9 @@ exports.getAllUpcomingMissions = async ({ category, start_date }) => {
       duration: row.duration,
     }));
   } catch (error) {
-    console.error("[MODEL ERROR] 마감 임박 미션 조회 실패:", error.message);
+    console.error('[MODEL ERROR] 마감 임박 미션 조회 실패:', error.message);
     throw new Error(
-      "마감 임박 미션 리스트를 불러오는 중 데이터베이스 오류가 발생했습니다."
+      '마감 임박 미션 리스트를 불러오는 중 데이터베이스 오류가 발생했습니다.'
     );
   }
 };
@@ -238,12 +238,12 @@ exports.getAllParticipatingMissions = async (userNumber, { category }) => {
   // 카테고리 필터링 (하나만 선택 가능)
   if (category) {
     // 카테고리 값이 하나만 선택되도록 확인
-    const selectedCategories = category.split(",");
+    const selectedCategories = category.split(',');
     if (selectedCategories.length > 1) {
-      throw new Error("카테고리는 하나만 선택할 수 있습니다.");
+      throw new Error('카테고리는 하나만 선택할 수 있습니다.');
     }
 
-    const validCategories = ["운동", "식단", "걸음수", "러닝"];
+    const validCategories = ['운동', '식단', '걸음수', '러닝'];
     if (!validCategories.includes(selectedCategories[0])) {
       throw new Error(
         "유효하지 않은 카테고리입니다. 선택할 수 있는 카테고리는 '운동', '식단', '걸음수', '러닝'입니다."
@@ -252,7 +252,7 @@ exports.getAllParticipatingMissions = async (userNumber, { category }) => {
 
     // 유효한 카테고리 값이면 필터링 조건 추가
     values.push(selectedCategories[0]);
-    query += ` AND missions.title = $${values.length}`; // 카테고리 필터링
+    query += ` AND missions.mission_type = $${values.length}`; // 카테고리 필터링
   }
 
   // 정렬 조건: 인증 미완료 미션을 먼저 보여주고, 시작일 순, 동일한 경우 방 생성일 순으로 정렬
@@ -277,11 +277,11 @@ exports.getAllParticipatingMissions = async (userNumber, { category }) => {
     }));
   } catch (error) {
     console.error(
-      "[Model] Error fetching participating missions:",
+      '[Model] Error fetching participating missions:',
       error.message
     );
     throw new Error(
-      "참여 중인 미션 리스트를 불러오는 중 데이터베이스 오류가 발생했습니다."
+      '참여 중인 미션 리스트를 불러오는 중 데이터베이스 오류가 발생했습니다.'
     );
   }
 };
@@ -322,7 +322,7 @@ exports.getCompletedMissions = async (userNumber, { category }) => {
   // 카테고리 필터링 조건 추가
   if (category) {
     values.push(category);
-    query += ` AND missions.title = $${values.length}`; // 카테고리 필터링
+    query += ` AND missions.mission_type = $${values.length}`; // 카테고리 필터링
   }
 
   query += `
@@ -342,7 +342,7 @@ exports.getCompletedMissions = async (userNumber, { category }) => {
 
     // 빈 배열이 반환된 경우
     if (rows.length === 0) {
-      console.log("[Model] No completed missions found.");
+      console.log('[Model] No completed missions found.');
       return []; // 빈 배열 반환
     }
 
@@ -355,9 +355,9 @@ exports.getCompletedMissions = async (userNumber, { category }) => {
       duration: row.duration,
     }));
   } catch (error) {
-    console.error("[Model] Error fetching completed missions:", error.message);
+    console.error('[Model] Error fetching completed missions:', error.message);
     throw new Error(
-      "진행했던 미션 리스트를 불러오는 중 데이터베이스 오류가 발생했습니다."
+      '진행했던 미션 리스트를 불러오는 중 데이터베이스 오류가 발생했습니다.'
     );
   }
 };
