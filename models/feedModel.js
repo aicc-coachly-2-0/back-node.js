@@ -19,7 +19,7 @@ exports.createFeedComment = async ({ user_number, feed_number, reference_comment
     VALUES ($1, $2, $3, $4)
     RETURNING *;
   `;
-  const values = [user_number, feed_number, content];
+  const values = [user_number, feed_number, reference_comment_number, content];
   const { rows } = await postgreSQL.query(query, values);
   return rows[0];
 };
