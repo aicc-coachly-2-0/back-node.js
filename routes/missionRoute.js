@@ -63,10 +63,17 @@ router.get('/detail/:room_number', missionDetailsController.getMissionDetails);
 // 미션 인증샷 업로드
 router.post(
   '/rooms/:room_number/validate',
-  authenticateToken, // 사용자 인증
+  authenticateToken,
   upload, // 이미지 처리 (multer)
   uploadFileToSFTP, // FTP 서버로 이미지 업로드
-  validationController.uploadMissionValidation // 인증샷 업로드 컨트롤러
+  validationController.uploadMissionValidation
+);
+
+// 인증샷 확인해주기
+router.get(
+  '/validations/:mission_validation_number/approvals',
+  authenticateToken,
+  validationController.getApprovalCount
 );
 
 module.exports = router;
