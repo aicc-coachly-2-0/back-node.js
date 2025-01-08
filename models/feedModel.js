@@ -13,10 +13,10 @@ exports.createFeed = async ({ user_number, img_number, content }) => {
 };
 
 // 피드 댓글 생성
-exports.createFeedComment = async ({ user_number, feed_number, content }) => {
+exports.createFeedComment = async ({ user_number, feed_number, reference_comment_number, content }) => {
   const query = `
-    INSERT INTO feed_comments (user_number, feed_number, content)
-    VALUES ($1, $2, $3)
+    INSERT INTO feed_comments (user_number, feed_number, reference_comment_number, content)
+    VALUES ($1, $2, $3, $4)
     RETURNING *;
   `;
   const values = [user_number, feed_number, content];
