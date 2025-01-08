@@ -282,7 +282,10 @@ exports.findReportById = async (domain, reportId) => {
   if (!table) throw new Error('Invalid domain');
 
   const query = `
-    SELECT * FROM ${table} WHERE ${getPrimaryKey(domain)} = $1;
+    SELECT r.*, u.user_id
+    FROM ${table} r
+    JOIN users u ON r.user_number = u.user_number
+    WHERE ${getPrimaryKey(domain)} = $1;
   `;
   const { rows } = await postgreSQL.query(query, [reportId]);
   return rows[0];
