@@ -121,6 +121,7 @@ module.exports = {
     { name: 'postPicture', maxCount: 1 },
     { name: 'noticePicture', maxCount: 10 },
     { name: 'missionThumbnail', maxCount: 1 },
+    { name: 'missionValidationPicture', maxCount: 1 },
   ]),
   uploadFileToSFTP,
 };
