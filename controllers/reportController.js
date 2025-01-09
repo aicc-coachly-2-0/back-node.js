@@ -97,10 +97,10 @@ exports.processReport = async (req, res, next) => {
 // 신고 처리 내역 조회
 exports.getReportProcess = async (req, res, next) => {
   try {
-    const { report_number } = req.params;
+    const { domain, report_number } = req.params;
 
     // 신고 처리 내역 조회
-    const reportManagement = await reportService.getReportManagementByReportNumber(report_number);
+    const reportManagement = await reportService.getReportManagementByReportNumber(domain, report_number);
 
     res.status(200).json({
       message: 'Report management retrieved successfully',

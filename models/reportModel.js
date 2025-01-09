@@ -291,82 +291,120 @@ exports.findReportById = async (domain, reportId) => {
   return rows[0];
 };
 
-// 신고 상태 업데이트
-exports.updateReportState = async (domain, report_number, state, admin_number, report_content, ban_until) => {
+
+// 신고 처리 내역 기록
+exports.insertOrUpdateReportManagement = async (domain, report_number, state, admin_number, report_content, ban_until) => {
+  // 해당 domain에 매핑된 테이블 이름 가져오기
   const table = DOMAIN_TABLE_MAP[domain];
   if (!table) throw new Error('Invalid domain');
 
-  // 신고 상태 업데이트
-  const query = `
-    UPDATE ${table}
-    SET state = $1
-    WHERE ${getPrimaryKey(domain)} = $2
+  // getPrimaryKey(domain)로 primary key 컬럼을 가져오고, 해당 테이블에서 report_number에 해당하는 report_man_number 찾기
+  const primaryKey = getPrimaryKey(domain);
+
+  // report_man_number를 찾기 위해 domain에 해당하는 테이블에서 조회
+  const findReportQuery = `
+    SELECT report_man_number FROM ${table} 
+    WHERE ${primaryKey} = $1
+  `;
+  const { rows: reportRows } = await postgreSQL.query(findReportQuery, [report_number]);
+
+  if (reportRows.length > 0) {
+    const report_man_number = reportRows[0].report_man_number;
+
+    if (report_man_number) {
+      // report_man_number가 있으면 신고 처리 내역을 업데이트
+      const updateQuery1 = `
+        UPDATE report_managements
+        SET report_type = $2,
+            admin_number = $3,
+            report_content = $4,
+            resolution_at = CURRENT_TIMESTAMP,
+            state = 'resolved',
+            ban_until = $5
+        WHERE report_man_number = $1
+        RETURNING *;
+      `;
+    
+      const updateQuery2 = `
+        UPDATE ${table}
+        SET state = $2, report_man_number = $3  
+        WHERE ${primaryKey} = $4
+        RETURNING *;
+      `;
+    
+      // 첫 번째 쿼리 실행 (신고 처리 내역 업데이트)
+      const result1 = await postgreSQL.query(updateQuery1, [report_man_number, domain, admin_number, report_content, ban_until]);
+      
+      // 두 번째 쿼리 실행 (신고 테이블 상태 업데이트)
+      const result2 = await postgreSQL.query(updateQuery2, [state, report_man_number, report_number]);
+
+      // result1과 result2의 결과 반환
+      return {
+        reportManagement: result1.rows[0], // 신고 처리 내역
+        updatedState: result2.rows[0] // 상태 업데이트된 행
+      };
+    }
+  }
+  
+  // report_man_number가 없으면 신고 처리 내역을 새로 생성
+  const insertQuery = `
+    INSERT INTO report_managements (report_type, report_man_number, admin_number, report_content, resolution_at, state, ban_until)
+    VALUES ($1, DEFAULT, $2, $3, CURRENT_TIMESTAMP, 'resolved', $4)
     RETURNING *;
   `;
-  const values = [state, report_number];
-  const { rows } = await postgreSQL.query(query, values);
+  const insertValues = [domain, admin_number, report_content, ban_until];
+  const { rows: insertRows } = await postgreSQL.query(insertQuery, insertValues);
 
-  if (rows[0]) {
-    // 신고 처리 내역 기록 (report_managements 테이블만)
-    const reportManagement = await this.insertOrUpdateReportManagement({
-      report_type: domain,
-      report_number,
-      admin_number,
-      report_content,
-      ban_until
-    });
-    return reportManagement; // 업데이트된 또는 삽입된 신고 처리 내역 반환
-  }
+  const newReportManNumber = insertRows[0].report_man_number;  // 새로 생성된 report_man_number 값을 받음
 
-  return rows[0];
-};
-
-// 신고 처리 내역 기록 (업데이트 또는 삽입)
-exports.insertOrUpdateReportManagement = async ({ report_type, report_number, admin_number, report_content, ban_until }) => {
-  // 신고 처리 내역이 이미 존재하는지 확인
-  const checkQuery = `
-    SELECT * FROM report_managements
-    WHERE report_number = $1;
+  // report_man_number를 포함하여 상태 업데이트 쿼리 실행
+  const updateQuery2 = `
+    UPDATE ${table}
+    SET state = $1, report_man_number = $2  -- 새로 생성된 report_man_number 값 삽입
+    WHERE ${primaryKey} = $3
+    RETURNING *;
   `;
-  const checkResult = await postgreSQL.query(checkQuery, [report_number]);
+  const result2 = await postgreSQL.query(updateQuery2, [state, newReportManNumber, report_number]);
 
-  if (checkResult.rows.length > 0) {
-    // 신고 처리 내역이 존재하면 업데이트
-    const updateQuery = `
-      UPDATE report_managements
-      SET admin_number = $2,
-          report_content = $3,
-          resolution_at = CURRENT_TIMESTAMP,
-          state = 'resolved',
-          ban_until = $4
-      WHERE report_number = $1
-      RETURNING *;
-    `;
-    const updateValues = [report_number, admin_number, report_content, ban_until];
-    const { rows } = await postgreSQL.query(updateQuery, updateValues);
-    return rows[0]; // 업데이트된 내역 반환
-  } else {
-    // 신고 처리 내역이 없으면 삽입
-    const insertQuery = `
-      INSERT INTO report_managements (report_type, report_number, admin_number, report_content, resolution_at, state, ban_until)
-      VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, 'resolved', $5)
-      RETURNING *;
-    `;
-    const insertValues = [report_type, report_number, admin_number, report_content, ban_until];
-    const { rows } = await postgreSQL.query(insertQuery, insertValues);
-    return rows[0]; // 삽입된 내역 반환
-  }
+  return {
+    reportManagement: insertRows[0],  // 새로 생성된 신고 처리 내역
+    updatedState: result2.rows[0] // 상태 업데이트된 행
+  };
 };
 
 
 // 신고 처리 내역 조회 (특정 신고에 대한 처리 내역)
-exports.findReportManagementByReportNumber = async (report_number) => {
-  console.log("신고번호:" ,report_number)
-  const query = `
+exports.findReportManagementByReportNumber = async (domain, report_number) => {
+  console.log("도메인:", domain);
+  console.log("신고번호:", report_number);
+
+  const primaryKey = getPrimaryKey(domain);
+  // 해당 domain에 맞는 테이블에서 report_man_number를 조회
+  const table = DOMAIN_TABLE_MAP[domain];
+  if (!table) throw new Error('Invalid domain');
+
+  // 신고 처리 내역을 domain과 report_number로 조회
+  const findReportQuery = `
+    SELECT report_man_number FROM ${table} 
+    WHERE ${primaryKey} = $1
+  `;
+  const { rows } = await postgreSQL.query(findReportQuery, [report_number]);
+  console.log("조회된 report_man_number:", rows); // 추가 디버깅 로그
+  // report_man_number가 없으면 빈 배열 반환
+  if (rows.length === 0 || !rows[0].report_man_number) {
+    return []; // 신고 처리 내역이 없으면 빈 배열 반환
+  }
+
+  // report_man_number가 있으면 해당 신고 처리 내역을 report_managements 테이블에서 조회
+  const report_man_number = rows[0].report_man_number;
+  const findManagementQuery = `
     SELECT * FROM report_managements 
-    WHERE report_number = $1
+    WHERE report_man_number = $1
     ORDER BY resolution_at DESC;
   `;
-  const { rows } = await postgreSQL.query(query, [report_number]);
-  return rows;
+  const { rows: reportManagementRows } = await postgreSQL.query(findManagementQuery, [report_man_number]);
+
+  // 신고 처리 내역 반환
+  return reportManagementRows;
 };
+
