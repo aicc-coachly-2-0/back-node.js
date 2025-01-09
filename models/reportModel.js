@@ -381,7 +381,6 @@ exports.findReportManagementByReportNumber = async (domain, report_number) => {
   console.log("신고번호:", report_number);
 
   const primaryKey = getPrimaryKey(domain);
-  // 해당 domain에 맞는 테이블에서 report_man_number를 조회
   const table = DOMAIN_TABLE_MAP[domain];
   if (!table) throw new Error('Invalid domain');
 
@@ -391,22 +390,29 @@ exports.findReportManagementByReportNumber = async (domain, report_number) => {
     WHERE ${primaryKey} = $1
   `;
   const { rows } = await postgreSQL.query(findReportQuery, [report_number]);
-  console.log("조회된 report_man_number:", rows); // 추가 디버깅 로그
-  // report_man_number가 없으면 빈 배열 반환
+
+  // report_man_number가 없으면 null 반환
   if (rows.length === 0 || !rows[0].report_man_number) {
-    return []; // 신고 처리 내역이 없으면 빈 배열 반환
+    return null; // 신고 처리 내역이 없으면 null 반환
   }
 
   // report_man_number가 있으면 해당 신고 처리 내역을 report_managements 테이블에서 조회
   const report_man_number = rows[0].report_man_number;
   const findManagementQuery = `
-    SELECT * FROM report_managements 
+    SELECT report_man_number, report_type, admin_number, report_content, state, ban_until, resolution_at
+    FROM report_managements 
     WHERE report_man_number = $1
-    ORDER BY resolution_at DESC;
+    ORDER BY resolution_at DESC
+    LIMIT 1;  
   `;
   const { rows: reportManagementRows } = await postgreSQL.query(findManagementQuery, [report_man_number]);
 
-  // 신고 처리 내역 반환
-  return reportManagementRows;
+  // 처리 내역이 있으면 해당 항목 반환
+  if (reportManagementRows.length > 0) {
+    return reportManagementRows[0];  // 첫 번째 항목만 반환
+  }
+
+  // 처리 내역이 없다면 null 반환
+  return null;
 };
 
