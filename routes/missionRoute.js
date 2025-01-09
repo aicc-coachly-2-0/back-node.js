@@ -69,6 +69,13 @@ router.post(
   validationController.uploadMissionValidation
 );
 
+// 미션 인증샷 상세 조회
+router.get(
+  '/validations/:mission_validation_number',
+  authenticateToken,
+  validationController.getMissionValidationDetail
+);
+
 // 인증샷 확인해주기
 router.get(
   '/validations/:mission_validation_number/approvals',
