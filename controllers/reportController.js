@@ -85,12 +85,25 @@ exports.processReport = async (req, res, next) => {
     // 신고 처리 상태 업데이트
     const updatedReport = await reportService.updateReportState(domain, report_number, state, admin_number, report_content, banUntilDate);
 
-     // 신고 처리 내역 조회
-     const reportManagement = await reportService.getReportManagementByReportNumber(report_number);
-
     res.status(200).json({
       message: 'Report processed successfully',
       updatedReport,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 신고 처리 내역 조회
+exports.getReportProcess = async (req, res, next) => {
+  try {
+    const { report_number } = req.params;
+
+    // 신고 처리 내역 조회
+    const reportManagement = await reportService.getReportManagementByReportNumber(report_number);
+
+    res.status(200).json({
+      message: 'Report management retrieved successfully',
       reportManagement
     });
   } catch (error) {

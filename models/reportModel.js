@@ -280,7 +280,7 @@ return allReports.flat(); // 결과를 평탄화하여 반환
 exports.findReportById = async (domain, reportId) => {
   const table = DOMAIN_TABLE_MAP[domain];
   if (!table) throw new Error('Invalid domain');
-
+  console.log("특정신고 도메인:", domain); // 로그 추가
   const query = `
     SELECT r.*, u.user_id
     FROM ${table} r
@@ -361,6 +361,7 @@ exports.insertOrUpdateReportManagement = async ({ report_type, report_number, ad
 
 // 신고 처리 내역 조회 (특정 신고에 대한 처리 내역)
 exports.findReportManagementByReportNumber = async (report_number) => {
+  console.log("신고번호:" ,report_number)
   const query = `
     SELECT * FROM report_managements 
     WHERE report_number = $1
