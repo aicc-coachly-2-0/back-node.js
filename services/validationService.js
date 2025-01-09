@@ -1,4 +1,4 @@
-const validationModel = require('../models/validationModel');
+const validationModel = require("../models/validationModel");
 
 // 공통 함수: group_number 조회
 exports.getGroupNumber = async (user_number, room_number) => {
@@ -9,7 +9,7 @@ exports.getGroupNumber = async (user_number, room_number) => {
     );
     return group_number;
   } catch (error) {
-    console.error('Group Number 조회 실패:', error.message);
+    console.error("Group Number 조회 실패:", error.message);
     throw error;
   }
 };
@@ -22,7 +22,7 @@ exports.getMissionRoomState = async (room_number) => {
     const roomState = await validationModel.checkMissionRoomState(room_number);
     return roomState;
   } catch (error) {
-    console.error('미션방 상태 조회 실패:', error.message);
+    console.error("미션방 상태 조회 실패:", error.message);
     throw error;
   }
 };
@@ -35,7 +35,20 @@ exports.uploadMissionValidation = async (validationData) => {
     );
     return savedValidation;
   } catch (error) {
-    console.error('미션 인증샷 저장 실패:', error.message);
+    console.error("미션 인증샷 저장 실패:", error.message);
+    throw error;
+  }
+};
+
+// 미션 인증샷 상세 조회
+exports.getMissionValidationDetail = async (mission_validation_number) => {
+  try {
+    const validationDetail = await validationModel.findMissionValidationDetail(
+      mission_validation_number
+    );
+    return validationDetail;
+  } catch (error) {
+    console.error("getMissionValidationDetail 실패:", error.message);
     throw error;
   }
 };
@@ -55,7 +68,7 @@ exports.getGroupNumberForValidation = async (
 
     return group_number; // 모델에서 반환된 group_number 전달
   } catch (error) {
-    console.error('getGroupNumberForValidation 실패:', error.message);
+    console.error("getGroupNumberForValidation 실패:", error.message);
     throw error;
   }
 };
@@ -70,7 +83,7 @@ exports.approveMissionValidation = async (approvalData) => {
 
     return approvalResult;
   } catch (error) {
-    console.error('approveMissionValidation 실패:', error.message);
+    console.error("approveMissionValidation 실패:", error.message);
     throw error;
   }
 };
@@ -83,15 +96,14 @@ exports.getUserMissionValidations = async (group_number) => {
     );
     return validations;
   } catch (error) {
-    console.error('getUserMissionValidations 실패:', error.message);
-    throw error; // 컨트롤러로 에러 전달
+    console.error("getUserMissionValidations 실패:", error.message);
+    throw error;
   }
 };
 
 // 참가자 인증샷 전체 리스트 조회 (로그인 유저 제외한 미션방 참여 유저)
 exports.getParticipantValidations = async (group_number, room_number) => {
   try {
-    // 모델 계층 호출
     const participantValidations =
       await validationModel.findParticipantValidations(
         group_number,
@@ -99,7 +111,7 @@ exports.getParticipantValidations = async (group_number, room_number) => {
       );
     return participantValidations;
   } catch (error) {
-    console.error('참가자 인증샷 리스트 조회 실패:', error.message);
+    console.error("참가자 인증샷 리스트 조회 실패:", error.message);
     throw error;
   }
 };

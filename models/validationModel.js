@@ -1,4 +1,4 @@
-const { postgreSQL } = require('../config/database');
+const { postgreSQL } = require("../config/database");
 
 // 공통 함수: room_number와 user_number를 기반으로 group_number 조회
 exports.findGroupNumber = async (user_number, room_number) => {
@@ -13,9 +13,9 @@ exports.findGroupNumber = async (user_number, room_number) => {
 
   try {
     const { rows } = await postgreSQL.query(query, values);
-    return rows[0]?.group_number || null; // group_number 반환 (없으면 null)
+    return rows[0]?.group_number || null;
   } catch (error) {
-    console.error('findGroupNumber 실패:', error.message);
+    console.error("findGroupNumber 실패:", error.message);
     throw error;
   }
 };
@@ -33,9 +33,9 @@ exports.checkMissionRoomState = async (room_number) => {
 
   try {
     const { rows } = await postgreSQL.query(query, values);
-    return rows[0]?.state || null; // state 반환 (없으면 null)
+    return rows[0]?.state || null;
   } catch (error) {
-    console.error('checkMissionRoomState 실패:', error.message);
+    console.error("checkMissionRoomState 실패:", error.message);
     throw error;
   }
 };
@@ -51,9 +51,44 @@ exports.postMissionValidation = async ({ group_number, image_url }) => {
 
   try {
     const { rows } = await postgreSQL.query(query, values);
-    return rows[0]; // 삽입된 데이터 반환
+    return rows[0];
   } catch (error) {
-    console.error('createMissionValidation 실패:', error.message);
+    console.error("createMissionValidation 실패:", error.message);
+    throw error;
+  }
+};
+
+// 미션 인증샷 상세 조회
+exports.findValidationDetails = async (mission_validation_number) => {
+  const query = `
+    SELECT 
+        mission_validations.img_link AS validation_img_link,
+        mission_validations.created_at AS validation_created_at,
+        users.user_name,
+        users.img_link AS user_img_link,
+        (
+            SELECT COUNT(*) 
+            FROM validation_approvals 
+            WHERE validation_approvals.mission_validation_number = mission_validations.mission_validation_number
+        ) AS approval_count
+    FROM 
+        mission_validations
+    JOIN 
+        mission_participants ON mission_validations.group_number = mission_participants.group_number
+    JOIN 
+        users ON mission_participants.user_number = users.user_number
+    WHERE 
+        mission_validations.mission_validation_number = $1;
+  `;
+
+  const values = [mission_validation_number];
+
+  try {
+    const { rows } = await postgreSQL.query(query, values);
+
+    return rows[0] || null;
+  } catch (error) {
+    console.error("findValidationDetails 실패:", error.message);
     throw error;
   }
 };
@@ -76,7 +111,7 @@ exports.findGroupNumber2 = async (user_number, mission_validation_number) => {
     const { rows } = await postgreSQL.query(query, values);
     return rows[0]?.group_number || null; // 조회된 group_number 반환
   } catch (error) {
-    console.error('findGroupNumberByValidation 실패:', error.message);
+    console.error("findGroupNumberByValidation 실패:", error.message);
     throw error;
   }
 };
@@ -88,7 +123,7 @@ exports.insertValidationApproval = async ({
 }) => {
   const client = await postgreSQL.connect();
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     // 1. 현재 인증 상태 확인
     const { rows: stateRows } = await client.query(
@@ -103,9 +138,9 @@ exports.insertValidationApproval = async ({
     const { state } = stateRows[0];
 
     // 상태가 approved라면 연산 생략
-    if (state === 'approved') {
-      await client.query('COMMIT');
-      return { message: '이미 approved 상태입니다.' };
+    if (state === "approved") {
+      await client.query("COMMIT");
+      return { message: "이미 approved 상태입니다." };
     }
 
     // 2. 인증 확인 데이터 삽입
@@ -141,10 +176,10 @@ exports.insertValidationApproval = async ({
       );
     }
 
-    await client.query('COMMIT');
-    return { message: '인증 확인 성공', approvalCount: approval_count };
+    await client.query("COMMIT");
+    return { message: "인증 확인 성공", approvalCount: approval_count };
   } catch (error) {
-    await client.query('ROLLBACK');
+    await client.query("ROLLBACK");
     throw error;
   } finally {
     client.release();
@@ -165,11 +200,10 @@ exports.findUserMissionValidations = async (group_number) => {
   try {
     const { rows } = await postgreSQL.query(query, values);
 
-    // 데이터가 없을 경우 빈 배열 반환
     return rows || [];
   } catch (error) {
-    console.error('findUserMissionValidations 실패:', error.message);
-    throw error; // 에러 전달
+    console.error("findUserMissionValidations 실패:", error.message);
+    throw error;
   }
 };
 
@@ -193,10 +227,9 @@ exports.findParticipantValidations = async (group_number, room_number) => {
   try {
     const { rows } = await postgreSQL.query(query, values);
 
-    // 데이터가 없을 경우 빈 배열 반환
     return rows || [];
   } catch (error) {
-    console.error('findParticipantValidations 실패:', error.message);
-    throw error; // 에러 전달
+    console.error("findParticipantValidations 실패:", error.message);
+    throw error;
   }
 };
