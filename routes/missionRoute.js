@@ -76,4 +76,18 @@ router.get(
   validationController.approveMissionValidation
 );
 
+// 사용자의 미션 인증샷 전체 리스트 조회
+router.get(
+  '/rooms/:room_number/my-validations',
+  authenticateToken,
+  validationController.getUserMissionValidations
+);
+
+// 참가자 인증샷 전체 리스트 조회 (로그인 유저 제외한 미션방 참여 유저)
+router.get(
+  '/rooms/:room_number/participant-validations',
+  authenticateToken,
+  validationController.getParticipantValidations
+);
+
 module.exports = router;
