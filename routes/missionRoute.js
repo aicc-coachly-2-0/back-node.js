@@ -73,7 +73,7 @@ router.post(
 router.get(
   '/validations/:mission_validation_number/approvals',
   authenticateToken,
-  validationController.getApprovalCount
+  validationController.approveMissionValidation
 );
 
 module.exports = router;
