@@ -279,12 +279,14 @@ return allReports.flat(); // 결과를 평탄화하여 반환
 // 특정 신고 조회
 exports.findReportById = async (domain, reportId) => {
   const table = DOMAIN_TABLE_MAP[domain];
+   // 'user' 도메인일 경우, 'f.user_number' 대신 'f.reporting_user_number' 사용
+  const userColumn = domain === 'user' ? 'reporting_user_number' : 'user_number';
   if (!table) throw new Error('Invalid domain');
   console.log("특정신고 도메인:", domain); // 로그 추가
   const query = `
     SELECT r.*, u.user_id
     FROM ${table} r
-    JOIN users u ON r.user_number = u.user_number
+    JOIN users u ON r.${userColumn} = u.user_number
     WHERE ${getPrimaryKey(domain)} = $1;
   `;
   const { rows } = await postgreSQL.query(query, [reportId]);
