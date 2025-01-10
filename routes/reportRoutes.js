@@ -20,8 +20,10 @@ router.get('/report/:domain/:report_number', reportController.getReport);
 // 신고 처리 (관리자)
 router.put('/process/:domain/:report_number', reportController.processReport);
 
-// 신고 처리 조회 
-router.get('/process/:domain/:report_number', reportController.getReportProcess);
+// 신고 처리 조회
+router.get(
+  '/process/:domain/:report_number',
+  reportController.getReportProcess
+);
 
 module.exports = router;
-
