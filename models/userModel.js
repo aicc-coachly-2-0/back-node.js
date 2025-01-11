@@ -77,7 +77,9 @@ exports.updateUser = async (user_number, fieldsToUpdate) => {
 exports.deleteUser = async (user_number) => {
   const query = `
     UPDATE users
-    SET status = 'deleted'
+    SET 
+      status = 'deleted',
+      deleted_at = CURRENT_TIMESTAMP
     WHERE user_number = $1
     RETURNING *;
   `;
