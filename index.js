@@ -20,15 +20,17 @@ const faqRoute = require("./routes/faqRoutes");
 const qnaRoute = require("./routes/qnaRoutes");
 const noticeRoute = require("./routes/noticeRoute");
 const reportRoute = require("./routes/reportRoutes");
+const subscriptionRoute = require("./routes/subscriptionRoute");
 
 const PORT = config.server.port || 8080;
 const app = express();
 
-const runScheduler = require("./schedulers/missionStateScheduler");
-
+// const runScheduler = require("./schedulers/missionStateScheduler");
+const missionStateScheduler = require("./schedulers/missionStateScheduler");
+const { updateMissionStates } = require("./services/missionService");
 // 서버 시작 시 스케줄러 실행
 try {
-  runScheduler();
+  missionStateScheduler();
 } catch (error) {
   console.error("Error initializing scheduler:", error.message);
 }
@@ -57,6 +59,7 @@ app.use("/faqs", faqRoute);
 app.use("/qnas", qnaRoute);
 app.use("/notice", noticeRoute);
 app.use("/reports", reportRoute);
+app.use("/subscription", subscriptionRoute);
 
 //     // FastAPI 서버로 데이터 전송
 //     const response = await axios.post(fastapiUrl, requestData);
@@ -73,64 +76,10 @@ app.use("/reports", reportRoute);
 // const bootpayurl =
 //   "https://api.bootpay.co.kr/v2/subscribe/billing_key/:receipt_id"; // Bootpay API URL
 
-RestClient.setConfig(
-  process.env.BOOTPAY_API_KEY, // Your Application ID
-  process.env.BOOTPAY_PRIVATE_KEY // Your Private Key
-);
-
-// 액세스 토큰을 비동기적으로 받아오는 함수
-async function getAccessToken() {
-  try {
-    const response = await RestClient.getAccessToken();
-    if (response.status === 200) {
-      return response.data.token; // 토큰을 반환
-    } else {
-      throw new Error("Failed to get access token");
-    }
-  } catch (error) {
-    console.error("Error getting access token:", error);
-    throw error;
-  }
-}
-
-app.post("/lookup-billingkey", async (req, res) => {
-  const { receiptId } = req.body;
-
-  try {
-    // 액세스 토큰 받아오기
-    const accessToken = await getAccessToken();
-    if (!accessToken) {
-      return res.status(500).send("Failed to get access token");
-    }
-
-    console.log("Received Access Token:", accessToken);
-
-    // GET 요청으로 부트페이 API 호출 (axios.get)
-    const response = await axios.get(
-      `https://api.bootpay.co.kr/v2/subscribe/billing_key/${receiptId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`, // 액세스 토큰을 Authorization 헤더에 포함
-        },
-      }
-    );
-
-    // 응답 데이터 처리
-    if (response.status === 200) {
-      console.log("부트페이 응답:", response.data);
-      res.json(response.data); // 클라이언트에게 데이터 반환
-    } else {
-      res.status(400).json({ error: "Billing Key 조회 실패" });
-    }
-  } catch (error) {
-    console.error("오류 발생:", error);
-    res.status(500).send("Error communicating with Bootpay server");
-  }
-});
 // 여기까지 정민석이 임시로 작업한거 건들 ㄴㄴ
 
 // route
-
+// missionStateScheduler();
 // error route
 app.use(errorHandler);
 

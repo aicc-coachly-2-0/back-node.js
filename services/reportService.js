@@ -1,4 +1,4 @@
-const reportModel = require('../models/reportModel');
+const reportModel = require("../models/reportModel");
 
 // 도메인별 신고 접수
 exports.createReport = async (domain, reportData) => {
@@ -31,16 +31,33 @@ exports.getReportsMadeByUser = async (user_number) => {
 };
 
 // 특정 신고 조회
-exports.getReport = async (domain, reportId) => {
-  return await reportModel.findReportById(domain, reportId);
+exports.getReport = async (domain, report_number) => {
+  return await reportModel.findReportById(domain, report_number);
 };
 
 // 신고 처리 상태 업데이트
-exports.updateReportState = async (domain, reportId, state, admin_number, report_content) => {
-  return await reportModel.updateReportState(domain, reportId, { state, admin_number, report_content });
+exports.updateReportState = async (
+  domain,
+  report_number,
+  state,
+  admin_number,
+  report_content,
+  ban_until
+) => {
+  return await reportModel.insertOrUpdateReportManagement(
+    domain,
+    report_number,
+    state,
+    admin_number,
+    report_content,
+    ban_until
+  );
 };
 
-// 신고 처리 내역 조회
-exports.getReportManagements = async (state) => {
-  return await reportModel.findReportManagements({ state });
+// 신고 처리 내역 조회 (특정 신고에 대한 처리 내역)
+exports.getReportManagementByReportNumber = async (domain, report_number) => {
+  return await reportModel.findReportManagementByReportNumber(
+    domain,
+    report_number
+  );
 };

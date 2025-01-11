@@ -1,3 +1,4 @@
+const { postgreSQL } = require("../config/database");
 const missionService = require("../services/missionService");
 
 // 미션 방 생성
@@ -11,18 +12,17 @@ exports.createMission = async (req, res, next) => {
       return res.status(403).json({ message: "Unauthorized user" });
     }
 
-    // 제목, 미션 카테고리(의 고유 넘버), 미션 수행 기간, 미션 시작일, 참가 인원 데이터 전달
-    const { title, mission_number, started_at, duration, max_participants } =
-      req.body;
+    // 제목, 미션 카테고리, 미션 수행 기간, 미션 시작일, 참가 인원 데이터 전달
+    const { title, mission_title, started_at, duration } = req.body;
 
     // 필수 입력값 검증 -> 제목, 미션 카테고리, 미션 수행 기간, 미션 시작일 값이 비어있다면 에러 반환
     if (!title || title.trim() === "") {
       return res.status(400).json({ message: "Title is required." });
     }
-    if (!mission_number) {
+    if (!mission_title) {
       return res
         .status(400)
-        .json({ message: "Mission category (mission_number) is required." });
+        .json({ message: "Mission category (mission_title) is required." });
     }
     if (!duration) {
       return res.status(400).json({ message: "Mission duration is required." });
@@ -33,44 +33,58 @@ exports.createMission = async (req, res, next) => {
         .json({ message: "Mission start date is required." });
     }
 
-    // 참가 인원 유효성 검증 -> 입력값이 숫자인지 확인, 최소 4명 ~ 최대 2,000명 설정
-    if (
-      (max_participants && typeof max_participants !== "number") || // 숫자가 아닌 값일 경우
-      max_participants < 4 || // 최소 인원보다 적음
-      max_participants > 2000 // 최대 인원보다 많음
-    ) {
-      return res
-        .status(400)
-        .json({ message: "Participants must be a number between 4 and 2000." });
+    // 프론트에서 mission_title(예: '러닝')을 보내주기 때문에 이를 기반으로 mission_number를 조회
+    const getMissionNumberQuery = `
+      SELECT mission_number 
+      FROM missions 
+      WHERE mission_type = $1; -- mission_title에 해당하는 DB 컬럼
+    `;
+
+    let mission_number; // 조회된 mission_number를 저장할 변수
+    try {
+      console.log("[DEBUG] mission_title:", mission_title);
+
+      const result = await postgreSQL.query(getMissionNumberQuery, [
+        mission_title,
+      ]); // mission_title을 쿼리 파라미터로 전달
+
+      // console.log("[DEBUG] DB Query Result:", result.rows);
+
+      // 조회 결과 확인
+      if (result.rows.length === 0) {
+        return res.status(400).json({
+          message: `Invalid mission category: ${mission_title}`,
+        });
+      }
+
+      mission_number = result.rows[0].mission_number; // 조회된 mission_number 설정
+
+      console.log("[DEBUG] Retrieved mission_number:", mission_number);
+    } catch (error) {
+      console.error(
+        "[CONTROLLER ERROR] Failed to fetch mission_number:",
+        error.message
+      );
+      return res.status(500).json({
+        message: "Failed to fetch mission category.",
+        error: error.message,
+      });
     }
 
-    // 참가 인원 기본값 설정 (유저가 값을 입력하지 않은 경우)
-    const participants = max_participants || 2000;
-
+    // 이미지 URL 처리
+    const missionData = {
+      ...req.body, // 기존 요청 데이터
+      mission_number,
+      img_link: req.fileUrls?.[0]?.fileUrl || null, // 첫 번째 이미지 URL (없으면 null)
+    };
+    // console.log(missionData);
     // 미션 생성 로직 호출
-    // req.body: 클라이언트 전송 데이터
-    // max_participants: participants: Controller에서 처리한 참가 인원의 값, participants라는 변수를 max_participants라는 이름으로 바꿔서 전달
-    // req.user: 로그인한 유저 정보
-    const mission = await missionService.createMission(
-      { ...req.body, max_participants: participants },
-      req.user
-    );
+    const mission = await missionService.createMission(missionData, req.user);
 
     res.status(201).json({ message: "Mission created successfully", mission });
   } catch (error) {
     console.error("[CONTROLLER ERROR] Exception occurred:", error.message);
     next(error);
-  }
-};
-
-// state 업데이트 (스케쥴러 수동 실행을 위한 함수 호출)
-exports.updateMissionStates = async (req, res, next) => {
-  try {
-    await missionService.updateMissionStates;
-    res.status(200).json({ message: "Mission states updated successfully." });
-  } catch (error) {
-    console.error("Error updating mission states:", error.message);
-    res.status(500).json({ message: "Failed to update mission states." });
   }
 };
 
@@ -88,18 +102,7 @@ exports.joinMissionRoom = async (req, res, next) => {
       return res.status(400).json({ message: "Room number is required" });
     }
 
-    // 중복 참여 여부 확인
-    const isAlreadyParticipant = await missionService.checkParticipant(
-      user.user_number,
-      room_number
-    );
-    if (isAlreadyParticipant) {
-      return res
-        .status(409)
-        .json({ message: "이미 해당 미션방에 참여 중입니다." });
-    }
-
-    // 미션 방 참여 서비스 호출
+    // 미션 방 참여 서비스 호출 (중복 확인 및 참여 처리 포함)
     const result = await missionService.joinMissionRoom(
       user.user_number,
       room_number
@@ -113,6 +116,159 @@ exports.joinMissionRoom = async (req, res, next) => {
       "[CONTROLLER ERROR] Failed to join mission room:",
       error.message
     );
-    next(error); // 에러를 처리 미들웨어로 전달
+
+    // 중복 참여 에러 처리
+    if (error.message === "이미 해당 미션방에 참여 중입니다.") {
+      return res.status(409).json({ message: error.message });
+    }
+
+    // 기타 에러는 처리 미들웨어로 전달
+    next(error);
+  }
+};
+
+// 지금 주목받는 미션 5개 조회
+exports.getPopularMissions = async (req, res, next) => {
+  try {
+    const popularMissions = await missionService.getPopularMissions();
+
+    // 가져온 데이터를 클라이언트에 반환
+    res.status(200).json({
+      message: "Popular missions retrieved successfully",
+      data: popularMissions,
+    });
+  } catch (error) {
+    console.error(
+      "[CONTROLLER ERROR] Failed to retrieve popular missions:",
+      error.message
+    );
+    next(error);
+  }
+};
+
+// 마감 임박 미션 5개 조회
+exports.getUpcomingMissions = async (req, res, next) => {
+  try {
+    const upcomingMissions = await missionService.getUpcomingMissions();
+
+    // 성공적으로 데이터를 가져온 경우 클라이언트에 반환
+    res.status(200).json({
+      message: "Upcoming missions retrieved successfully",
+      data: upcomingMissions,
+    });
+  } catch (error) {
+    console.error(
+      "[CONTROLLER ERROR] Failed to retrieve upcoming missions:",
+      error.message
+    );
+    next(error);
+  }
+};
+
+// 참여 중인 미션 5개 조회
+exports.getParticipatingMissions = async (req, res, next) => {
+  try {
+    // 로그인된 유저 정보 확인
+    if (!req.user || !req.user.user_number) {
+      return res.status(403).json({ message: "Unauthorized user" });
+    }
+
+    const userNumber = req.user.user_number; // 유저 번호 추출
+
+    // 서비스 호출하여 참여 중인 미션 조회
+    const participatingMissions = await missionService.getParticipatingMissions(
+      userNumber
+    );
+
+    // 참여 중인 미션이 없는 경우 처리
+    if (!participatingMissions || participatingMissions.length === 0) {
+      return res.status(200).json({
+        message: "No participating missions found",
+        data: [],
+      });
+    }
+
+    // 가져온 데이터 클라이언트에 반환
+    res.status(200).json({
+      message: "Participating missions retrieved successfully",
+      data: participatingMissions,
+    });
+  } catch (error) {
+    console.error(
+      "[CONTROLLER ERROR] Failed to retrieve participating missions:",
+      error.message
+    );
+    next(error);
+  }
+};
+
+// 1) 로그인 없이 조회 가능한 미션
+exports.getPublicMissions = async (req, res, next) => {
+  const { category, start_date } = req.query;
+  let missions;
+
+  try {
+    // 경로에 따라 어떤 타입의 미션을 조회할지 구별
+    if (req.originalUrl.includes("popular-all")) {
+      // 주목받는 미션 조회
+      missions = await missionService.getAllPopularMissions({
+        category,
+        start_date,
+      });
+    } else if (req.originalUrl.includes("upcoming-all")) {
+      // 마감 임박 미션 조회
+      missions = await missionService.getAllUpcomingMissions({
+        category,
+        start_date,
+      });
+    } else {
+      return res.status(400).json({ message: "Invalid type parameter" });
+    }
+
+    res.status(200).json({
+      message: `All missions retrieved successfully`,
+      data: missions,
+    });
+  } catch (error) {
+    console.error(
+      "[CONTROLLER ERROR] Failed to retrieve missions:",
+      error.message
+    );
+    next(error);
+  }
+};
+
+// 2) 로그인 필요한 미션
+exports.getAuthRequiredMissions = async (req, res, next) => {
+  const { category } = req.query;
+  const userNumber = req.user.user_number; // 로그인 검증은 미들웨어에서 처리
+  let missions;
+
+  try {
+    // 경로에 따라 어떤 타입의 미션을 조회할지 구별
+    if (req.originalUrl.includes("participating-all")) {
+      // 참여 중인 미션 조회
+      missions = await missionService.getAllParticipatingMissions(userNumber, {
+        category,
+      });
+    } else if (req.originalUrl.includes("completed-all")) {
+      // 참여했던 미션 조회
+      missions = await missionService.getCompletedMissions(userNumber, {
+        category,
+      });
+    } else {
+      return res.status(400).json({ message: "Invalid type parameter" });
+    }
+
+    res.status(200).json({
+      message: `All missions retrieved successfully`,
+      data: missions,
+    });
+  } catch (error) {
+    console.error(
+      "[CONTROLLER ERROR] Failed to retrieve missions:",
+      error.message
+    );
+    next(error);
   }
 };

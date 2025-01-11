@@ -1,11 +1,30 @@
-const reportService = require('../services/reportService');
+const reportService = require("../services/reportService");
+const axios = require("axios");
 
 // 도메인별 신고 접수
 exports.createReport = async (req, res, next) => {
   try {
     const { domain } = req.params;
-    const report = await reportService.createReport(domain, req.body);
-    res.status(201).json({ message: 'Report created successfully', report });
+    const reportData = req.body;
+
+    // Python 서버에 신고 데이터 전송
+    const pythonResponse = await axios.post("http://196.168.0.28/report", {
+      domain: reportData.domain,
+      user_number: reportData.user_number,
+      target_id: reportData.target_id,
+      report_reason: reportData.report_reason,
+    });
+
+    const pythonResult = pythonResponse.data; // Python에서 반환된 데이터
+
+    // Python 결과를 데이터베이스에 저장
+    const savedReport = await reportService.createReport(domain, pythonResult);
+
+    // 클라이언트로 최종 응답
+    res.status(201).json({
+      message: "Report created successfully",
+      report: savedReport,
+    });
   } catch (error) {
     next(error);
   }
@@ -16,7 +35,10 @@ exports.getReportsByDomain = async (req, res, next) => {
   try {
     const { domain } = req.params;
     const { state, report_category } = req.query; // 쿼리 파라미터에서 state와 report_category 가져옴
-    const reports = await reportService.getReportsByDomain(domain, { state, report_category });
+    const reports = await reportService.getReportsByDomain(domain, {
+      state,
+      report_category,
+    });
     res.status(200).json(reports);
   } catch (error) {
     next(error);
@@ -37,7 +59,9 @@ exports.getReportsForUser = async (req, res, next) => {
     }
 
     if (!reportData || reportData.length === 0) {
-      return res.status(404).json({ message: 'No reports found for this user.' });
+      return res
+        .status(404)
+        .json({ message: "No reports found for this user." });
     }
 
     res.status(200).json(reportData);
@@ -47,12 +71,15 @@ exports.getReportsForUser = async (req, res, next) => {
 };
 
 // 특정 유저가 한 신고 조회
-exports.getReportsMadeByUser = async (req, res) => {
-  const { user_id } = req.user;  // 로그인된 사용자의 user_id
+exports.getReportsMadeByUser = async (req, res, next) => {
+  const { user_number } = req.params;
 
   try {
-    const reports = await reportService.getReportsMadeByUser(user_id);
-    res.status(200).json({ message: 'Reports made by user retrieved successfully', data: reports });
+    const reports = await reportService.getReportsMadeByUser(user_number);
+    res.status(200).json({
+      message: "Reports made by user retrieved successfully",
+      data: reports,
+    });
   } catch (error) {
     next(error);
   }
@@ -61,10 +88,10 @@ exports.getReportsMadeByUser = async (req, res) => {
 // 특정 신고 조회
 exports.getReport = async (req, res, next) => {
   try {
-    const { domain, report_id } = req.params;
-    const report = await reportService.getReport(domain, report_id);
+    const { domain, report_number } = req.params;
+    const report = await reportService.getReport(domain, report_number);
     if (!report) {
-      return res.status(404).json({ message: 'Report not found' });
+      return res.status(404).json({ message: "Report not found" });
     }
     res.status(200).json(report);
   } catch (error) {
@@ -75,19 +102,50 @@ exports.getReport = async (req, res, next) => {
 // 신고 처리 (관리자)
 exports.processReport = async (req, res, next) => {
   try {
-    const { domain, report_id } = req.params;
-    const updatedReport = await reportService.processReport(domain, report_id, req.body);
-    res.status(200).json({ message: 'Report processed successfully', updatedReport });
+    const { domain, report_number } = req.params;
+    const { state, admin_number, report_content, ban_until } = req.body;
+
+    // ban_until이 없으면 처리일로부터 7일 뒤로 설정
+    const resolutionDate = new Date(); // 현재 시간
+    const banUntilDate = ban_until
+      ? new Date(ban_until)
+      : new Date(resolutionDate.setDate(resolutionDate.getDate() + 7)); // 7일 뒤 기본 설정
+
+    // 신고 처리 상태 업데이트
+    const updatedReport = await reportService.updateReportState(
+      domain,
+      report_number,
+      state,
+      admin_number,
+      report_content,
+      banUntilDate
+    );
+
+    res.status(200).json({
+      message: "Report processed successfully",
+      updatedReport,
+    });
   } catch (error) {
     next(error);
   }
 };
 
 // 신고 처리 내역 조회
-exports.getReportManagements = async (req, res, next) => {
+exports.getReportProcess = async (req, res, next) => {
   try {
-    const managements = await reportService.getReportManagements(req.query);
-    res.status(200).json(managements);
+    const { domain, report_number } = req.params;
+
+    // 신고 처리 내역 조회
+    const reportManagement =
+      await reportService.getReportManagementByReportNumber(
+        domain,
+        report_number
+      );
+
+    res.status(200).json({
+      message: "Report management retrieved successfully",
+      reportManagement,
+    });
   } catch (error) {
     next(error);
   }

@@ -54,7 +54,7 @@ async function connectSFTP() {
       username: config.ftp.user,
       password: config.ftp.password,
       secure: config.ftp.secure,
-      readyTimeout: 120000, // Timeout을 2분으로 늘려보기
+      readyTimeout: 6000, // Timeout을 2분으로 늘려보기
     });
     console.log("SFTP에 성공적으로 연결되었습니다!");
 
@@ -68,7 +68,7 @@ async function connectSFTP() {
 
     return sftp; // FTP 클라이언트를 반환
   } catch (err) {
-    console.error("FTP 연결 에러:", err.message);
+    console.error("SFTP 연결 에러:", err.message);
   }
 }
 connectSFTP(); // 연결 함수 호출

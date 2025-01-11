@@ -6,7 +6,7 @@ const config = require("../config/config");
 const jwt = require("jsonwebtoken");
 
 // 사용자 생성 (회원가입)
-exports.createUser = async (userData, profilePictureUrl) => {
+exports.createUser = async (userData) => {
   const client = await postgreSQL.connect();
   const session = await mongoose.startSession();
 
@@ -32,6 +32,7 @@ exports.createUser = async (userData, profilePictureUrl) => {
       user_phone: sanitizedPhone,
       user_date_of_birth: userData.user_date_of_birth,
       user_gender: userData.user_gender,
+      img_link: userData.uploadedFiles,
     });
 
     // MongoDB에 사용자 생성
@@ -39,7 +40,7 @@ exports.createUser = async (userData, profilePictureUrl) => {
       {
         user_number: createdUser.user_number,
         nickname: userData.nickname,
-        profile_picture: profilePictureUrl,
+        profile_picture: createdUser.img_link,
       },
       session
     );

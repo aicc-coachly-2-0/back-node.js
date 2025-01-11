@@ -35,6 +35,7 @@ router.post(
   authMiddleware.authenticateToken,
   userController.likeContent
 );
+
 router.post(
   "/:type/:id/unlike",
   authMiddleware.authenticateToken,

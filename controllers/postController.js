@@ -53,6 +53,14 @@ exports.getPostsByCommunity = async (req, res, next) => {
     next(error);
   }
 };
+exports.getByCommunity = async (req, res, next) => {
+  try {
+    const posts = await postService.getCommunity();
+    res.status(200).json({ posts });
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.getPostsByUser = async (req, res, next) => {
   try {

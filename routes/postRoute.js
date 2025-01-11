@@ -27,6 +27,8 @@ router.get(
   postController.getPostsByCommunity
 );
 
+router.get("/communitiy", postController.getByCommunity);
+
 // 유저별 게시글 조회
 router.get("/users/:user_number", postController.getPostsByUser);
 

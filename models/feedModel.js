@@ -33,14 +33,28 @@ exports.getAllFeeds = async () => {
 
 // 특정 유저의 피드 조회
 exports.getFeedsByUser = async (user_number) => {
-  const query = `SELECT * FROM feeds WHERE user_number = $1;`;
+  const query = `SELECT 
+  f.*, 
+  u.user_name, 
+  u.img_link 
+FROM 
+  feeds f
+JOIN 
+  users u ON f.user_number = u.user_number
+WHERE 
+  f.user_number = $1;
+`;
   const { rows } = await postgreSQL.query(query, [user_number]);
   return rows;
 };
 
 // 피드 댓글 조회
 exports.getCommentsByFeed = async (feed_number) => {
-  const query = `SELECT * FROM feed_comments WHERE feed_number = $1;`;
+  const query = `SELECT fc.*, u.user_name, u.img_link
+FROM feed_comments fc
+JOIN users u ON fc.user_number = u.user_number
+WHERE fc.feed_number = $1;
+`;
   const { rows } = await postgreSQL.query(query, [feed_number]);
   return rows;
 };

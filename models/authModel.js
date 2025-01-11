@@ -10,11 +10,12 @@ exports.createUser = async ({
   user_phone,
   user_date_of_birth,
   user_gender,
+  img_link,
 }) => {
   const query = `
     INSERT INTO users (
-      user_id, user_name, user_email, user_pw, user_phone, user_date_of_birth, user_gender
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      user_id, user_name, user_email, user_pw, user_phone, user_date_of_birth, user_gender, img_link
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     RETURNING *;
   `;
   const values = [
@@ -25,6 +26,7 @@ exports.createUser = async ({
     user_phone,
     user_date_of_birth,
     user_gender,
+    img_link,
   ];
 
   const { rows } = await postgreSQL.query(query, values);
@@ -35,7 +37,7 @@ exports.createUser = async ({
 exports.createMongoUser = async (userData, session) => {
   const newUser = new User({
     user_number: userData.user_number,
-    profile_picture: userData.profile_picture || "",
+    profile_picture: userData.img_link || "",
     nickname: userData.nickname,
   });
 

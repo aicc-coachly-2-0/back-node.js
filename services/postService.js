@@ -1,4 +1,4 @@
-const postModel = require('../models/postModel');
+const postModel = require("../models/postModel");
 
 exports.createPost = async (postData) => {
   return await postModel.insertPost(postData);
@@ -18,6 +18,10 @@ exports.getCommunities = async () => {
 
 exports.getCommunityPosts = async (community_number) => {
   return await postModel.selectPostsByCommunity(community_number);
+};
+
+exports.getCommunity = async () => {
+  return await postModel.selectByCommunity();
 };
 
 exports.getUserPosts = async (user_number) => {

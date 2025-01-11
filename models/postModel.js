@@ -52,17 +52,39 @@ exports.selectAllCommunities = async () => {
 
 exports.selectPostsByCommunity = async (community_number) => {
   const query = `
-    SELECT * FROM posts
-    WHERE community_number = $1 AND state = 'active';
+    SELECT 
+      posts.*, 
+      users.img_link AS user_img_link,
+      users.user_name AS user_name
+    FROM 
+      posts
+    LEFT JOIN 
+      users ON posts.user_number = users.user_number
+    WHERE 
+      posts.community_number = $1 AND posts.state = 'active';
   `;
+
   const { rows } = await postgreSQL.query(query, [community_number]);
+  return rows;
+};
+
+exports.selectByCommunity = async (community_number) => {
+  const query = `
+    SELECT * FROM posts
+  `;
+
+  const { rows } = await postgreSQL.query(query);
   return rows;
 };
 
 exports.selectPostsByUser = async (user_number) => {
   const query = `
-    SELECT * FROM posts
-    WHERE user_number = $1 AND state = 'active';
+    SELECT 
+      posts.*, 
+      users.img_link
+    FROM posts
+    JOIN users ON posts.user_number = users.user_number
+    WHERE posts.user_number = $1 AND posts.state = 'active';
   `;
   const { rows } = await postgreSQL.query(query, [user_number]);
   return rows;
@@ -70,8 +92,16 @@ exports.selectPostsByUser = async (user_number) => {
 
 exports.selectCommentsByPost = async (post_number) => {
   const query = `
-    SELECT * FROM post_comments
-    WHERE post_number = $1 AND state = 'active';
+    SELECT 
+      post_comments.*, 
+      users.user_name, 
+      users.img_link
+    FROM 
+      post_comments
+    LEFT JOIN 
+      users ON post_comments.user_number = users.user_number
+    WHERE 
+      post_comments.post_number = $1 AND post_comments.state = 'active';
   `;
   const { rows } = await postgreSQL.query(query, [post_number]);
   return rows;

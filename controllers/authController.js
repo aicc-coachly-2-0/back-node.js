@@ -4,13 +4,14 @@ const authService = require("../services/authService");
 exports.signup = async (req, res, next) => {
   try {
     // Multer에서 처리된 파일 URL들
-    const uploadedFiles = req.fileUrls || [];
 
     // 요청에서 받은 회원가입 데이터
-    const userData = req.body;
+    const userData = {
+      ...req.body,
+      uploadedFiles: req.fileUrls?.[0]?.fileUrl || null, // 첫 번째 이미지 URL 추가
+    };
 
     console.log("회원가입 데이터:", userData);
-    console.log("업로드된 파일들:", uploadedFiles);
 
     // 유저 데이터로 회원가입 처리
     const newUser = await authService.createUser(userData);
