@@ -152,3 +152,5 @@ exports.getCommentById = async (post_comment_number) => {
   const { rows } = await postgreSQL.query(query, [post_comment_number]);
   return rows[0];
 };
+
+// hello
