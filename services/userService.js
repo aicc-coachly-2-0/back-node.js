@@ -156,3 +156,25 @@ exports.updateUser = async (user_number, fieldsToUpdate, role) => {
     throw error;
   }
 };
+
+exports.deleteUser = async (user_number) => {
+  try {
+    const deletedUser = await userModel.deleteUser(user_number);
+
+    if (!deletedUser) {
+      return {
+        success: false,
+        message: 'User not found or already deleted.',
+      };
+    }
+
+    return {
+      success: true,
+      message: 'User successfully deleted.',
+      data: deletedUser,
+    };
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    throw error;
+  }
+};

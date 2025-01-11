@@ -73,3 +73,22 @@ exports.updateUser = async (user_number, fieldsToUpdate) => {
     throw error;
   }
 };
+
+exports.deleteUser = async (user_number) => {
+  const query = `
+    UPDATE users
+    SET status = 'deleted'
+    WHERE user_number = $1
+    RETURNING *;
+  `;
+  try {
+    const { rows } = await postgreSQL.query(query, [user_number]);
+    if (!rows[0]) {
+      return null;
+    }
+    return rows[0];
+  } catch (error) {
+    console.error('Failed to delete user:', error.message);
+    throw new Error('Database error occurred while deleting user.');
+  }
+};
