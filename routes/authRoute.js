@@ -12,6 +12,7 @@ router.post(
   validation.validateSignup,
   authController.signup
 );
+
 router.post(
   '/admin-signup',
   validation.validateAdminSignup,

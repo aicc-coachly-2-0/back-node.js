@@ -119,6 +119,7 @@ module.exports = {
     { name: 'profilePicture', maxCount: 1 },
     { name: 'feedPicture', maxCount: 1 },
     { name: 'postPicture', maxCount: 1 },
+    { name: 'missionPicture', maxCount: 1 },
     { name: 'noticePicture', maxCount: 10 },
   ]),
   uploadFileToSFTP,

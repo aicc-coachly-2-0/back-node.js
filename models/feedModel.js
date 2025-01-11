@@ -1,9 +1,9 @@
-const { postgreSQL } = require('../config/database');
+const { postgreSQL } = require("../config/database");
 
 // 피드 생성
 exports.createFeed = async ({ user_number, img_number, content }) => {
   const query = `
-    INSERT INTO feeds (user_number,img_number ,content)
+    INSERT INTO feeds (user_number, img_number ,content)
     VALUES ($1, $2, $3)
     RETURNING *;
   `;
@@ -33,14 +33,28 @@ exports.getAllFeeds = async () => {
 
 // 특정 유저의 피드 조회
 exports.getFeedsByUser = async (user_number) => {
-  const query = `SELECT * FROM feeds WHERE user_number = $1;`;
+  const query = `SELECT 
+  f.*, 
+  u.user_name, 
+  u.img_link 
+FROM 
+  feeds f
+JOIN 
+  users u ON f.user_number = u.user_number
+WHERE 
+  f.user_number = $1;
+`;
   const { rows } = await postgreSQL.query(query, [user_number]);
   return rows;
 };
 
 // 피드 댓글 조회
 exports.getCommentsByFeed = async (feed_number) => {
-  const query = `SELECT * FROM feed_comments WHERE feed_number = $1;`;
+  const query = `SELECT fc.*, u.user_name, u.img_link
+FROM feed_comments fc
+JOIN users u ON fc.user_number = u.user_number
+WHERE fc.feed_number = $1;
+`;
   const { rows } = await postgreSQL.query(query, [feed_number]);
   return rows;
 };
@@ -51,19 +65,19 @@ exports.updateFeed = async (feed_number, { content, img_number }) => {
   const values = [];
 
   if (content !== undefined) {
-    updates.push('content = $' + (values.length + 1));
+    updates.push("content = $" + (values.length + 1));
     values.push(content);
   }
   if (img_number !== undefined) {
     // img_number가 명시적으로 제공된 경우에만 업데이트
-    updates.push('img_number = $' + (values.length + 1));
+    updates.push("img_number = $" + (values.length + 1));
     values.push(img_number);
   }
 
   values.push(feed_number); // feed_number 추가
   const query = `
     UPDATE feeds
-    SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
+    SET ${updates.join(", ")}, updated_at = CURRENT_TIMESTAMP
     WHERE feed_number = $${values.length} AND state = 'active'
     RETURNING *;
   `;

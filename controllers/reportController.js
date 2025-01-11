@@ -8,15 +8,12 @@ exports.createReport = async (req, res, next) => {
     const reportData = req.body;
 
     // Python 서버에 신고 데이터 전송
-    const pythonResponse = await axios.post(
-      'http://222.112.27.120:4002/report',
-      {
-        domain: reportData.domain,
-        user_number: reportData.user_number,
-        target_id: reportData.target_id,
-        report_reason: reportData.report_reason,
-      }
-    );
+    const pythonResponse = await axios.post('http://196.168.0.28/report', {
+      domain: reportData.domain,
+      user_number: reportData.user_number,
+      target_id: reportData.target_id,
+      report_reason: reportData.report_reason,
+    });
 
     const pythonResult = pythonResponse.data; // Python에서 반환된 데이터
 

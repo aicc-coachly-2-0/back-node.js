@@ -184,3 +184,29 @@ exports.updateUser = async (req, res) => {
     });
   }
 };
+
+// 회원 탈퇴
+exports.deleteUser = async (req, res) => {
+  const { user_number } = req.params;
+
+  try {
+    const result = await userService.deleteUser(user_number);
+
+    if (!result.success) {
+      return res.status(404).json({
+        message: result.message,
+      });
+    }
+
+    res.status(200).json({
+      message: result.message,
+      data: result.data,
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error.message);
+    res.status(500).json({
+      message: 'Failed to delete user',
+      error: error.message,
+    });
+  }
+};

@@ -1,4 +1,4 @@
-const questionService = require('../services/questionService');
+const questionService = require("../services/questionService");
 
 // 새로운 질문을 생성하는 컨트롤러 함수
 // 요청(req.body)에 포함된 데이터를 받아 서비스 계층의 createQuestion 호출
@@ -8,7 +8,7 @@ exports.createQuestion = async (req, res, next) => {
     const question = await questionService.createQuestion(req.body);
     res
       .status(201)
-      .json({ message: 'Question created successfully', question });
+      .json({ message: "Question created successfully", question });
   } catch (error) {
     next(error); // 에러 발생 시 에러 핸들러로 전달
   }
@@ -39,7 +39,7 @@ exports.updateQuestion = async (req, res, next) => {
     );
     res
       .status(200)
-      .json({ message: 'Question updated successfully', question });
+      .json({ message: "Question updated successfully", question });
   } catch (error) {
     next(error); // 에러 발생 시 에러 핸들러로 전달
   }
@@ -77,13 +77,13 @@ exports.getUnansweredQuestions = async (req, res, next) => {
   try {
     // 서비스 계층에서 답변이 달리지 않은 질문을 조회
     const unansweredQuestions = await questionService.getUnansweredQuestions();
-    console.log('Unanswered Questions:', unansweredQuestions);
+    console.log("Unanswered Questions:", unansweredQuestions);
 
     // 조회된 질문이 없다면 404 반환
     if (!unansweredQuestions || unansweredQuestions.length === 0) {
-      return res.status(404).json({ message: 'No unanswered questions found' });
+      return res.status(404).json({ message: "No unanswered questions found" });
     }
-    
+
     // 답변 없는 질문들 반환
     res.status(200).json(unansweredQuestions);
   } catch (error) {
@@ -91,4 +91,3 @@ exports.getUnansweredQuestions = async (req, res, next) => {
     next(error);
   }
 };
-

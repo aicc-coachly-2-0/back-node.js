@@ -35,6 +35,7 @@ router.post(
   authMiddleware.authenticateToken,
   userController.likeContent
 );
+
 router.post(
   '/:type/:id/unlike',
   authMiddleware.authenticateToken,
@@ -61,5 +62,7 @@ router.put(
   uploadFileToSFTP,
   userController.updateUser
 );
+
+router.delete('/:user_number', userController.deleteUser);
 
 module.exports = router;

@@ -1,4 +1,4 @@
-const reportModel = require('../models/reportModel');
+const reportModel = require("../models/reportModel");
 
 // 도메인별 신고 접수
 exports.createReport = async (domain, reportData) => {
