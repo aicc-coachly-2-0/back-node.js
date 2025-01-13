@@ -9,7 +9,7 @@ exports.createReport = async (req, res, next) => {
 
     // Python 서버에 신고 데이터 전송
     const pythonResponse = await axios.post(
-      'http://http://222.112.27.120:4002/report',
+      'http://222.112.27.120:4002/report',
       {
         domain: reportData.domain,
         user_number: reportData.user_number,
@@ -19,7 +19,7 @@ exports.createReport = async (req, res, next) => {
     );
 
     const pythonResult = pythonResponse.data; // Python에서 반환된 데이터
-
+    console.log(pythonResult);
     // Python 결과를 데이터베이스에 저장
     const savedReport = await reportService.createReport(domain, pythonResult);
 
