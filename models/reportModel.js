@@ -69,7 +69,7 @@ exports.insertReport = async (
   const table = getDomainTable(domain); // 신고 테이블 가져오기
   const targetColumn = getTargetColumn(domain); // 타겟 컬럼 가져오기
   const sqltable = getUserNumberTable(domain); // 사용자 상태 테이블 가져오기
-
+  const stateit = 'refused';
   // 트랜잭션 시작
   const client = await postgreSQL.connect();
   try {
@@ -81,7 +81,7 @@ exports.insertReport = async (
       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
       RETURNING *;
     `;
-    const insertValues = [user_number, target_id, report_reason, state];
+    const insertValues = [user_number, target_id, report_reason, stateit];
     const { rows: insertRows } = await client.query(insertQuery, insertValues);
     const insertedReport = insertRows[0];
 
