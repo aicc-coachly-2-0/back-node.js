@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const config = {
   server: {
-    port: process.env.SERVER_PORT || 8000, // 서버 포트
+    port: process.env.SERVER_PORT || 8080, // 서버 포트
   },
   auth: {
     jwtSecret: process.env.JWT_SECRET, // JWT 시크릿 키
@@ -24,6 +24,14 @@ const config = {
     database: process.env.MG_DB, // 데이터베이스 이름
     password: process.env.MG_PW, // 비밀번호
     port: process.env.MG_PORT, // 포트
+  },
+  ftp: {
+    host: process.env.FTP_HOST, // FTP 호스트
+    port: process.env.FTP_PORT, // FTP 포트
+    user: process.env.FTP_USER, // FTP 사용자
+    password: process.env.FTP_PASSWORD, // FTP 비밀번호
+    secure: process.env.FTP_SECURE, // FTP 보안 설정 (true/false)
+    baseUrl: process.env.BASE_URL,
   },
 };
 module.exports = config;

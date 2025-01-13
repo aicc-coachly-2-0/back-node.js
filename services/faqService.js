@@ -11,11 +11,11 @@ exports.updateFaq = async (faqNumber, faqData) => {
 };
 
 // 자주 묻는 질문 조회 (단일)
-exports.getFaq = async (faqNumber) => {
-  return await faqModel.findFaqById(faqNumber);
+exports.findFaqById = async (faqNumber, role) => {
+  return await faqModel.findFaqById(faqNumber, role);
 };
 
 // 자주 묻는 질문 전체 조회
-exports.getAllFaqs = async () => {
-  return await faqModel.findAllFaqs();
+exports.getAllFaqs = async (role) => {
+  return await faqModel.findAllFaqs(role);
 };

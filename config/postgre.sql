@@ -1,21 +1,25 @@
 -- ENUM 타입 정의
-CREATE TYPE mission_state_enum AS ENUM ('active', 'inactive');
-CREATE TYPE community_state_enum AS ENUM ('active', 'inactive', 'archived');
-CREATE TYPE level_enum AS ENUM ('easy', 'medium', 'hard');
-CREATE TYPE cert_freq_enum AS ENUM ('매일', '주중', '주말');
-CREATE TYPE field_enum AS ENUM ('field1', 'field2', 'field3', 'field4');
-CREATE TYPE is_secret_enum AS ENUM ('yes', 'no');
-CREATE TYPE participant_state_enum AS ENUM ('active', 'banned');
-CREATE TYPE validation_status_enum AS ENUM ('pending', 'approved', 'rejected');
-CREATE TYPE validation_state_enum AS ENUM ('active', 'inactive');
+CREATE TYPE mission_state_enum AS ENUM ('active', 'inactive'); -- 미션 카테고리 상태
+CREATE TYPE level_enum AS ENUM ('easy', 'medium', 'hard'); -- 미션 난이도
+CREATE TYPE cert_freq_enum AS ENUM ('매일', '평일 매일', '주말 매일'); -- 미션 인증 빈도
+CREATE TYPE mission_rooms_state_enum AS ENUM ('recruiting', 'ongoing', 'completed'); -- 미션방 상태
+CREATE TYPE duration_enum AS ENUM ('하루', '3일', '일주일', '한 달'); -- 미션방 기간
+CREATE TYPE status_enum AS ENUM ('active', 'inactive', 'deleted', 'suspended'); -- 유저 상태 
+
+CREATE TYPE participant_state_enum AS ENUM ('active', 'banned'); -- 미션 참가자 상태
+
+CREATE TYPE validation_status_enum AS ENUM ('pending', 'approved', 'rejected'); -- 미션 성공 상태
+CREATE TYPE validation_state_enum AS ENUM ('active', 'inactive'); -- 미션 인증 상태
+
 CREATE TYPE feed_state_enum AS ENUM ('active', 'inactive', 'deleted');
+CREATE TYPE community_state_enum AS ENUM ('active', 'inactive', 'archived');
 CREATE TYPE comment_state_enum AS ENUM ('active', 'deleted');
 CREATE TYPE post_state_enum AS ENUM ('active', 'hidden', 'deleted');
 CREATE TYPE payment_status_enum AS ENUM ('success', 'failed', 'pending');
 CREATE TYPE subscription_state_enum AS ENUM ('active', 'paused', 'canceled');
 CREATE TYPE refund_state_enum AS ENUM ('requested', 'approved', 'completed', 'rejected');
 CREATE TYPE refund_review_state_enum AS ENUM ('pending', 'in_progress', 'approved', 'rejected');
-CREATE TYPE classification_state_enum AS ENUM ('active', 'inactive');
+CREATE TYPE classification_state_enum AS ENUM ('active', 'inactive'); -- 질문 카테고리 상태
 CREATE TYPE question_state_enum AS ENUM ('pending', 'answered', 'deleted');
 CREATE TYPE admin_position_enum AS ENUM ('superadmin', 'manager', 'staff');
 CREATE TYPE admin_state_enum AS ENUM ('active', 'inactive', 'suspended');
@@ -31,7 +35,8 @@ CREATE TABLE users (
     user_email VARCHAR(100),
     user_pw VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status status_enum DEFAULT active
 );
 
 -- 관리자 테이블
@@ -62,15 +67,17 @@ CREATE TABLE mission_rooms (
     content TEXT,
     img_link VARCHAR,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ended_at TIMESTAMP,
+    started_at DATE,
+    ended_at DATE,
     weekly_cert_count INT,
     cert_freq cert_freq_enum,
     level level_enum,
-    state VARCHAR(20),
+    state mission_rooms_state_enum,
     CONSTRAINT fk_user_number FOREIGN KEY (user_number) REFERENCES users(user_number) ON DELETE CASCADE,
     CONSTRAINT fk_mission_number FOREIGN KEY (mission_number) REFERENCES missions(mission_number) ON DELETE CASCADE
 );
- 
+
+
 -- 미션 참가자
 CREATE TABLE mission_participants (
     group_number SERIAL PRIMARY KEY,
@@ -432,3 +439,32 @@ CREATE TRIGGER trigger_update_faqs_updated_at
 BEFORE UPDATE ON faqs
 FOR EACH ROW
 EXECUTE FUNCTION update_timestamp();
+
+
+-- 유저 신고 테이블에 신고 분류 추가
+ALTER TABLE user_reports
+ADD COLUMN report_category VARCHAR(50);
+
+-- 게시글 신고 테이블에 신고 분류 추가
+ALTER TABLE post_reports
+ADD COLUMN report_category VARCHAR(50);
+
+-- 게시글 댓글 신고 테이블에 신고 분류 추가
+ALTER TABLE post_comment_reports
+ADD COLUMN report_category VARCHAR(50);
+
+-- 피드 신고 테이블에 신고 분류 추가
+ALTER TABLE feed_reports
+ADD COLUMN report_category VARCHAR(50);
+
+-- 피드 댓글 신고 테이블에 신고 분류 추가
+ALTER TABLE feed_comment_reports
+ADD COLUMN report_category VARCHAR(50);
+
+-- 미션 신고 테이블에 신고 분류 추가
+ALTER TABLE mission_reports
+ADD COLUMN report_category VARCHAR(50);
+
+-- 미션 인증 신고 테이블에 신고 분류 추가
+ALTER TABLE mission_validation_reports
+ADD COLUMN report_category VARCHAR(50);
