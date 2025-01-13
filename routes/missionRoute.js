@@ -70,30 +70,33 @@ router.post(
 );
 
 // 미션 인증샷 상세 조회
-router.get(
-  '/validations/:mission_validation_number',
-  authenticateToken,
-  validationController.getMissionValidationDetail
-);
+// router.get(
+//   '/validations/:mission_validation_number',
+//   authenticateToken,
+//   validationController.getMissionValidationDetail
+// );
 
 // 인증샷 확인해주기
-router.get(
-  '/validations/:mission_validation_number/approvals',
-  authenticateToken,
+router.post(
+  '/validations/:mission_validation_number/approvals/:user_number',
   validationController.approveMissionValidation
+);
+
+// 인증 몇 명 했는지 확인해주기, 인증 성공 여부 반환하기
+router.get(
+  '/validations/:mission_validation_number',
+  validationController.getValidationStatus
 );
 
 // 사용자의 미션 인증샷 전체 리스트 조회
 router.get(
-  '/rooms/:room_number/my-validations',
-  authenticateToken,
+  '/rooms/:room_number/my-validations/:user_number',
   validationController.getUserMissionValidations
 );
 
-// 참가자 인증샷 전체 리스트 조회 (로그인 유저 제외한 미션방 참여 유저)
+// 참가자 인증샷 전체 리스트 조회
 router.get(
   '/rooms/:room_number/participant-validations',
-  authenticateToken,
   validationController.getParticipantValidations
 );
 

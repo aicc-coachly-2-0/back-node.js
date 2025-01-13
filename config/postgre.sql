@@ -105,13 +105,53 @@ CREATE TABLE mission_validations (
 CREATE TABLE validation_approvals (
   approval_id SERIAL PRIMARY KEY,
   mission_validation_number INT NOT NULL,
-  group_number INT NOT NULL,
+  user_number INT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   state approvals_state_enum DEFAULT 'active',
-  UNIQUE (mission_validation_number, group_number),
+  UNIQUE (mission_validation_number, user_number),
   FOREIGN KEY (mission_validation_number) REFERENCES mission_validations (mission_validation_number),
-  FOREIGN KEY (group_number) REFERENCES mission_participants (group_number)
+  FOREIGN KEY (user_number) REFERENCES users (user_number)
 );
+
+-- 3명 이상 미션 인증샷에 '확인'을 눌러주면 mission_validations.state가 approved로 변경되는 트리거 함수
+-- 트리거 설정
+CREATE OR REPLACE FUNCTION update_success_status()
+RETURNS TRIGGER AS $$
+DECLARE
+  approval_count INT;
+BEGIN
+  -- 현재 인증샷에 대한 '확인' 수 계산
+  SELECT COUNT(*)
+  INTO approval_count
+  FROM validation_approvals
+  WHERE mission_validation_number = NEW.mission_validation_number;
+
+  -- '확인' 수에 따라 success_status 업데이트
+  IF approval_count >= 3 THEN
+    UPDATE mission_validations
+    SET success_status = 'approved'
+    WHERE mission_validation_number = NEW.mission_validation_number;
+  ELSE
+    UPDATE mission_validations
+    SET success_status = 'pending'
+    WHERE mission_validation_number = NEW.mission_validation_number;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 데이터 삽입 시에 트리거 발동
+CREATE TRIGGER trigger_update_success_status_on_insert
+AFTER INSERT ON validation_approvals
+FOR EACH ROW
+EXECUTE FUNCTION update_success_status();
+
+-- 데이터 삭제 시 트리거 발동
+CREATE TRIGGER trigger_update_success_status_on_delete
+AFTER DELETE ON validation_approvals
+FOR EACH ROW
+EXECUTE FUNCTION update_success_status();
 
 -- 커뮤니티
 CREATE TABLE communities (
